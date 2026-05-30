@@ -25,7 +25,6 @@
             width: 100%;
         }
 
-        /* ========== 左侧边栏 ========== */
         .sidebar {
             width: 280px;
             background: #1a1a2e;
@@ -65,7 +64,6 @@
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -132,7 +130,6 @@
             color: #888;
         }
 
-        /* ========== 右侧主内容区 ========== */
         .main {
             flex: 1;
             display: flex;
@@ -199,10 +196,23 @@
             font-size: 14px;
             outline: none;
             background: #fff;
+            -webkit-appearance: none;
+            appearance: none;
         }
         .form-group input:focus, .form-group select:focus {
             border-color: #e6b980;
             box-shadow: 0 0 0 3px rgba(230,185,128,0.1);
+        }
+
+        /* 日期选择器优化 - 增大点击区域，改善滑动体验 */
+        input[type="date"] {
+            -webkit-appearance: none;
+            appearance: none;
+            min-height: 46px;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            padding: 8px;
+            cursor: pointer;
         }
 
         .time-option-row {
@@ -339,6 +349,17 @@
             0%, 60%, 100% { opacity: 0.3; }
             30% { opacity: 1; }
         }
+
+        /* 省市区三级联动样式 */
+        .location-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .location-select {
+            flex: 1;
+            min-width: 100px;
+        }
     </style>
 </head>
 <body>
@@ -396,7 +417,6 @@
                     </div>
                 </div>
 
-                <!-- 是否知道出生时间 -->
                 <div class="time-option-row">
                     <div class="time-toggle">
                         <label>
@@ -446,23 +466,31 @@
                         <div class="form-group">
                             <label>分钟</label>
                             <select id="minuteSelect">
-                                <option value="0">00分</option>
-                                <option value="15">15分</option>
-                                <option value="30">30分</option>
-                                <option value="45">45分</option>
+                                <option value="">请选择分钟</option>
+                                <!-- 分钟 0-59 动态生成 -->
                             </select>
                         </div>
                     </div>
                 </div>
 
+                <!-- 省市区三级联动 -->
                 <div class="form-row">
                     <div class="form-group">
                         <label>出生地点</label>
-                        <input type="text" id="locationInput" placeholder="例如：四川省宜宾市（用于真太阳时校正）">
+                        <div class="location-row">
+                            <select id="provinceSelect" class="location-select">
+                                <option value="">请选择省份</option>
+                            </select>
+                            <select id="citySelect" class="location-select">
+                                <option value="">请选择城市</option>
+                            </select>
+                            <select id="districtSelect" class="location-select">
+                                <option value="">请选择区/县</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 真太阳时选项 -->
                 <div class="checkbox-row">
                     <label class="checkbox-label">
                         <input type="checkbox" id="useTrueSolar"> 使用真太阳时（需填写出生地点）
@@ -472,7 +500,6 @@
                     </label>
                 </div>
 
-                <!-- 真太阳时结果显示区域 -->
                 <div id="trueSolarResult" class="true-solar-box" style="display: none;"></div>
 
                 <div class="module-buttons">
@@ -495,12 +522,110 @@
 </div>
 
 <script>
+    // ==================== 中国省市区数据（简化版，覆盖主要地区）====================
+    const chinaRegions = {
+        '北京市': { lon: 116.40, cities: { '北京市': ['东城区', '西城区', '朝阳区', '海淀区', '丰台区', '石景山区', '通州区', '昌平区', '大兴区'] } },
+        '上海市': { lon: 121.48, cities: { '上海市': ['黄浦区', '徐汇区', '长宁区', '静安区', '普陀区', '虹口区', '杨浦区', '浦东新区', '闵行区'] } },
+        '广东省': { lon: 113.27, cities: { '广州市': ['越秀区', '海珠区', '荔湾区', '天河区', '白云区', '黄埔区', '番禺区', '花都区'], '深圳市': ['罗湖区', '福田区', '南山区', '宝安区', '龙岗区', '盐田区'], '珠海市': ['香洲区', '斗门区', '金湾区'], '佛山市': ['禅城区', '南海区', '顺德区', '三水区', '高明区'] } },
+        '四川省': { lon: 104.06, cities: { '成都市': ['锦江区', '青羊区', '金牛区', '武侯区', '成华区', '龙泉驿区', '青白江区', '新都区', '温江区', '双流区', '郫都区'], '绵阳市': ['涪城区', '游仙区'], '德阳市': ['旌阳区'], '宜宾市': ['翠屏区', '南溪区', '叙州区'] } },
+        '浙江省': { lon: 120.15, cities: { '杭州市': ['上城区', '拱墅区', '西湖区', '滨江区', '萧山区', '余杭区', '富阳区', '临安区'], '宁波市': ['海曙区', '江北区', '北仑区', '鄞州区'], '温州市': ['鹿城区', '龙湾区', '瓯海区'] } },
+        '江苏省': { lon: 118.78, cities: { '南京市': ['玄武区', '秦淮区', '建邺区', '鼓楼区', '栖霞区', '雨花台区', '江宁区'], '苏州市': ['虎丘区', '吴中区', '相城区', '姑苏区', '吴江区'], '无锡市': ['锡山区', '惠山区', '滨湖区', '梁溪区'] } },
+        '重庆市': { lon: 106.55, cities: { '重庆市': ['渝中区', '大渡口区', '江北区', '沙坪坝区', '九龙坡区', '南岸区', '北碚区', '渝北区', '巴南区'] } },
+        '湖北省': { lon: 114.30, cities: { '武汉市': ['江岸区', '江汉区', '硚口区', '汉阳区', '武昌区', '青山区', '洪山区', '东西湖区'] } },
+        '湖南省': { lon: 112.98, cities: { '长沙市': ['芙蓉区', '天心区', '岳麓区', '开福区', '雨花区', '望城区'] } },
+        '福建省': { lon: 119.30, cities: { '福州市': ['鼓楼区', '台江区', '仓山区', '马尾区', '晋安区'], '厦门市': ['思明区', '海沧区', '湖里区', '集美区', '同安区'] } },
+        '安徽省': { lon: 117.27, cities: { '合肥市': ['瑶海区', '庐阳区', '蜀山区', '包河区'] } },
+        '河南省': { lon: 113.65, cities: { '郑州市': ['中原区', '二七区', '管城回族区', '金水区', '惠济区'] } },
+        '山东省': { lon: 120.38, cities: { '济南市': ['历下区', '市中区', '槐荫区', '天桥区', '历城区'], '青岛市': ['市南区', '市北区', '黄岛区', '崂山区', '李沧区', '城阳区'] } },
+        '陕西省': { lon: 108.95, cities: { '西安市': ['新城区', '碑林区', '莲湖区', '灞桥区', '未央区', '雁塔区'] } },
+        '云南省': { lon: 102.73, cities: { '昆明市': ['五华区', '盘龙区', '官渡区', '西山区', '呈贡区'] } },
+        '贵州省': { lon: 106.63, cities: { '贵阳市': ['南明区', '云岩区', '花溪区', '乌当区', '白云区', '观山湖区'] } }
+    };
+
+    // 初始化分钟选项（0-59）
+    function initMinuteSelect() {
+        const minuteSelect = document.getElementById('minuteSelect');
+        minuteSelect.innerHTML = '<option value="">请选择分钟</option>';
+        for (let i = 0; i <= 59; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `${i.toString().padStart(2, '0')}分`;
+            minuteSelect.appendChild(option);
+        }
+    }
+
+    // 初始化省份选项
+    function initProvinceSelect() {
+        const provinceSelect = document.getElementById('provinceSelect');
+        for (const province in chinaRegions) {
+            const option = document.createElement('option');
+            option.value = province;
+            option.textContent = province;
+            provinceSelect.appendChild(option);
+        }
+    }
+
+    // 根据省份更新城市选项
+    function updateCitySelect() {
+        const province = document.getElementById('provinceSelect').value;
+        const citySelect = document.getElementById('citySelect');
+        const districtSelect = document.getElementById('districtSelect');
+        
+        citySelect.innerHTML = '<option value="">请选择城市</option>';
+        districtSelect.innerHTML = '<option value="">请选择区/县</option>';
+        
+        if (province && chinaRegions[province]) {
+            const cities = chinaRegions[province].cities;
+            for (const city in cities) {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                citySelect.appendChild(option);
+            }
+        }
+    }
+
+    // 根据城市更新区县选项
+    function updateDistrictSelect() {
+        const province = document.getElementById('provinceSelect').value;
+        const city = document.getElementById('citySelect').value;
+        const districtSelect = document.getElementById('districtSelect');
+        
+        districtSelect.innerHTML = '<option value="">请选择区/县</option>';
+        
+        if (province && city && chinaRegions[province] && chinaRegions[province].cities[city]) {
+            const districts = chinaRegions[province].cities[city];
+            for (const district of districts) {
+                const option = document.createElement('option');
+                option.value = district;
+                option.textContent = district;
+                districtSelect.appendChild(option);
+            }
+        }
+    }
+
+    // 获取完整地点名称和经度
+    function getLocationInfo() {
+        const province = document.getElementById('provinceSelect').value;
+        const city = document.getElementById('citySelect').value;
+        const district = document.getElementById('districtSelect').value;
+        
+        if (!province) return null;
+        
+        let locationName = province;
+        if (city) locationName += city;
+        if (district) locationName += district;
+        
+        let longitude = chinaRegions[province]?.lon || null;
+        
+        return { name: locationName, longitude: longitude };
+    }
+
     const API_URL = 'https://bazi-api-production-0123.up.railway.app';
     let currentModule = 'career';
     let isLoading = false;
     let cachedLongitude = null;
 
-    // 获取某天在一年中的第几天
     function getDayOfYear(date) {
         const start = new Date(date.getFullYear(), 0, 0);
         const diff = date - start;
@@ -508,27 +633,17 @@
         return Math.floor(diff / oneDay);
     }
 
-    // 真太阳时计算函数（纯前端实现）
     function calculateTrueSolarTime(date, hour, minute, longitude) {
         const dayOfYear = getDayOfYear(date);
-        // 时差曲线参数（简化版，足够日常使用）
         const B = (dayOfYear - 1) * 2 * Math.PI / 365;
-        // 时差公式（单位：分钟），精度约±1分钟
         let eqTime = 0.258 * Math.cos(B) - 7.416 * Math.sin(B) 
                     - 3.648 * Math.cos(2 * B) - 9.228 * Math.sin(2 * B);
-        
-        // 经度修正：每度4分钟，120°为东八区基准
         let lonCorrection = (longitude - 120) * 4;
-        
-        // 总偏移（分钟）
         let offsetMinutes = lonCorrection + eqTime;
-        
-        // 应用到用户输入的时间
         let totalMinutes = hour * 60 + minute + offsetMinutes;
         let newHour = Math.floor(totalMinutes / 60) % 24;
         let newMinute = Math.round(totalMinutes % 60);
         
-        // 边界处理
         if (newMinute >= 60) {
             newMinute -= 60;
             newHour = (newHour + 1) % 24;
@@ -541,31 +656,6 @@
         return { hour: newHour, minute: newMinute };
     }
 
-    // 根据城市名称获取大致经度（简化版）
-    function getLongitudeByCity(location) {
-        if (!location) return null;
-        
-        const cityMap = {
-            '北京': 116.40, '上海': 121.48, '广州': 113.27, '深圳': 114.07,
-            '成都': 104.06, '重庆': 106.55, '杭州': 120.15, '武汉': 114.30,
-            '西安': 108.95, '南京': 118.78, '天津': 117.20, '沈阳': 123.43,
-            '青岛': 120.38, '长沙': 112.98, '昆明': 102.73, '贵阳': 106.63,
-            '南宁': 108.32, '南昌': 115.89, '福州': 119.30, '合肥': 117.27,
-            '郑州': 113.65, '太原': 112.56, '石家庄': 114.52, '哈尔滨': 126.64,
-            '长春': 125.35, '呼和浩特': 111.65, '兰州': 103.82, '西宁': 101.78,
-            '银川': 106.27, '乌鲁木齐': 87.62, '拉萨': 91.14, '海口': 110.35,
-            '香港': 114.17, '澳门': 113.54, '台湾': 121.52
-        };
-        
-        for (const [city, lon] of Object.entries(cityMap)) {
-            if (location.includes(city)) {
-                return lon;
-            }
-        }
-        return null;  // 默认返回 null，使用北京时间
-    }
-
-    // 展示真太阳时计算结果
     function updateTrueSolarDisplay() {
         const useTrueSolar = document.getElementById('useTrueSolar').checked;
         const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
@@ -576,12 +666,10 @@
             return;
         }
         
-        const location = document.getElementById('locationInput').value;
-        const longitude = getLongitudeByCity(location);
-        
-        if (!location || !longitude) {
+        const locationInfo = getLocationInfo();
+        if (!locationInfo || !locationInfo.longitude) {
             trueSolarDiv.style.display = 'block';
-            trueSolarDiv.innerHTML = '📍 请填写详细的出生地点（如：四川省宜宾市），以便进行真太阳时校正';
+            trueSolarDiv.innerHTML = '📍 请选择完整的出生地点（省-市-区），以便进行真太阳时校正';
             trueSolarDiv.style.background = '#fff3e0';
             trueSolarDiv.style.borderLeftColor = '#e6b980';
             return;
@@ -591,16 +679,15 @@
         const hour = parseInt(document.getElementById('hourSelect').value);
         const minute = parseInt(document.getElementById('minuteSelect').value);
         
-        if (!dateStr || isNaN(hour)) {
+        if (!dateStr || isNaN(hour) || isNaN(minute)) {
             trueSolarDiv.style.display = 'block';
             trueSolarDiv.innerHTML = '⏰ 请先填写完整的出生日期和时间';
             return;
         }
         
         const date = new Date(dateStr);
-        const trueTime = calculateTrueSolarTime(date, hour, minute, longitude);
+        const trueTime = calculateTrueSolarTime(date, hour, minute, locationInfo.longitude);
         
-        // 时辰映射
         const shichenMap = {
             23: '子', 0: '子', 1: '丑', 2: '丑', 3: '寅', 4: '寅',
             5: '卯', 6: '卯', 7: '辰', 8: '辰', 9: '巳', 10: '巳',
@@ -616,52 +703,52 @@
         trueSolarDiv.style.borderLeftColor = '#4caf50';
         trueSolarDiv.innerHTML = `
             🌞 真太阳时校正结果<br>
-            📍 ${location}（经度 ${longitude}°）<br>
+            📍 ${locationInfo.name}（经度 ${locationInfo.longitude}°）<br>
             🕐 北京时间：${hour.toString().padStart(2,'0')}:${minute.toString().padStart(2,'0')}（${originalShichen}时）<br>
             🕐 真太阳时：${trueTime.hour.toString().padStart(2,'0')}:${trueTime.minute.toString().padStart(2,'0')}（${trueShichen}时）<br>
             ⚡ 分析将使用校正后的真太阳时
         `;
         
-        // 缓存校正后的时间，供发送请求时使用
-        cachedLongitude = longitude;
+        cachedLongitude = locationInfo.longitude;
         return trueTime;
     }
 
-    // 获取实际使用的出生时间（考虑真太阳时）
     function getActualBirthTime() {
         const useTrueSolar = document.getElementById('useTrueSolar').checked;
         const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
         
-        if (knowTime === 'no') {
-            return null;
-        }
+        if (knowTime === 'no') return null;
         
         let hour = parseInt(document.getElementById('hourSelect').value);
         let minute = parseInt(document.getElementById('minuteSelect').value);
         
         if (useTrueSolar) {
-            const location = document.getElementById('locationInput').value;
-            const longitude = getLongitudeByCity(location);
+            const locationInfo = getLocationInfo();
             const dateStr = document.getElementById('dateInput').value;
-            
-            if (location && longitude && dateStr && !isNaN(hour)) {
+            if (locationInfo && locationInfo.longitude && dateStr && !isNaN(hour) && !isNaN(minute)) {
                 const date = new Date(dateStr);
-                const trueTime = calculateTrueSolarTime(date, hour, minute, longitude);
+                const trueTime = calculateTrueSolarTime(date, hour, minute, locationInfo.longitude);
                 return { hour: trueTime.hour, minute: trueTime.minute };
             }
         }
-        
         return { hour: hour, minute: minute };
     }
 
-    // 监听相关输入变化，实时更新真太阳时显示
+    // 事件监听
     document.getElementById('useTrueSolar').addEventListener('change', updateTrueSolarDisplay);
-    document.getElementById('locationInput').addEventListener('input', updateTrueSolarDisplay);
+    document.getElementById('provinceSelect').addEventListener('change', () => {
+        updateCitySelect();
+        updateTrueSolarDisplay();
+    });
+    document.getElementById('citySelect').addEventListener('change', () => {
+        updateDistrictSelect();
+        updateTrueSolarDisplay();
+    });
+    document.getElementById('districtSelect').addEventListener('change', updateTrueSolarDisplay);
     document.getElementById('dateInput').addEventListener('change', updateTrueSolarDisplay);
     document.getElementById('hourSelect').addEventListener('change', updateTrueSolarDisplay);
     document.getElementById('minuteSelect').addEventListener('change', updateTrueSolarDisplay);
 
-    // 时间选项切换
     document.querySelectorAll('input[name="knowTime"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
             const timeSelectArea = document.getElementById('timeSelectArea');
@@ -678,7 +765,6 @@
         });
     });
 
-    // 模块切换
     document.querySelectorAll('.module-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.module-btn').forEach(b => b.classList.remove('active'));
@@ -687,7 +773,6 @@
         });
     });
 
-    // 构建生辰字符串
     function buildBirthString() {
         const date = new Date(document.getElementById('dateInput').value);
         if (isNaN(date.getTime())) return null;
@@ -696,19 +781,17 @@
         const month = date.getMonth() + 1;
         const day = date.getDate();
         const gender = document.getElementById('genderSelect').value;
-        
         const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
         
         if (knowTime === 'yes') {
             const actualTime = getActualBirthTime();
-            if (!actualTime) return null;
+            if (!actualTime || isNaN(actualTime.hour) || isNaN(actualTime.minute)) return null;
             return `${year}.${month}.${day} ${actualTime.hour}时 ${actualTime.minute}分 ${gender}`;
         } else {
             return `${year}.${month}.${day} ${gender}`;
         }
     }
 
-    // 验证必填项
     function validateForm() {
         if (!document.getElementById('genderSelect').value) {
             alert('请选择性别');
@@ -724,11 +807,14 @@
                 alert('请选择出生时间');
                 return false;
             }
+            if (!document.getElementById('minuteSelect').value) {
+                alert('请选择分钟');
+                return false;
+            }
         }
         return true;
     }
 
-    // 添加历史记录
     function addHistory(birthStr) {
         const historyList = document.getElementById('historyList');
         const existingItems = Array.from(historyList.querySelectorAll('.history-item'));
@@ -822,6 +908,10 @@
         }
     }
 
+    // 初始化
+    initMinuteSelect();
+    initProvinceSelect();
+    
     document.getElementById('analyzeBtn').addEventListener('click', analyze);
     document.getElementById('newChatBtn').addEventListener('click', newChat);
 </script>
