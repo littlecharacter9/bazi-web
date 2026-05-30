@@ -205,7 +205,6 @@
             box-shadow: 0 0 0 3px rgba(230,185,128,0.1);
         }
 
-        /* 时间选项 */
         .time-option-row {
             margin-bottom: 16px;
         }
@@ -236,6 +235,15 @@
             font-size: 13px;
             color: #b86b00;
         }
+        .true-solar-box {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #2e7d32;
+        }
 
         .checkbox-row {
             display: flex;
@@ -249,12 +257,8 @@
             align-items: center;
             gap: 6px;
             font-size: 13px;
-            color: #999;
-        }
-        .disabled-note {
-            font-size: 11px;
-            color: #ccc;
-            margin-left: 8px;
+            color: #333;
+            cursor: pointer;
         }
 
         .module-buttons {
@@ -319,14 +323,6 @@
             white-space: pre-wrap;
             word-break: break-word;
         }
-        .result-content h3 {
-            font-size: 15px;
-            margin: 16px 0 8px;
-            color: #1a1a2e;
-        }
-        .result-content h3:first-child {
-            margin-top: 0;
-        }
 
         .loading-dots {
             display: inline-flex;
@@ -343,38 +339,11 @@
             0%, 60%, 100% { opacity: 0.3; }
             30% { opacity: 1; }
         }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 3px;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                position: fixed;
-                left: -280px;
-                z-index: 100;
-                height: 100%;
-                transition: left 0.3s;
-            }
-            .content-area {
-                padding: 16px;
-            }
-            .form-row {
-                gap: 12px;
-            }
-        }
     </style>
 </head>
 <body>
 <div class="app">
-    <div class="sidebar" id="sidebar">
+    <div class="sidebar">
         <div class="logo-area">
             <div class="logo">八戒命理</div>
             <div class="logo-sub">AI解析 · 仅供参考</div>
@@ -407,7 +376,7 @@
             <div class="form-card">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>姓名 <span class="required">(选填)</span></label>
+                        <label>姓名 (选填)</label>
                         <input type="text" id="nameInput" placeholder="请输入姓名">
                     </div>
                     <div class="form-group">
@@ -442,7 +411,6 @@
                     </div>
                 </div>
 
-                <!-- 时间选择区域（默认显示） -->
                 <div id="timeSelectArea">
                     <div class="form-row">
                         <div class="form-group">
@@ -490,19 +458,22 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>出生地点</label>
-                        <input type="text" id="locationInput" placeholder="选填（暂未启用）">
+                        <input type="text" id="locationInput" placeholder="例如：四川省宜宾市（用于真太阳时校正）">
                     </div>
                 </div>
 
+                <!-- 真太阳时选项 -->
                 <div class="checkbox-row">
                     <label class="checkbox-label">
-                        <input type="checkbox" id="useTrueSolar"> 使用真太阳时
+                        <input type="checkbox" id="useTrueSolar"> 使用真太阳时（需填写出生地点）
                     </label>
                     <label class="checkbox-label">
                         <input type="checkbox" id="useEarlyLate"> 使用早晚子时
                     </label>
-                    <span class="disabled-note">（功能开发中）</span>
                 </div>
+
+                <!-- 真太阳时结果显示区域 -->
+                <div id="trueSolarResult" class="true-solar-box" style="display: none;"></div>
 
                 <div class="module-buttons">
                     <button class="module-btn" data-module="overview">综合</button>
@@ -527,32 +498,183 @@
     const API_URL = 'https://bazi-api-production-0123.up.railway.app';
     let currentModule = 'career';
     let isLoading = false;
+    let cachedLongitude = null;
 
-    // DOM 元素
-    const genderSelect = document.getElementById('genderSelect');
-    const dateInput = document.getElementById('dateInput');
-    const hourSelect = document.getElementById('hourSelect');
-    const minuteSelect = document.getElementById('minuteSelect');
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    const resultCard = document.getElementById('resultCard');
-    const resultContent = document.getElementById('resultContent');
-    const newChatBtn = document.getElementById('newChatBtn');
-    const timeWarning = document.getElementById('timeWarning');
-    const timeSelectArea = document.getElementById('timeSelectArea');
-    const knowTimeRadios = document.querySelectorAll('input[name="knowTime"]');
+    // 获取某天在一年中的第几天
+    function getDayOfYear(date) {
+        const start = new Date(date.getFullYear(), 0, 0);
+        const diff = date - start;
+        const oneDay = 86400000;
+        return Math.floor(diff / oneDay);
+    }
+
+    // 真太阳时计算函数（纯前端实现）
+    function calculateTrueSolarTime(date, hour, minute, longitude) {
+        const dayOfYear = getDayOfYear(date);
+        // 时差曲线参数（简化版，足够日常使用）
+        const B = (dayOfYear - 1) * 2 * Math.PI / 365;
+        // 时差公式（单位：分钟），精度约±1分钟
+        let eqTime = 0.258 * Math.cos(B) - 7.416 * Math.sin(B) 
+                    - 3.648 * Math.cos(2 * B) - 9.228 * Math.sin(2 * B);
+        
+        // 经度修正：每度4分钟，120°为东八区基准
+        let lonCorrection = (longitude - 120) * 4;
+        
+        // 总偏移（分钟）
+        let offsetMinutes = lonCorrection + eqTime;
+        
+        // 应用到用户输入的时间
+        let totalMinutes = hour * 60 + minute + offsetMinutes;
+        let newHour = Math.floor(totalMinutes / 60) % 24;
+        let newMinute = Math.round(totalMinutes % 60);
+        
+        // 边界处理
+        if (newMinute >= 60) {
+            newMinute -= 60;
+            newHour = (newHour + 1) % 24;
+        }
+        if (newMinute < 0) {
+            newMinute += 60;
+            newHour = (newHour - 1 + 24) % 24;
+        }
+        
+        return { hour: newHour, minute: newMinute };
+    }
+
+    // 根据城市名称获取大致经度（简化版）
+    function getLongitudeByCity(location) {
+        if (!location) return null;
+        
+        const cityMap = {
+            '北京': 116.40, '上海': 121.48, '广州': 113.27, '深圳': 114.07,
+            '成都': 104.06, '重庆': 106.55, '杭州': 120.15, '武汉': 114.30,
+            '西安': 108.95, '南京': 118.78, '天津': 117.20, '沈阳': 123.43,
+            '青岛': 120.38, '长沙': 112.98, '昆明': 102.73, '贵阳': 106.63,
+            '南宁': 108.32, '南昌': 115.89, '福州': 119.30, '合肥': 117.27,
+            '郑州': 113.65, '太原': 112.56, '石家庄': 114.52, '哈尔滨': 126.64,
+            '长春': 125.35, '呼和浩特': 111.65, '兰州': 103.82, '西宁': 101.78,
+            '银川': 106.27, '乌鲁木齐': 87.62, '拉萨': 91.14, '海口': 110.35,
+            '香港': 114.17, '澳门': 113.54, '台湾': 121.52
+        };
+        
+        for (const [city, lon] of Object.entries(cityMap)) {
+            if (location.includes(city)) {
+                return lon;
+            }
+        }
+        return null;  // 默认返回 null，使用北京时间
+    }
+
+    // 展示真太阳时计算结果
+    function updateTrueSolarDisplay() {
+        const useTrueSolar = document.getElementById('useTrueSolar').checked;
+        const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
+        const trueSolarDiv = document.getElementById('trueSolarResult');
+        
+        if (!useTrueSolar || knowTime === 'no') {
+            trueSolarDiv.style.display = 'none';
+            return;
+        }
+        
+        const location = document.getElementById('locationInput').value;
+        const longitude = getLongitudeByCity(location);
+        
+        if (!location || !longitude) {
+            trueSolarDiv.style.display = 'block';
+            trueSolarDiv.innerHTML = '📍 请填写详细的出生地点（如：四川省宜宾市），以便进行真太阳时校正';
+            trueSolarDiv.style.background = '#fff3e0';
+            trueSolarDiv.style.borderLeftColor = '#e6b980';
+            return;
+        }
+        
+        const dateStr = document.getElementById('dateInput').value;
+        const hour = parseInt(document.getElementById('hourSelect').value);
+        const minute = parseInt(document.getElementById('minuteSelect').value);
+        
+        if (!dateStr || isNaN(hour)) {
+            trueSolarDiv.style.display = 'block';
+            trueSolarDiv.innerHTML = '⏰ 请先填写完整的出生日期和时间';
+            return;
+        }
+        
+        const date = new Date(dateStr);
+        const trueTime = calculateTrueSolarTime(date, hour, minute, longitude);
+        
+        // 时辰映射
+        const shichenMap = {
+            23: '子', 0: '子', 1: '丑', 2: '丑', 3: '寅', 4: '寅',
+            5: '卯', 6: '卯', 7: '辰', 8: '辰', 9: '巳', 10: '巳',
+            11: '午', 12: '午', 13: '未', 14: '未', 15: '申', 16: '申',
+            17: '酉', 18: '酉', 19: '戌', 20: '戌', 21: '亥', 22: '亥'
+        };
+        
+        const originalShichen = shichenMap[hour] || '';
+        const trueShichen = shichenMap[trueTime.hour] || '';
+        
+        trueSolarDiv.style.display = 'block';
+        trueSolarDiv.style.background = '#e8f5e9';
+        trueSolarDiv.style.borderLeftColor = '#4caf50';
+        trueSolarDiv.innerHTML = `
+            🌞 真太阳时校正结果<br>
+            📍 ${location}（经度 ${longitude}°）<br>
+            🕐 北京时间：${hour.toString().padStart(2,'0')}:${minute.toString().padStart(2,'0')}（${originalShichen}时）<br>
+            🕐 真太阳时：${trueTime.hour.toString().padStart(2,'0')}:${trueTime.minute.toString().padStart(2,'0')}（${trueShichen}时）<br>
+            ⚡ 分析将使用校正后的真太阳时
+        `;
+        
+        // 缓存校正后的时间，供发送请求时使用
+        cachedLongitude = longitude;
+        return trueTime;
+    }
+
+    // 获取实际使用的出生时间（考虑真太阳时）
+    function getActualBirthTime() {
+        const useTrueSolar = document.getElementById('useTrueSolar').checked;
+        const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
+        
+        if (knowTime === 'no') {
+            return null;
+        }
+        
+        let hour = parseInt(document.getElementById('hourSelect').value);
+        let minute = parseInt(document.getElementById('minuteSelect').value);
+        
+        if (useTrueSolar) {
+            const location = document.getElementById('locationInput').value;
+            const longitude = getLongitudeByCity(location);
+            const dateStr = document.getElementById('dateInput').value;
+            
+            if (location && longitude && dateStr && !isNaN(hour)) {
+                const date = new Date(dateStr);
+                const trueTime = calculateTrueSolarTime(date, hour, minute, longitude);
+                return { hour: trueTime.hour, minute: trueTime.minute };
+            }
+        }
+        
+        return { hour: hour, minute: minute };
+    }
+
+    // 监听相关输入变化，实时更新真太阳时显示
+    document.getElementById('useTrueSolar').addEventListener('change', updateTrueSolarDisplay);
+    document.getElementById('locationInput').addEventListener('input', updateTrueSolarDisplay);
+    document.getElementById('dateInput').addEventListener('change', updateTrueSolarDisplay);
+    document.getElementById('hourSelect').addEventListener('change', updateTrueSolarDisplay);
+    document.getElementById('minuteSelect').addEventListener('change', updateTrueSolarDisplay);
 
     // 时间选项切换
-    knowTimeRadios.forEach(radio => {
+    document.querySelectorAll('input[name="knowTime"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
+            const timeSelectArea = document.getElementById('timeSelectArea');
+            const timeWarning = document.getElementById('timeWarning');
             if (e.target.value === 'yes') {
                 timeSelectArea.style.display = 'block';
                 timeWarning.style.display = 'none';
-                hourSelect.required = true;
             } else {
                 timeSelectArea.style.display = 'none';
                 timeWarning.style.display = 'block';
-                hourSelect.required = false;
+                document.getElementById('trueSolarResult').style.display = 'none';
             }
+            updateTrueSolarDisplay();
         });
     });
 
@@ -567,40 +689,38 @@
 
     // 构建生辰字符串
     function buildBirthString() {
-        const date = new Date(dateInput.value);
+        const date = new Date(document.getElementById('dateInput').value);
         if (isNaN(date.getTime())) return null;
         
         const year = date.getFullYear();
         const month = date.getMonth() + 1;
         const day = date.getDate();
-        const gender = genderSelect.value;
+        const gender = document.getElementById('genderSelect').value;
         
         const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
         
         if (knowTime === 'yes') {
-            let hour = parseInt(hourSelect.value);
-            const minute = parseInt(minuteSelect.value);
-            if (isNaN(hour)) return null;
-            return `${year}.${month}.${day} ${hour}时 ${minute}分 ${gender}`;
+            const actualTime = getActualBirthTime();
+            if (!actualTime) return null;
+            return `${year}.${month}.${day} ${actualTime.hour}时 ${actualTime.minute}分 ${gender}`;
         } else {
-            // 不知道时间，只传年月日和性别
             return `${year}.${month}.${day} ${gender}`;
         }
     }
 
     // 验证必填项
     function validateForm() {
-        if (!genderSelect.value) {
+        if (!document.getElementById('genderSelect').value) {
             alert('请选择性别');
             return false;
         }
-        if (!dateInput.value) {
+        if (!document.getElementById('dateInput').value) {
             alert('请选择出生日期');
             return false;
         }
         const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
         if (knowTime === 'yes') {
-            if (!hourSelect.value) {
+            if (!document.getElementById('hourSelect').value) {
                 alert('请选择出生时间');
                 return false;
             }
@@ -619,27 +739,26 @@
             li.dataset.birth = birthStr;
             li.textContent = birthStr.length > 30 ? birthStr.substring(0, 30) + '...' : birthStr;
             li.onclick = () => {
-                // 解析历史记录并填充表单
                 const match = birthStr.match(/(\d{4}\.\d{1,2}\.\d{1,2})\s+(\d{1,2})时\s+(\d+)分\s+([男女])/);
                 if (match) {
                     const dateParts = match[1].split('.');
-                    dateInput.value = `${dateParts[0]}-${dateParts[1].padStart(2,'0')}-${dateParts[2].padStart(2,'0')}`;
-                    hourSelect.value = match[2];
-                    minuteSelect.value = match[3];
-                    genderSelect.value = match[4];
+                    document.getElementById('dateInput').value = `${dateParts[0]}-${dateParts[1].padStart(2,'0')}-${dateParts[2].padStart(2,'0')}`;
+                    document.getElementById('hourSelect').value = match[2];
+                    document.getElementById('minuteSelect').value = match[3];
+                    document.getElementById('genderSelect').value = match[4];
                     document.querySelector('input[name="knowTime"][value="yes"]').checked = true;
-                    timeSelectArea.style.display = 'block';
-                    timeWarning.style.display = 'none';
+                    document.getElementById('timeSelectArea').style.display = 'block';
+                    document.getElementById('timeWarning').style.display = 'none';
+                    updateTrueSolarDisplay();
                 } else {
-                    // 无时间的历史记录
                     const simpleMatch = birthStr.match(/(\d{4}\.\d{1,2}\.\d{1,2})\s+([男女])/);
                     if (simpleMatch) {
                         const dateParts = simpleMatch[1].split('.');
-                        dateInput.value = `${dateParts[0]}-${dateParts[1].padStart(2,'0')}-${dateParts[2].padStart(2,'0')}`;
-                        genderSelect.value = simpleMatch[2];
+                        document.getElementById('dateInput').value = `${dateParts[0]}-${dateParts[1].padStart(2,'0')}-${dateParts[2].padStart(2,'0')}`;
+                        document.getElementById('genderSelect').value = simpleMatch[2];
                         document.querySelector('input[name="knowTime"][value="no"]').checked = true;
-                        timeSelectArea.style.display = 'none';
-                        timeWarning.style.display = 'block';
+                        document.getElementById('timeSelectArea').style.display = 'none';
+                        document.getElementById('timeWarning').style.display = 'block';
                     }
                 }
             };
@@ -651,14 +770,14 @@
         let html = content.replace(/\n/g, '<br>');
         html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         html = html.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
-        resultContent.innerHTML = html;
-        resultCard.style.display = 'block';
-        resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        document.getElementById('resultContent').innerHTML = html;
+        document.getElementById('resultCard').style.display = 'block';
+        document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function newChat() {
-        resultCard.style.display = 'none';
-        resultContent.innerHTML = '';
+        document.getElementById('resultCard').style.display = 'none';
+        document.getElementById('resultContent').innerHTML = '';
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -673,6 +792,7 @@
         }
 
         isLoading = true;
+        const analyzeBtn = document.getElementById('analyzeBtn');
         analyzeBtn.disabled = true;
         analyzeBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
 
@@ -702,8 +822,8 @@
         }
     }
 
-    analyzeBtn.addEventListener('click', analyze);
-    newChatBtn.addEventListener('click', newChat);
+    document.getElementById('analyzeBtn').addEventListener('click', analyze);
+    document.getElementById('newChatBtn').addEventListener('click', newChat);
 </script>
 </body>
 </html>
