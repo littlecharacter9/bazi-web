@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>FateMaster - 八字命理助手</title>
+    <title>八戒命理 - 八字命理助手</title>
     <style>
         * {
             margin: 0;
@@ -58,7 +58,7 @@
             margin-top: 6px;
         }
 
-        /* 新对话按钮 */
+        /* 新对话按钮（有实际功能） */
         .new-chat-btn {
             margin: 20px;
             padding: 12px 16px;
@@ -79,7 +79,7 @@
             border-color: rgba(255,255,255,0.3);
         }
 
-        /* 历史记录区域 */
+        /* 历史记录区域（有实际功能） */
         .history-section {
             flex: 1;
             padding: 0 12px;
@@ -108,12 +108,8 @@
         .history-item:hover {
             background: rgba(255,255,255,0.08);
         }
-        .history-item.active {
-            background: rgba(230,185,128,0.2);
-            color: #e6b980;
-        }
 
-        /* 用户信息区域 */
+        /* 用户信息区域（暂无实质功能，保留为 UI） */
         .user-section {
             padding: 20px;
             border-top: 1px solid rgba(255,255,255,0.1);
@@ -123,7 +119,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            cursor: pointer;
+            cursor: default;
         }
         .user-avatar {
             width: 40px;
@@ -231,8 +227,16 @@
             align-items: center;
             gap: 6px;
             font-size: 13px;
-            color: #555;
+            color: #999;
+            cursor: default;
+        }
+        .checkbox-label input {
             cursor: pointer;
+        }
+        .disabled-note {
+            font-size: 11px;
+            color: #ccc;
+            margin-left: 8px;
         }
 
         /* 模块按钮 */
@@ -356,21 +360,6 @@
             .main {
                 margin-left: 0;
             }
-            .menu-toggle {
-                display: block;
-                position: fixed;
-                top: 20px;
-                left: 20px;
-                z-index: 101;
-                background: #1a1a2e;
-                color: white;
-                padding: 10px;
-                border-radius: 8px;
-                cursor: pointer;
-            }
-        }
-        .menu-toggle {
-            display: none;
         }
     </style>
 </head>
@@ -379,10 +368,11 @@
     <!-- 左侧边栏 -->
     <div class="sidebar" id="sidebar">
         <div class="logo-area">
-            <div class="logo">✦ FateMaster</div>
+            <div class="logo">🐷 八戒命理</div>
             <div class="logo-sub">子平八字 · 专业解析</div>
         </div>
 
+        <!-- 新对话按钮：清空当前结果 -->
         <div class="new-chat-btn" id="newChatBtn">
             <span>+</span> 新对话
         </div>
@@ -391,16 +381,16 @@
             <div class="history-title">最近对话</div>
             <ul class="history-list" id="historyList">
                 <li class="history-item" data-birth="2001.10.30 18时 男">2001.10.30 男</li>
-                <li class="history-item" data-birth="1995.08.15 14时 女">1995.08.15 女</li>
             </ul>
         </div>
 
+        <!-- 用户信息：目前仅为 UI 占位，无登录功能 -->
         <div class="user-section">
             <div class="user-info">
                 <div class="user-avatar">八</div>
                 <div>
-                    <div class="user-name">游客用户</div>
-                    <div class="user-email">点击登录</div>
+                    <div class="user-name">游客模式</div>
+                    <div class="user-email">登录功能开发中</div>
                 </div>
             </div>
         </div>
@@ -414,7 +404,6 @@
         </div>
 
         <div class="content-area">
-            <!-- 表单卡片 -->
             <div class="form-card">
                 <div class="form-row">
                     <div class="form-group">
@@ -478,10 +467,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>出生地点</label>
-                        <input type="text" id="locationInput" placeholder="例如：四川省宜宾市">
+                        <input type="text" id="locationInput" placeholder="选填（暂未启用）">
                     </div>
                 </div>
 
+                <!-- 真太阳时/早晚子时：UI 预留，目前无实质功能 -->
                 <div class="checkbox-row">
                     <label class="checkbox-label">
                         <input type="checkbox" id="useTrueSolar"> 使用真太阳时
@@ -489,6 +479,7 @@
                     <label class="checkbox-label">
                         <input type="checkbox" id="useEarlyLate"> 使用早晚子时
                     </label>
+                    <span class="disabled-note">（功能开发中）</span>
                 </div>
 
                 <!-- 模块选择 -->
@@ -523,9 +514,6 @@
     const dateInput = document.getElementById('dateInput');
     const hourSelect = document.getElementById('hourSelect');
     const minuteSelect = document.getElementById('minuteSelect');
-    const locationInput = document.getElementById('locationInput');
-    const useTrueSolar = document.getElementById('useTrueSolar');
-    const useEarlyLate = document.getElementById('useEarlyLate');
     const analyzeBtn = document.getElementById('analyzeBtn');
     const resultCard = document.getElementById('resultCard');
     const resultContent = document.getElementById('resultContent');
@@ -550,12 +538,7 @@
         const minute = parseInt(minuteSelect.value);
         const gender = genderSelect.value;
 
-        // 小时格式化
-        let hourStr = hour;
-        if (hour === 0) hourStr = 0;
-        if (hour === 23) hourStr = 23;
-        
-        return `${year}.${month}.${day} ${hourStr}时 ${minute}分 ${gender}`;
+        return `${year}.${month}.${day} ${hour}时 ${minute}分 ${gender}`;
     }
 
     // 添加历史记录
@@ -567,9 +550,8 @@
             const li = document.createElement('li');
             li.className = 'history-item';
             li.dataset.birth = birthStr;
-            li.textContent = birthStr.length > 25 ? birthStr.substring(0, 25) + '...' : birthStr;
+            li.textContent = birthStr.length > 30 ? birthStr.substring(0, 30) + '...' : birthStr;
             li.onclick = () => {
-                // 加载历史记录
                 const parts = birthStr.match(/(\d{4}\.\d{1,2}\.\d{1,2})\s+(\d{1,2})时\s+(\d+)分\s+([男女])/);
                 if (parts) {
                     const dateParts = parts[1].split('.');
@@ -591,6 +573,13 @@
         resultContent.innerHTML = html;
         resultCard.style.display = 'block';
         resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // 清空结果（新对话）
+    function newChat() {
+        resultCard.style.display = 'none';
+        resultContent.innerHTML = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // 分析请求
@@ -637,21 +626,12 @@
         }
     }
 
-    // 新对话
-    function newChat() {
-        resultCard.style.display = 'none';
-        resultContent.innerHTML = '';
-        // 可选：清空表单
-        // 滚动到顶部
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
     // 事件绑定
     analyzeBtn.addEventListener('click', analyze);
     newChatBtn.addEventListener('click', newChat);
 
     // 回车快捷分析
-    const inputs = [nameInput, locationInput, dateInput, hourSelect, minuteSelect];
+    const inputs = [nameInput, dateInput, hourSelect, minuteSelect];
     inputs.forEach(input => {
         if (input) input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') analyze();
