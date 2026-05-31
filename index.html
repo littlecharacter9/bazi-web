@@ -44,18 +44,17 @@
         .warning-box { background: #fff3e0; border-left: 4px solid #e6b980; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #b86b00; }
         .true-solar-box { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #2e7d32; }
         .verify-box { background: #e8f0fe; border-left: 4px solid #1a1a2e; padding: 16px; border-radius: 12px; margin-bottom: 16px; }
-        .verify-box.disabled { opacity: 0.5; background: #f0f0f0; }
-        .verify-box.disabled .verify-buttons { display: none; }
+        .verify-box.disabled { display: none; }
+        .verify-item { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e0e0e0; }
+        .verify-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .verify-title { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 12px; }
-        .verify-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
-        .verify-buttons { display: flex; gap: 16px; margin-top: 16px; }
-        .verify-btn { padding: 8px 20px; border: none; border-radius: 30px; font-size: 14px; cursor: pointer; }
+        .verify-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; margin-bottom: 12px; }
+        .verify-buttons { display: flex; gap: 16px; margin-top: 8px; }
+        .verify-btn { padding: 6px 16px; border: none; border-radius: 20px; font-size: 13px; cursor: pointer; }
         .verify-btn.confirm { background: #1a1a2e; color: white; }
         .verify-btn.feedback { background: #f0f0f0; color: #666; }
-        .feedback-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; font-size: 14px; margin-top: 12px; display: none; resize: vertical; font-family: inherit; }
-        .feedback-input.active { display: block; }
-        .submit-feedback-btn { width: 100%; padding: 10px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 30px; font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 12px; display: none; }
-        .submit-feedback-btn.active { display: block; }
+        .feedback-detail { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 12px; font-size: 13px; margin-top: 12px; display: none; resize: vertical; font-family: inherit; }
+        .feedback-detail.active { display: block; }
         .bazi-info { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 14px; }
         .bazi-info span { font-weight: 600; color: #1a1a2e; }
         .checkbox-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -75,6 +74,7 @@
         .location-select { flex: 1; min-width: 100px; }
         .hidden { display: none !important; }
         .loading-text { color: #666; font-size: 12px; margin-top: 8px; }
+        .overall-buttons { margin-top: 16px; padding-top: 16px; border-top: 1px solid #e0e0e0; }
     </style>
 </head>
 <body>
@@ -132,14 +132,13 @@
                 <!-- 验证阶段 -->
                 <div id="verifyArea" class="hidden">
                     <div class="verify-box" id="verifyBox">
-                        <div class="verify-title">📋 八字验证推断</div>
-                        <div class="verify-content" id="verifyContent"></div>
-                        <div class="verify-buttons">
-                            <button class="verify-btn confirm" id="confirmBtn">✓ 准确</button>
-                            <button class="verify-btn feedback" id="feedbackBtn">✗ 不准确</button>
+                        <div class="verify-title">📋 请逐条判断以下推断是否准确</div>
+                        <div id="verifyItemsContainer"></div>
+                        <div class="overall-buttons">
+                            <div class="verify-buttons">
+                                <button class="verify-btn confirm" id="confirmOverallBtn">✓ 全部准确，继续分析</button>
+                            </div>
                         </div>
-                        <textarea id="feedbackInput" class="feedback-input" rows="2" placeholder="请告诉我哪里不准确，例如：第一条不对、环境方位不准、性格不太像..."></textarea>
-                        <button id="submitFeedbackBtn" class="submit-feedback-btn">提交反馈并重新分析</button>
                     </div>
                 </div>
 
@@ -174,12 +173,20 @@
     let pcaData = null;
     
     // 验证阶段状态
-    let currentStep = 0; // 0: 输入生辰, 1: 验证阶段, 2: 模块选择
+    let currentStep = 0;
     let currentBirth = '';
     let currentGender = '';
     let currentHasHour = true;
     let currentBaziStr = '';
-    let currentVerifyResult = '';
+    let parsedVerifyItems = []; // 存储解析后的验证条目
+    
+    // 存储每条的用户反馈
+    let userFeedbacks = {
+        item1: '',
+        item2: '',
+        item3: '',
+        item4: ''
+    };
 
     // ==================== 省市区数据加载 ====================
     async function loadRegionData() {
@@ -417,6 +424,76 @@
         }
     }
 
+    // ==================== 解析验证内容为条目 ====================
+    function parseVerifyContent(content) {
+        const items = [];
+        const sections = ['【环境方位】', '【六亲情况】', '【过去经历】', '【性格特征】'];
+        for (let i = 0; i < sections.length; i++) {
+            const start = content.indexOf(sections[i]);
+            const end = (i < sections.length - 1) ? content.indexOf(sections[i + 1]) : content.length;
+            if (start !== -1) {
+                let sectionContent = content.substring(start + sections[i].length, end).trim();
+                items.push({
+                    title: sections[i],
+                    content: sectionContent
+                });
+            }
+        }
+        return items;
+    }
+
+    // 显示验证条目
+    function displayVerifyItems(items) {
+        const container = document.getElementById('verifyItemsContainer');
+        container.innerHTML = '';
+        
+        items.forEach((item, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'verify-item';
+            itemDiv.id = `verify-item-${index}`;
+            itemDiv.innerHTML = `
+                <div class="verify-title">${item.title}</div>
+                <div class="verify-content">${item.content.replace(/\n/g, '<br>')}</div>
+                <div class="verify-buttons">
+                    <button class="verify-btn confirm" data-index="${index}" data-type="confirm">✓ 准确</button>
+                    <button class="verify-btn feedback" data-index="${index}" data-type="feedback">✗ 不准确</button>
+                </div>
+                <textarea class="feedback-detail" id="feedback-${index}" rows="2" placeholder="请描述实际情况..."></textarea>
+            `;
+            container.appendChild(itemDiv);
+        });
+        
+        // 绑定每个条目的按钮事件
+        for (let i = 0; i < items.length; i++) {
+            const confirmBtn = document.querySelector(`#verify-item-${i} .confirm`);
+            const feedbackBtn = document.querySelector(`#verify-item-${i} .feedback`);
+            const textarea = document.getElementById(`feedback-${i}`);
+            
+            confirmBtn.onclick = () => {
+                textarea.classList.remove('active');
+                userFeedbacks[`item${i+1}`] = '';
+                confirmBtn.style.background = '#1a1a2e';
+                confirmBtn.style.opacity = '0.7';
+                confirmBtn.disabled = true;
+                feedbackBtn.disabled = true;
+            };
+            
+            feedbackBtn.onclick = () => {
+                textarea.classList.toggle('active');
+                if (textarea.classList.contains('active')) {
+                    feedbackBtn.style.background = '#e6b980';
+                } else {
+                    feedbackBtn.style.background = '#f0f0f0';
+                    userFeedbacks[`item${i+1}`] = textarea.value;
+                }
+            };
+            
+            textarea.oninput = () => {
+                userFeedbacks[`item${i+1}`] = textarea.value;
+            };
+        }
+    }
+
     // ==================== 验证功能 ====================
     async function callVerify() {
         const birth = buildBirthString();
@@ -427,12 +504,12 @@
         
         isLoading = true;
         const verifyArea = document.getElementById('verifyArea');
-        const verifyContent = document.getElementById('verifyContent');
+        const verifyItemsContainer = document.getElementById('verifyItemsContainer');
         const startVerifyBtn = document.getElementById('startVerifyBtn');
         
         verifyArea.classList.remove('hidden');
         startVerifyBtn.classList.add('hidden');
-        verifyContent.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 正在分析中...';
+        verifyItemsContainer.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 正在分析中...';
         
         try {
             const response = await fetch(`${API_URL}/verify`, {
@@ -446,19 +523,19 @@
                 currentBirth = birth;
                 currentGender = document.getElementById('genderSelect').value;
                 currentHasHour = document.querySelector('input[name="knowTime"]:checked').value === 'yes';
-                currentVerifyResult = data.data.verify;
-                // 提取八字信息
                 if (data.data.bazi) {
                     currentBaziStr = data.data.bazi;
                 }
-                verifyContent.innerHTML = data.data.verify.replace(/\n/g, '<br>');
+                // 解析并显示验证条目
+                parsedVerifyItems = parseVerifyContent(data.data.verify);
+                displayVerifyItems(parsedVerifyItems);
                 currentStep = 1;
             } else {
-                verifyContent.innerHTML = `❌ 验证失败：${data.error || '未知错误'}<br><br>请检查输入信息后重试。`;
+                verifyItemsContainer.innerHTML = `❌ 验证失败：${data.error || '未知错误'}<br><br>请检查输入信息后重试。`;
                 currentStep = 0;
             }
         } catch (err) {
-            verifyContent.innerHTML = `❌ 网络错误：${err.message}。请稍后重试。`;
+            verifyItemsContainer.innerHTML = `❌ 网络错误：${err.message}。请稍后重试。`;
             currentStep = 0;
         } finally {
             isLoading = false;
@@ -466,15 +543,31 @@
         return true;
     }
 
-    function confirmVerify() {
+    // 确认全部准确
+    function confirmAllAccurate() {
+        // 检查是否所有条目都已确认
+        let allConfirmed = true;
+        for (let i = 0; i < parsedVerifyItems.length; i++) {
+            const confirmBtn = document.querySelector(`#verify-item-${i} .confirm`);
+            if (confirmBtn && !confirmBtn.disabled) {
+                allConfirmed = false;
+                break;
+            }
+        }
+        
+        if (!allConfirmed) {
+            // 如果还有未确认的，提示用户
+            alert('请先逐条确认所有推断是否准确（点击每条后面的"准确"按钮）');
+            return;
+        }
+        
         currentStep = 2;
-        const verifyBox = document.getElementById('verifyBox');
         const verifyArea = document.getElementById('verifyArea');
         const baziInfoArea = document.getElementById('baziInfoArea');
         const baziDisplay = document.getElementById('baziDisplay');
         
-        // 验证区域变灰禁用（保留内容但不显示按钮）
-        verifyBox.classList.add('disabled');
+        // 隐藏验证区域
+        verifyArea.classList.add('hidden');
         
         // 显示八字信息
         if (currentBaziStr) {
@@ -486,52 +579,8 @@
         document.getElementById('moduleArea').classList.remove('hidden');
         document.getElementById('resultCard').style.display = 'none';
         
-        // 隐藏反馈输入框
-        document.getElementById('feedbackInput').classList.remove('active');
-        document.getElementById('submitFeedbackBtn').classList.remove('active');
-        document.getElementById('feedbackInput').value = '';
-    }
-
-    function showFeedbackInput() {
-        const feedbackInput = document.getElementById('feedbackInput');
-        const submitBtn = document.getElementById('submitFeedbackBtn');
-        feedbackInput.classList.toggle('active');
-        submitBtn.classList.toggle('active');
-    }
-
-    async function submitFeedback() {
-        const feedback = document.getElementById('feedbackInput').value.trim();
-        if (!feedback) {
-            alert('请输入不准确的具体内容');
-            return;
-        }
-        
-        isLoading = true;
-        const verifyContent = document.getElementById('verifyContent');
-        verifyContent.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 根据反馈重新分析中...';
-        
-        try {
-            const response = await fetch(`${API_URL}/verify`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ birth: currentBirth })
-            });
-            const data = await response.json();
-            
-            if (data.success) {
-                currentVerifyResult = data.data.verify;
-                verifyContent.innerHTML = data.data.verify.replace(/\n/g, '<br>');
-                document.getElementById('feedbackInput').classList.remove('active');
-                document.getElementById('submitFeedbackBtn').classList.remove('active');
-                document.getElementById('feedbackInput').value = '';
-            } else {
-                verifyContent.innerHTML = `❌ 重新分析失败：${data.error || '未知错误'}`;
-            }
-        } catch (err) {
-            verifyContent.innerHTML = `❌ 网络错误：${err.message}。请稍后重试。`;
-        } finally {
-            isLoading = false;
-        }
+        // 重置用户反馈
+        userFeedbacks = { item1: '', item2: '', item3: '', item4: '' };
     }
 
     async function startAnalysis() {
@@ -592,14 +641,9 @@
         document.getElementById('moduleArea').classList.add('hidden');
         document.getElementById('resultCard').style.display = 'none';
         document.getElementById('baziInfoArea').classList.add('hidden');
-        document.getElementById('verifyContent').innerHTML = '';
-        document.getElementById('feedbackInput').value = '';
-        document.getElementById('feedbackInput').classList.remove('active');
-        document.getElementById('submitFeedbackBtn').classList.remove('active');
+        document.getElementById('verifyItemsContainer').innerHTML = '';
         document.getElementById('startVerifyBtn').classList.remove('hidden');
-        // 重置验证框状态
-        const verifyBox = document.getElementById('verifyBox');
-        verifyBox.classList.remove('disabled');
+        userFeedbacks = { item1: '', item2: '', item3: '', item4: '' };
     }
 
     // ==================== 事件绑定 ====================
@@ -607,15 +651,12 @@
         initMinuteSelect();
         loadRegionData();
         
-        // 按钮事件
         document.getElementById('startVerifyBtn').onclick = async () => {
             if (currentStep === 0) {
                 await callVerify();
             }
         };
-        document.getElementById('confirmBtn').onclick = confirmVerify;
-        document.getElementById('feedbackBtn').onclick = showFeedbackInput;
-        document.getElementById('submitFeedbackBtn').onclick = submitFeedback;
+        document.getElementById('confirmOverallBtn').onclick = confirmAllAccurate;
         document.getElementById('startAnalysisBtn').onclick = startAnalysis;
         document.getElementById('newChatBtn').onclick = newChat;
         
@@ -649,13 +690,11 @@
             });
         });
         
-        // 真太阳时
         document.getElementById('useTrueSolar').addEventListener('change', updateTrueSolarDisplay);
         document.getElementById('dateInput').addEventListener('change', updateTrueSolarDisplay);
         document.getElementById('hourSelect').addEventListener('change', updateTrueSolarDisplay);
         document.getElementById('minuteSelect').addEventListener('change', updateTrueSolarDisplay);
         
-        // 模块切换
         document.querySelectorAll('.module-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.module-btn').forEach(b => b.classList.remove('active'));
