@@ -44,6 +44,8 @@
         .warning-box { background: #fff3e0; border-left: 4px solid #e6b980; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #b86b00; }
         .true-solar-box { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #2e7d32; }
         .verify-box { background: #e8f0fe; border-left: 4px solid #1a1a2e; padding: 16px; border-radius: 12px; margin-bottom: 16px; }
+        .verify-box.disabled { opacity: 0.5; background: #f0f0f0; }
+        .verify-box.disabled .verify-buttons { display: none; }
         .verify-title { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 12px; }
         .verify-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
         .verify-buttons { display: flex; gap: 16px; margin-top: 16px; }
@@ -54,6 +56,8 @@
         .feedback-input.active { display: block; }
         .submit-feedback-btn { width: 100%; padding: 10px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 30px; font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 12px; display: none; }
         .submit-feedback-btn.active { display: block; }
+        .bazi-info { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 14px; }
+        .bazi-info span { font-weight: 600; color: #1a1a2e; }
         .checkbox-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
         .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #333; cursor: pointer; }
         .module-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
@@ -120,12 +124,14 @@
                 </div>
                 <div id="trueSolarResult" class="true-solar-box hidden"></div>
                 
-                <!-- 按钮区域 -->
-                <button class="primary-btn" id="startVerifyBtn">开始验证八字</button>
+                <!-- 八字信息显示区域 -->
+                <div id="baziInfoArea" class="bazi-info hidden">
+                    📜 <span>八字排盘：</span> <span id="baziDisplay"></span>
+                </div>
                 
                 <!-- 验证阶段 -->
                 <div id="verifyArea" class="hidden">
-                    <div class="verify-box">
+                    <div class="verify-box" id="verifyBox">
                         <div class="verify-title">📋 八字验证推断</div>
                         <div class="verify-content" id="verifyContent"></div>
                         <div class="verify-buttons">
@@ -148,6 +154,9 @@
                     </div>
                     <button class="primary-btn" id="startAnalysisBtn">开始深度分析</button>
                 </div>
+                
+                <!-- 开始验证按钮 -->
+                <button class="primary-btn" id="startVerifyBtn">开始验证八字</button>
             </div>
             <div class="result-card" id="resultCard" style="display: none;">
                 <div class="result-title">📊 分析结果</div>
@@ -169,6 +178,7 @@
     let currentBirth = '';
     let currentGender = '';
     let currentHasHour = true;
+    let currentBaziStr = '';
     let currentVerifyResult = '';
 
     // ==================== 省市区数据加载 ====================
@@ -418,7 +428,10 @@
         isLoading = true;
         const verifyArea = document.getElementById('verifyArea');
         const verifyContent = document.getElementById('verifyContent');
+        const startVerifyBtn = document.getElementById('startVerifyBtn');
+        
         verifyArea.classList.remove('hidden');
+        startVerifyBtn.classList.add('hidden');
         verifyContent.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 正在分析中...';
         
         try {
@@ -434,6 +447,10 @@
                 currentGender = document.getElementById('genderSelect').value;
                 currentHasHour = document.querySelector('input[name="knowTime"]:checked').value === 'yes';
                 currentVerifyResult = data.data.verify;
+                // 提取八字信息
+                if (data.data.bazi) {
+                    currentBaziStr = data.data.bazi;
+                }
                 verifyContent.innerHTML = data.data.verify.replace(/\n/g, '<br>');
                 currentStep = 1;
             } else {
@@ -451,9 +468,25 @@
 
     function confirmVerify() {
         currentStep = 2;
-        document.getElementById('verifyArea').classList.add('hidden');
+        const verifyBox = document.getElementById('verifyBox');
+        const verifyArea = document.getElementById('verifyArea');
+        const baziInfoArea = document.getElementById('baziInfoArea');
+        const baziDisplay = document.getElementById('baziDisplay');
+        
+        // 验证区域变灰禁用（保留内容但不显示按钮）
+        verifyBox.classList.add('disabled');
+        
+        // 显示八字信息
+        if (currentBaziStr) {
+            baziDisplay.textContent = currentBaziStr;
+            baziInfoArea.classList.remove('hidden');
+        }
+        
+        // 显示模块选择区域
         document.getElementById('moduleArea').classList.remove('hidden');
         document.getElementById('resultCard').style.display = 'none';
+        
+        // 隐藏反馈输入框
         document.getElementById('feedbackInput').classList.remove('active');
         document.getElementById('submitFeedbackBtn').classList.remove('active');
         document.getElementById('feedbackInput').value = '';
@@ -548,7 +581,7 @@
         li.dataset.birth = birthStr;
         li.textContent = birthStr.length > 30 ? birthStr.substring(0, 30) + '...' : birthStr;
         li.onclick = () => {
-            alert('请手动输入生辰重新分析');
+            alert('历史记录功能：请手动输入生辰重新分析');
         };
         historyList.insertBefore(li, historyList.firstChild);
     }
@@ -558,10 +591,15 @@
         document.getElementById('verifyArea').classList.add('hidden');
         document.getElementById('moduleArea').classList.add('hidden');
         document.getElementById('resultCard').style.display = 'none';
+        document.getElementById('baziInfoArea').classList.add('hidden');
         document.getElementById('verifyContent').innerHTML = '';
         document.getElementById('feedbackInput').value = '';
         document.getElementById('feedbackInput').classList.remove('active');
         document.getElementById('submitFeedbackBtn').classList.remove('active');
+        document.getElementById('startVerifyBtn').classList.remove('hidden');
+        // 重置验证框状态
+        const verifyBox = document.getElementById('verifyBox');
+        verifyBox.classList.remove('disabled');
     }
 
     // ==================== 事件绑定 ====================
