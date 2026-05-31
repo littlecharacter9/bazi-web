@@ -49,16 +49,13 @@
         .verify-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .verify-title { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 8px; }
         .verify-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; margin-bottom: 12px; }
-        .verify-buttons { display: flex; gap: 16px; margin-top: 8px; }
-        .verify-btn { padding: 6px 16px; border: none; border-radius: 20px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
-        .verify-btn.confirm { background: #1a1a2e; color: white; }
-        .verify-btn.confirm.disabled { background: #aaa; cursor: not-allowed; opacity: 0.6; }
-        .verify-btn.feedback { background: #f0f0f0; color: #666; }
-        .verify-btn.feedback.active { background: #e6b980; color: #1a1a2e; }
+        .item-buttons { display: flex; gap: 16px; margin-top: 8px; }
+        .item-btn { padding: 4px 12px; border: none; border-radius: 16px; font-size: 12px; cursor: pointer; background: #f0f0f0; color: #666; }
+        .item-btn.confirm.active { background: #1a1a2e; color: white; }
+        .item-btn.feedback.active { background: #e6b980; color: #1a1a2e; }
+        .item-btn.disabled { opacity: 0.5; cursor: not-allowed; }
         .feedback-detail { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 12px; font-size: 13px; margin-top: 12px; display: none; resize: vertical; font-family: inherit; }
         .feedback-detail.active { display: block; }
-        .submit-feedback-btn { padding: 6px 16px; background: #e6b980; border: none; border-radius: 20px; font-size: 12px; cursor: pointer; margin-top: 8px; display: none; }
-        .submit-feedback-btn.active { display: inline-block; }
         .bazi-info { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 14px; }
         .bazi-info span { font-weight: 600; color: #1a1a2e; }
         .checkbox-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -78,14 +75,17 @@
         .location-select { flex: 1; min-width: 100px; }
         .hidden { display: none !important; }
         .loading-text { color: #666; font-size: 12px; margin-top: 8px; }
-        .overall-buttons { margin-top: 16px; padding-top: 16px; border-top: 1px solid #e0e0e0; }
+        .action-buttons { margin-top: 16px; padding-top: 16px; border-top: 1px solid #e0e0e0; display: flex; gap: 16px; justify-content: flex-end; }
+        .action-btn { padding: 8px 20px; border: none; border-radius: 24px; font-size: 14px; cursor: pointer; }
+        .action-btn.primary { background: #1a1a2e; color: white; }
+        .action-btn.secondary { background: #f0f0f0; color: #666; }
     </style>
 </head>
 <body>
 <div class="app">
     <div class="sidebar">
         <div class="logo-area"><div class="logo">八戒命理</div><div class="logo-sub">AI解析 · 仅供参考</div></div>
-        <div class="new-chat-btn" id="newChatBtn"><span>+</span> 新对话</div>
+        <div class="new-chat-btn" id="newChatBtn">+ 新对话</div>
         <div class="history-section"><div class="history-title">最近对话</div><ul class="history-list" id="historyList"></ul></div>
         <div class="user-section"><div class="user-info"><div class="user-avatar">八</div><div><div class="user-name">游客模式</div><div class="user-email">登录功能开发中</div></div></div></div>
     </div>
@@ -129,19 +129,15 @@
                 <div id="trueSolarResult" class="true-solar-box hidden"></div>
                 
                 <!-- 八字信息显示区域 -->
-                <div id="baziInfoArea" class="bazi-info hidden">
-                    📜 <span>八字排盘：</span> <span id="baziDisplay"></span>
-                </div>
+                <div id="baziInfoArea" class="bazi-info hidden">八字排盘：<span id="baziDisplay"></span></div>
                 
                 <!-- 验证阶段 -->
                 <div id="verifyArea" class="hidden">
                     <div class="verify-box" id="verifyBox">
-                        <div class="verify-title">📋 请逐条判断以下推断是否准确</div>
                         <div id="verifyItemsContainer"></div>
-                        <div class="overall-buttons">
-                            <div class="verify-buttons">
-                                <button class="verify-btn confirm" id="confirmOverallBtn">✅ 全部/大部分准确，继续分析</button>
-                            </div>
+                        <div class="action-buttons" id="actionButtons" style="display: none;">
+                            <button class="action-btn secondary" id="submitFeedbackBtn">提交不准确反馈</button>
+                            <button class="action-btn primary" id="confirmOverallBtn">全部/大部分准确，继续分析</button>
                         </div>
                     </div>
                 </div>
@@ -162,7 +158,7 @@
                 <button class="primary-btn" id="startVerifyBtn">开始验证八字</button>
             </div>
             <div class="result-card" id="resultCard" style="display: none;">
-                <div class="result-title">📊 分析结果</div>
+                <div class="result-title">分析结果</div>
                 <div class="result-content" id="resultContent"></div>
             </div>
         </div>
@@ -170,23 +166,17 @@
 </div>
 
 <script>
-    // ==================== API 配置 ====================
     const API_URL = 'https://bazi-api-production-0123.up.railway.app';
     let currentModule = 'career';
     let isLoading = false;
     let pcaData = null;
     
-    // 验证阶段状态
     let currentStep = 0;
     let currentBirth = '';
-    let currentGender = '';
-    let currentHasHour = true;
     let currentBaziStr = '';
     let parsedVerifyItems = [];
-    
-    // 存储每条的状态和反馈
-    let itemStatus = [];  // 'confirmed' 或 'pending'
     let itemFeedbacks = [];
+    let currentVerifyRawData = '';
 
     // ==================== 省市区数据加载 ====================
     async function loadRegionData() {
@@ -198,28 +188,20 @@
                 fetch('https://unpkg.com/china-division@2.7.0/dist/cities.json'),
                 fetch('https://unpkg.com/china-division@2.7.0/dist/areas.json')
             ]);
-            
             const provinces = await provincesRes.json();
             const cities = await citiesRes.json();
             const areas = await areasRes.json();
-            
             pcaData = provinces.map(province => ({
                 code: province.code,
                 name: province.name,
-                children: cities
-                    .filter(city => city.provinceCode === province.code)
-                    .map(city => ({
-                        code: city.code,
-                        name: city.name,
-                        children: areas
-                            .filter(area => area.cityCode === city.code)
-                            .map(area => ({ code: area.code, name: area.name }))
-                    }))
+                children: cities.filter(city => city.provinceCode === province.code).map(city => ({
+                    code: city.code,
+                    name: city.name,
+                    children: areas.filter(area => area.cityCode === city.code).map(area => ({ code: area.code, name: area.name }))
+                }))
             }));
-            
             initProvinceSelect();
         } catch (error) {
-            console.error('数据加载失败:', error);
             useFallbackData();
         }
         loadingDiv.classList.add('hidden');
@@ -229,14 +211,8 @@
         pcaData = [
             { code: '11', name: '北京市', children: [{ code: '1101', name: '北京市', children: ['东城区','西城区','朝阳区','海淀区'] }] },
             { code: '31', name: '上海市', children: [{ code: '3101', name: '上海市', children: ['黄浦区','徐汇区','长宁区','静安区'] }] },
-            { code: '44', name: '广东省', children: [
-                { code: '4401', name: '广州市', children: ['越秀区','海珠区','天河区','白云区'] },
-                { code: '4403', name: '深圳市', children: ['福田区','南山区','宝安区','龙岗区'] }
-            ] },
-            { code: '51', name: '四川省', children: [
-                { code: '5101', name: '成都市', children: ['锦江区','青羊区','金牛区','武侯区','成华区'] },
-                { code: '5115', name: '宜宾市', children: ['翠屏区','南溪区','叙州区','江安县','长宁县','高县','珙县','筠连县','兴文县','屏山县'] }
-            ] }
+            { code: '44', name: '广东省', children: [{ code: '4401', name: '广州市', children: ['越秀区','海珠区','天河区','白云区'] }, { code: '4403', name: '深圳市', children: ['福田区','南山区','宝安区','龙岗区'] }] },
+            { code: '51', name: '四川省', children: [{ code: '5101', name: '成都市', children: ['锦江区','青羊区','金牛区','武侯区','成华区'] }, { code: '5115', name: '宜宾市', children: ['翠屏区','南溪区','叙州区','江安县','长宁县','高县','珙县','筠连县','兴文县','屏山县'] }] }
         ];
         initProvinceSelect();
     }
@@ -257,10 +233,8 @@
         const provinceCode = document.getElementById('provinceSelect').value;
         const citySelect = document.getElementById('citySelect');
         const districtSelect = document.getElementById('districtSelect');
-        
         citySelect.innerHTML = '<option value="">请选择城市</option>';
         districtSelect.innerHTML = '<option value="">请选择区/县</option>';
-        
         if (provinceCode && pcaData) {
             const province = pcaData.find(p => p.code === provinceCode);
             if (province && province.children) {
@@ -278,9 +252,7 @@
         const provinceCode = document.getElementById('provinceSelect').value;
         const cityCode = document.getElementById('citySelect').value;
         const districtSelect = document.getElementById('districtSelect');
-        
         districtSelect.innerHTML = '<option value="">请选择区/县</option>';
-        
         if (provinceCode && cityCode && pcaData) {
             const province = pcaData.find(p => p.code === provinceCode);
             if (province) {
@@ -299,27 +271,10 @@
 
     function getLocationInfo() {
         const provinceSelect = document.getElementById('provinceSelect');
-        const citySelect = document.getElementById('citySelect');
-        const districtSelect = document.getElementById('districtSelect');
         const provinceName = provinceSelect.options[provinceSelect.selectedIndex]?.text || '';
-        const cityName = citySelect.options[citySelect.selectedIndex]?.text || '';
-        const districtName = districtSelect.options[districtSelect.selectedIndex]?.text || '';
-        
-        let locationName = provinceName;
-        if (cityName && cityName !== '请选择城市') locationName += cityName;
-        if (districtName && districtName !== '请选择区/县') locationName += districtName;
-        
         const provinceCode = provinceSelect.value;
-        const lonMap = {
-            '11': 116.40, '12': 117.20, '13': 114.52, '14': 112.56, '15': 111.65,
-            '21': 123.43, '22': 125.35, '23': 126.64, '31': 121.48, '32': 118.78,
-            '33': 120.15, '34': 117.27, '35': 119.30, '36': 115.89, '37': 120.38,
-            '41': 113.65, '42': 114.30, '43': 112.98, '44': 113.27, '45': 108.32,
-            '46': 110.35, '50': 106.55, '51': 104.06, '52': 106.63, '53': 102.73,
-            '54': 91.14, '61': 108.95, '62': 103.82, '63': 101.78, '64': 106.27,
-            '65': 87.62, '71': 121.52, '81': 114.17, '82': 113.54
-        };
-        return { name: locationName, longitude: lonMap[provinceCode] || 120.0 };
+        const lonMap = { '11':116.40,'31':121.48,'44':113.27,'51':104.06 };
+        return { name: provinceName, longitude: lonMap[provinceCode] || 120.0 };
     }
 
     function initMinuteSelect() {
@@ -335,8 +290,7 @@
 
     function getDayOfYear(date) {
         const start = new Date(date.getFullYear(), 0, 0);
-        const diff = date - start;
-        return Math.floor(diff / 86400000);
+        return Math.floor((date - start) / 86400000);
     }
 
     function calculateTrueSolarTime(date, hour, minute, longitude) {
@@ -344,8 +298,7 @@
         const B = (dayOfYear - 1) * 2 * Math.PI / 365;
         let eqTime = 0.258 * Math.cos(B) - 7.416 * Math.sin(B) - 3.648 * Math.cos(2 * B) - 9.228 * Math.sin(2 * B);
         let lonCorrection = (longitude - 120) * 4;
-        let offsetMinutes = lonCorrection + eqTime;
-        let totalMinutes = hour * 60 + minute + offsetMinutes;
+        let totalMinutes = hour * 60 + minute + lonCorrection + eqTime;
         let newHour = Math.floor(totalMinutes / 60) % 24;
         let newMinute = Math.round(totalMinutes % 60);
         if (newMinute >= 60) { newMinute -= 60; newHour = (newHour + 1) % 24; }
@@ -359,9 +312,9 @@
         const trueSolarDiv = document.getElementById('trueSolarResult');
         if (!useTrueSolar || knowTime === 'no') { trueSolarDiv.classList.add('hidden'); return; }
         const locationInfo = getLocationInfo();
-        if (!locationInfo || !locationInfo.longitude || !document.getElementById('provinceSelect').value) {
+        if (!locationInfo || !locationInfo.longitude) {
             trueSolarDiv.classList.remove('hidden');
-            trueSolarDiv.innerHTML = '📍 请选择完整的出生地点（省-市），以便进行真太阳时校正';
+            trueSolarDiv.innerHTML = '请选择完整的出生地点';
             return;
         }
         const dateStr = document.getElementById('dateInput').value;
@@ -369,16 +322,14 @@
         const minute = parseInt(document.getElementById('minuteSelect').value);
         if (!dateStr || isNaN(hour) || isNaN(minute)) {
             trueSolarDiv.classList.remove('hidden');
-            trueSolarDiv.innerHTML = '⏰ 请先填写完整的出生日期和时间';
+            trueSolarDiv.innerHTML = '请先填写完整的出生日期和时间';
             return;
         }
         const date = new Date(dateStr);
         const trueTime = calculateTrueSolarTime(date, hour, minute, locationInfo.longitude);
         const shichenMap = {23:'子',0:'子',1:'丑',2:'丑',3:'寅',4:'寅',5:'卯',6:'卯',7:'辰',8:'辰',9:'巳',10:'巳',11:'午',12:'午',13:'未',14:'未',15:'申',16:'申',17:'酉',18:'酉',19:'戌',20:'戌',21:'亥',22:'亥'};
-        const originalShichen = shichenMap[hour] || '';
-        const trueShichen = shichenMap[trueTime.hour] || '';
         trueSolarDiv.classList.remove('hidden');
-        trueSolarDiv.innerHTML = `🌞 真太阳时校正结果<br>📍 ${locationInfo.name}<br>🕐 北京时间：${hour.toString().padStart(2,'0')}:${minute.toString().padStart(2,'0')}（${originalShichen}时）<br>🕐 真太阳时：${trueTime.hour.toString().padStart(2,'0')}:${trueTime.minute.toString().padStart(2,'0')}（${trueShichen}时）<br>⚡ 分析将使用校正后的真太阳时`;
+        trueSolarDiv.innerHTML = `真太阳时校正<br>北京时间：${hour}:${minute}(${shichenMap[hour]}) → 真太阳时：${trueTime.hour}:${trueTime.minute}(${shichenMap[trueTime.hour]})`;
     }
 
     function getActualBirthTime() {
@@ -415,7 +366,6 @@
         }
     }
 
-    // ==================== 解析验证内容 ====================
     function parseVerifyContent(content) {
         const items = [];
         const sections = ['【环境方位】', '【六亲情况】', '【过去经历】', '【性格特征】'];
@@ -424,167 +374,75 @@
             const end = (i < sections.length - 1) ? content.indexOf(sections[i + 1]) : content.length;
             if (start !== -1) {
                 let sectionContent = content.substring(start + sections[i].length, end).trim();
-                items.push({
-                    title: sections[i],
-                    content: sectionContent
-                });
+                items.push({ title: sections[i], content: sectionContent });
             }
         }
         return items;
     }
 
-    // 重新生成某一条推断
-    async function regenerateItem(index, feedback) {
-        const itemDiv = document.getElementById(`verify-item-${index}`);
-        const contentDiv = itemDiv.querySelector('.verify-content');
-        const originalContent = contentDiv.innerHTML;
-        
-        contentDiv.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 重新分析中...';
-        
-        try {
-            // 调用 analyze 接口，传入重新生成请求
-            const response = await fetch(`${API_URL}/analyze`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    birth: currentBirth, 
-                    module: 'verify_regenerate',
-                    item_index: index,
-                    feedback: feedback
-                })
-            });
-            const data = await response.json();
-            
-            if (data.success) {
-                // 更新该条内容
-                contentDiv.innerHTML = data.data.analysis.replace(/\n/g, '<br>');
-                // 重置该条的状态
-                itemStatus[index] = 'pending';
-                const confirmBtn = itemDiv.querySelector('.confirm');
-                const feedbackBtn = itemDiv.querySelector('.feedback');
-                confirmBtn.disabled = false;
-                confirmBtn.classList.remove('disabled');
-                feedbackBtn.classList.remove('active');
-                const textarea = itemDiv.querySelector('.feedback-detail');
-                textarea.classList.remove('active');
-                textarea.value = '';
-            } else {
-                contentDiv.innerHTML = `重新生成失败：${data.error || '未知错误'}`;
-            }
-        } catch (err) {
-            contentDiv.innerHTML = `网络错误：${err.message}`;
-        }
-    }
-
-    // 显示验证条目
     function displayVerifyItems(items) {
         const container = document.getElementById('verifyItemsContainer');
         container.innerHTML = '';
-        itemStatus = items.map(() => 'pending');
         itemFeedbacks = items.map(() => '');
         
         items.forEach((item, index) => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'verify-item';
-            itemDiv.id = `verify-item-${index}`;
             itemDiv.innerHTML = `
                 <div class="verify-title">${item.title}</div>
                 <div class="verify-content">${item.content.replace(/\n/g, '<br>')}</div>
-                <div class="verify-buttons">
-                    <button class="verify-btn confirm" data-index="${index}" id="confirm-${index}">✓ 准确</button>
-                    <button class="verify-btn feedback" data-index="${index}" id="feedback-${index}">✗ 不准确</button>
+                <div class="item-buttons">
+                    <button class="item-btn confirm" data-index="${index}">准确</button>
+                    <button class="item-btn feedback" data-index="${index}">不准确</button>
                 </div>
-                <textarea class="feedback-detail" id="feedback-text-${index}" rows="2" placeholder="请描述实际情况..."></textarea>
-                <button class="submit-feedback-btn" id="submit-feedback-${index}">📤 提交反馈并重新生成</button>
+                <textarea class="feedback-detail" id="feedback-${index}" rows="2" placeholder="请描述实际情况..."></textarea>
             `;
             container.appendChild(itemDiv);
         });
         
         // 绑定事件
         for (let i = 0; i < items.length; i++) {
-            const confirmBtn = document.getElementById(`confirm-${i}`);
-            const feedbackBtn = document.getElementById(`feedback-${i}`);
-            const textarea = document.getElementById(`feedback-text-${i}`);
-            const submitBtn = document.getElementById(`submit-feedback-${i}`);
+            const confirmBtn = container.querySelector(`.item-btn.confirm[data-index="${i}"]`);
+            const feedbackBtn = container.querySelector(`.item-btn.feedback[data-index="${i}"]`);
+            const textarea = document.getElementById(`feedback-${i}`);
             
             confirmBtn.onclick = () => {
-                itemStatus[i] = 'confirmed';
-                confirmBtn.disabled = true;
+                confirmBtn.classList.add('active');
                 confirmBtn.classList.add('disabled');
-                feedbackBtn.disabled = true;
-                // 隐藏反馈区域
+                feedbackBtn.classList.add('disabled');
+                itemFeedbacks[i] = '';
                 textarea.classList.remove('active');
-                submitBtn.classList.remove('active');
             };
             
             feedbackBtn.onclick = () => {
                 textarea.classList.toggle('active');
-                submitBtn.classList.toggle('active');
                 if (textarea.classList.contains('active')) {
                     feedbackBtn.classList.add('active');
+                    itemFeedbacks[i] = '';
                 } else {
                     feedbackBtn.classList.remove('active');
                 }
             };
             
-            submitBtn.onclick = async () => {
-                const feedback = textarea.value.trim();
-                if (!feedback) {
-                    alert('请填写实际情况描述');
-                    return;
-                }
-                await regenerateItem(i, feedback);
-                // 重新绑定事件（因为内容被替换了）
-                const newConfirmBtn = document.getElementById(`confirm-${i}`);
-                const newFeedbackBtn = document.getElementById(`feedback-${i}`);
-                const newTextarea = document.getElementById(`feedback-text-${i}`);
-                const newSubmitBtn = document.getElementById(`submit-feedback-${i}`);
-                
-                if (newConfirmBtn) {
-                    newConfirmBtn.onclick = () => {
-                        itemStatus[i] = 'confirmed';
-                        newConfirmBtn.disabled = true;
-                        newConfirmBtn.classList.add('disabled');
-                        newFeedbackBtn.disabled = true;
-                        newTextarea.classList.remove('active');
-                        newSubmitBtn.classList.remove('active');
-                    };
-                }
-                if (newFeedbackBtn) {
-                    newFeedbackBtn.onclick = () => {
-                        newTextarea.classList.toggle('active');
-                        newSubmitBtn.classList.toggle('active');
-                    };
-                }
-                if (newSubmitBtn) {
-                    newSubmitBtn.onclick = async () => {
-                        const newFeedback = newTextarea.value.trim();
-                        if (!newFeedback) {
-                            alert('请填写实际情况描述');
-                            return;
-                        }
-                        await regenerateItem(i, newFeedback);
-                    };
-                }
+            textarea.oninput = () => {
+                itemFeedbacks[i] = textarea.value;
             };
         }
     }
 
-    // ==================== 验证功能 ====================
     async function callVerify() {
         const birth = buildBirthString();
-        if (!birth) {
-            alert('请完整填写必填信息');
-            return false;
-        }
+        if (!birth) { alert('请完整填写必填信息'); return false; }
         
         isLoading = true;
         const verifyArea = document.getElementById('verifyArea');
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
         const startVerifyBtn = document.getElementById('startVerifyBtn');
+        const actionButtons = document.getElementById('actionButtons');
         
         verifyArea.classList.remove('hidden');
         startVerifyBtn.classList.add('hidden');
+        actionButtons.style.display = 'none';
         verifyItemsContainer.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 正在分析中...';
         
         try {
@@ -597,64 +455,71 @@
             
             if (data.success) {
                 currentBirth = birth;
-                currentGender = document.getElementById('genderSelect').value;
-                currentHasHour = document.querySelector('input[name="knowTime"]:checked').value === 'yes';
-                if (data.data.bazi) {
-                    currentBaziStr = data.data.bazi;
-                }
+                if (data.data.bazi) currentBaziStr = data.data.bazi;
+                currentVerifyRawData = data.data.verify;
                 parsedVerifyItems = parseVerifyContent(data.data.verify);
                 displayVerifyItems(parsedVerifyItems);
+                actionButtons.style.display = 'flex';
                 currentStep = 1;
             } else {
-                verifyItemsContainer.innerHTML = `❌ 验证失败：${data.error || '未知错误'}`;
-                currentStep = 0;
+                verifyItemsContainer.innerHTML = `验证失败：${data.error || '未知错误'}`;
             }
         } catch (err) {
-            verifyItemsContainer.innerHTML = `❌ 网络错误：${err.message}`;
-            currentStep = 0;
+            verifyItemsContainer.innerHTML = `网络错误：${err.message}`;
         } finally {
             isLoading = false;
         }
         return true;
     }
 
-    function confirmAllAccurate() {
-        // 检查是否所有条目都已确认
-        let allConfirmed = true;
-        for (let i = 0; i < itemStatus.length; i++) {
-            if (itemStatus[i] !== 'confirmed') {
-                allConfirmed = false;
-                break;
-            }
+    async function submitFeedback() {
+        const hasFeedback = itemFeedbacks.some(fb => fb && fb.trim() !== '');
+        if (!hasFeedback) {
+            alert('请先在不准确的条目中填写反馈内容');
+            return;
         }
         
-        if (!allConfirmed) {
-            if (confirm('还有未确认的推断项，确认继续吗？')) {
-                // 用户选择继续
+        const verifyItemsContainer = document.getElementById('verifyItemsContainer');
+        verifyItemsContainer.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 根据反馈重新分析中...';
+        
+        try {
+            const response = await fetch(`${API_URL}/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ birth: currentBirth, feedback: itemFeedbacks })
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                currentVerifyRawData = data.data.verify;
+                parsedVerifyItems = parseVerifyContent(data.data.verify);
+                displayVerifyItems(parsedVerifyItems);
+                itemFeedbacks = parsedVerifyItems.map(() => '');
             } else {
-                return;
+                verifyItemsContainer.innerHTML = `重新分析失败：${data.error || '未知错误'}`;
             }
+        } catch (err) {
+            verifyItemsContainer.innerHTML = `网络错误：${err.message}`;
         }
-        
+    }
+
+    function confirmAllAccurate() {
         currentStep = 2;
         const verifyArea = document.getElementById('verifyArea');
         const baziInfoArea = document.getElementById('baziInfoArea');
         const baziDisplay = document.getElementById('baziDisplay');
         
         verifyArea.classList.add('hidden');
-        
         if (currentBaziStr) {
             baziDisplay.textContent = currentBaziStr;
             baziInfoArea.classList.remove('hidden');
         }
-        
         document.getElementById('moduleArea').classList.remove('hidden');
         document.getElementById('resultCard').style.display = 'none';
     }
 
     async function startAnalysis() {
         if (isLoading) return;
-        
         isLoading = true;
         const analyzeBtn = document.getElementById('startAnalysisBtn');
         analyzeBtn.disabled = true;
@@ -667,19 +532,17 @@
                 body: JSON.stringify({ birth: currentBirth, module: currentModule })
             });
             const data = await response.json();
-            
             if (data.success) {
                 let html = data.data.analysis.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                 document.getElementById('resultContent').innerHTML = html;
                 document.getElementById('resultCard').style.display = 'block';
-                document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
                 addHistory(currentBirth);
             } else {
-                document.getElementById('resultContent').innerHTML = `❌ 分析失败：${data.error || '未知错误'}`;
+                document.getElementById('resultContent').innerHTML = `分析失败：${data.error || '未知错误'}`;
                 document.getElementById('resultCard').style.display = 'block';
             }
         } catch (err) {
-            document.getElementById('resultContent').innerHTML = `❌ 网络错误：${err.message}`;
+            document.getElementById('resultContent').innerHTML = `网络错误：${err.message}`;
             document.getElementById('resultCard').style.display = 'block';
         } finally {
             isLoading = false;
@@ -693,9 +556,7 @@
         const li = document.createElement('li');
         li.className = 'history-item';
         li.textContent = birthStr.length > 30 ? birthStr.substring(0, 30) + '...' : birthStr;
-        li.onclick = () => {
-            alert('点击历史记录：请手动填入生辰重新分析');
-        };
+        li.onclick = () => { alert('请手动输入生辰重新分析'); };
         historyList.insertBefore(li, historyList.firstChild);
     }
 
@@ -707,35 +568,25 @@
         document.getElementById('baziInfoArea').classList.add('hidden');
         document.getElementById('verifyItemsContainer').innerHTML = '';
         document.getElementById('startVerifyBtn').classList.remove('hidden');
-        itemStatus = [];
+        document.getElementById('actionButtons').style.display = 'none';
+        itemFeedbacks = [];
     }
 
-    // ==================== 事件绑定 ====================
     document.addEventListener('DOMContentLoaded', function() {
         initMinuteSelect();
         loadRegionData();
         
-        document.getElementById('startVerifyBtn').onclick = async () => {
-            if (currentStep === 0) {
-                await callVerify();
-            }
-        };
+        document.getElementById('startVerifyBtn').onclick = () => { if (currentStep === 0) callVerify(); };
+        document.getElementById('submitFeedbackBtn').onclick = submitFeedback;
         document.getElementById('confirmOverallBtn').onclick = confirmAllAccurate;
         document.getElementById('startAnalysisBtn').onclick = startAnalysis;
         document.getElementById('newChatBtn').onclick = newChat;
         
-        document.getElementById('provinceSelect').addEventListener('change', function() {
-            updateCitySelect();
-            updateTrueSolarDisplay();
-        });
-        document.getElementById('citySelect').addEventListener('change', function() {
-            updateDistrictSelect();
-            updateTrueSolarDisplay();
-        });
+        document.getElementById('provinceSelect').addEventListener('change', () => { updateCitySelect(); updateTrueSolarDisplay(); });
+        document.getElementById('citySelect').addEventListener('change', () => { updateDistrictSelect(); updateTrueSolarDisplay(); });
         document.getElementById('districtSelect').addEventListener('change', updateTrueSolarDisplay);
         
-        const radios = document.querySelectorAll('input[name="knowTime"]');
-        radios.forEach(radio => {
+        document.querySelectorAll('input[name="knowTime"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 const timeSelectArea = document.getElementById('timeSelectArea');
                 const timeWarning = document.getElementById('timeWarning');
@@ -745,8 +596,7 @@
                 } else {
                     timeSelectArea.classList.add('hidden');
                     timeWarning.classList.remove('hidden');
-                    const trueSolarDiv = document.getElementById('trueSolarResult');
-                    if (trueSolarDiv) trueSolarDiv.classList.add('hidden');
+                    document.getElementById('trueSolarResult').classList.add('hidden');
                 }
                 if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
             });
