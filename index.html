@@ -49,6 +49,7 @@
         .verify-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .verify-title { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 8px; }
         .verify-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; margin-bottom: 12px; }
+        .verify-question { font-size: 13px; color: #666; margin-bottom: 10px; font-style: italic; }
         .item-buttons { display: flex; gap: 16px; margin-top: 8px; }
         .item-btn { padding: 4px 12px; border: none; border-radius: 16px; font-size: 12px; cursor: pointer; background: #f0f0f0; color: #666; }
         .item-btn.confirm.active { background: #1a1a2e; color: white; }
@@ -80,7 +81,7 @@
         .action-btn.primary { background: #1a1a2e; color: white; }
         .action-btn.primary.highlight { background: #e6b980; color: #1a1a2e; box-shadow: 0 2px 8px rgba(230,185,128,0.4); }
         .action-btn.secondary { background: #f0f0f0; color: #666; }
-        .action-btn.secondary.highlight { background: #1a1a2e; color: white; }
+        .action-btn.dark { background: #1a1a2e; color: white; }
     </style>
 </head>
 <body>
@@ -139,7 +140,7 @@
                         <div id="verifyItemsContainer"></div>
                         <div class="action-buttons" id="actionButtons" style="display: none;">
                             <button class="action-btn secondary" id="submitFeedbackBtn">提交不准确反馈</button>
-                            <button class="action-btn primary" id="confirmOverallBtn">全部/大部分准确，继续分析</button>
+                            <button class="action-btn dark" id="confirmOverallBtn">全部/大部分准确，继续分析</button>
                         </div>
                     </div>
                 </div>
@@ -388,31 +389,28 @@
         itemFeedbacks = items.map(() => '');
         hasAnyFeedback = false;
         
-        // 重新排序：把性格特征放在最后
-        const reordered = [...items];
-        const characterIndex = reordered.findIndex(i => i.title === '【性格特征】');
-        if (characterIndex !== -1 && characterIndex !== reordered.length - 1) {
-            const character = reordered.splice(characterIndex, 1)[0];
-            reordered.push(character);
-        }
-        
-        reordered.forEach((item, originalIndex) => {
+        items.forEach((item, index) => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'verify-item';
+            // 判断是否是性格特征，添加额外的问题描述
+            const isCharacter = item.title === '【性格特征】';
+            const questionText = isCharacter ? '请判断以上性格描述是否准确？' : '请判断以上推断是否准确？';
+            
             itemDiv.innerHTML = `
                 <div class="verify-title">${item.title}</div>
                 <div class="verify-content">${item.content.replace(/\n/g, '<br>')}</div>
+                <div class="verify-question">${questionText}</div>
                 <div class="item-buttons">
-                    <button class="item-btn confirm" data-index="${originalIndex}">准确</button>
-                    <button class="item-btn feedback" data-index="${originalIndex}">不准确</button>
+                    <button class="item-btn confirm" data-index="${index}">准确</button>
+                    <button class="item-btn feedback" data-index="${index}">不准确</button>
                 </div>
-                <textarea class="feedback-detail" id="feedback-${originalIndex}" rows="2" placeholder="请描述实际情况..."></textarea>
+                <textarea class="feedback-detail" id="feedback-${index}" rows="2" placeholder="请描述实际情况..."></textarea>
             `;
             container.appendChild(itemDiv);
         });
         
         // 绑定事件
-        for (let i = 0; i < reordered.length; i++) {
+        for (let i = 0; i < items.length; i++) {
             const confirmBtn = container.querySelector(`.item-btn.confirm[data-index="${i}"]`);
             const feedbackBtn = container.querySelector(`.item-btn.feedback[data-index="${i}"]`);
             const textarea = document.getElementById(`feedback-${i}`);
@@ -455,16 +453,14 @@
             submitBtn.classList.add('highlight');
             submitBtn.classList.remove('secondary');
             submitBtn.classList.add('primary');
-            confirmBtn.classList.remove('highlight');
+            confirmBtn.classList.remove('dark');
             confirmBtn.classList.add('secondary');
-            confirmBtn.classList.remove('primary');
         } else {
             submitBtn.classList.remove('highlight');
             submitBtn.classList.remove('primary');
             submitBtn.classList.add('secondary');
-            confirmBtn.classList.add('highlight');
+            confirmBtn.classList.add('dark');
             confirmBtn.classList.remove('secondary');
-            confirmBtn.classList.add('primary');
         }
     }
 
@@ -510,27 +506,100 @@
     }
 
     async function submitFeedback() {
-        const hasFeedback = itemFeedbacks.some(fb => fb && fb.trim() !== '');
-        if (!hasFeedback) {
+        const feedbackItems = [];
+        for (let i = 0; i < itemFeedbacks.length; i++) {
+            if (itemFeedbacks[i] && itemFeedbacks[i].trim() !== '') {
+                feedbackItems.push({
+                    section: parsedVerifyItems[i].title,
+                    feedback: itemFeedbacks[i]
+                });
+            }
+        }
+        
+        if (feedbackItems.length === 0) {
             alert('请先在不准确的条目中填写反馈内容');
             return;
         }
         
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
-        verifyItemsContainer.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 根据反馈重新分析中...';
+        verifyItemsContainer.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 根据您的反馈重新分析中...';
         
         try {
             const response = await fetch(`${API_URL}/verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ birth: currentBirth, feedback: itemFeedbacks })
+                body: JSON.stringify({ 
+                    birth: currentBirth, 
+                    feedback_items: feedbackItems 
+                })
             });
             const data = await response.json();
             
             if (data.success) {
+                // 添加反馈确认信息
+                let feedbackConfirmHtml = '<div class="verify-item" style="background:#e8f5e9; padding:12px; border-radius:12px; margin-bottom:16px;">';
+                feedbackConfirmHtml += '📝 <strong>感谢您的反馈！</strong> 以下是根据您的反馈做出的调整：<br><br>';
+                for (let fb of feedbackItems) {
+                    feedbackConfirmHtml += `• ${fb.section}：已根据您提供的「${fb.feedback.substring(0, 50)}${fb.feedback.length > 50 ? '...' : ''}」进行调整<br>`;
+                }
+                feedbackConfirmHtml += '</div>';
+                
                 parsedVerifyItems = parseVerifyContent(data.data.verify);
-                displayVerifyItems(parsedVerifyItems);
+                
+                // 重新生成验证条目
+                const container = document.getElementById('verifyItemsContainer');
+                container.innerHTML = feedbackConfirmHtml;
+                
+                parsedVerifyItems.forEach((item, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'verify-item';
+                    const isCharacter = item.title === '【性格特征】';
+                    const questionText = isCharacter ? '请判断以上性格描述是否准确？' : '请判断以上推断是否准确？';
+                    itemDiv.innerHTML = `
+                        <div class="verify-title">${item.title}</div>
+                        <div class="verify-content">${item.content.replace(/\n/g, '<br>')}</div>
+                        <div class="verify-question">${questionText}</div>
+                        <div class="item-buttons">
+                            <button class="item-btn confirm" data-index="${index}">准确</button>
+                            <button class="item-btn feedback" data-index="${index}">不准确</button>
+                        </div>
+                        <textarea class="feedback-detail" id="feedback-${index}" rows="2" placeholder="请描述实际情况..."></textarea>
+                    `;
+                    container.appendChild(itemDiv);
+                });
+                
+                // 重新绑定事件
                 itemFeedbacks = parsedVerifyItems.map(() => '');
+                for (let i = 0; i < parsedVerifyItems.length; i++) {
+                    const confirmBtn = container.querySelector(`.item-btn.confirm[data-index="${i}"]`);
+                    const feedbackBtn = container.querySelector(`.item-btn.feedback[data-index="${i}"]`);
+                    const textarea = document.getElementById(`feedback-${i}`);
+                    
+                    confirmBtn.onclick = () => {
+                        confirmBtn.classList.add('active');
+                        confirmBtn.classList.add('disabled');
+                        feedbackBtn.classList.add('disabled');
+                        itemFeedbacks[i] = '';
+                        textarea.classList.remove('active');
+                        updateButtonHighlights();
+                    };
+                    
+                    feedbackBtn.onclick = () => {
+                        textarea.classList.toggle('active');
+                        if (textarea.classList.contains('active')) {
+                            feedbackBtn.classList.add('active');
+                        } else {
+                            feedbackBtn.classList.remove('active');
+                        }
+                        updateButtonHighlights();
+                    };
+                    
+                    textarea.oninput = () => {
+                        itemFeedbacks[i] = textarea.value;
+                        updateButtonHighlights();
+                    };
+                }
+                updateButtonHighlights();
             } else {
                 verifyItemsContainer.innerHTML = `重新分析失败：${data.error || '未知错误'}`;
             }
