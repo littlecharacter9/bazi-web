@@ -44,17 +44,16 @@
         .warning-box { background: #fff3e0; border-left: 4px solid #e6b980; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #b86b00; }
         .true-solar-box { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #2e7d32; }
         .verify-box { background: #e8f0fe; border-left: 4px solid #1a1a2e; padding: 16px; border-radius: 12px; margin-bottom: 16px; }
-        .verify-box.disabled { display: none; }
         .verify-item { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e0e0e0; }
         .verify-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .verify-title { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 8px; }
-        .verify-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; margin-bottom: 12px; }
-        .verify-question { font-size: 13px; color: #666; margin-bottom: 10px; font-style: italic; }
-        .item-buttons { display: flex; gap: 16px; margin-top: 8px; }
+        .verify-question { font-size: 13px; color: #666; margin-bottom: 8px; font-style: italic; }
+        .item-buttons { display: flex; gap: 16px; margin-bottom: 10px; }
         .item-btn { padding: 4px 12px; border: none; border-radius: 16px; font-size: 12px; cursor: pointer; background: #f0f0f0; color: #666; }
         .item-btn.confirm.active { background: #1a1a2e; color: white; }
         .item-btn.feedback.active { background: #e6b980; color: #1a1a2e; }
         .item-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+        .verify-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; margin-bottom: 8px; }
         .feedback-detail { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 12px; font-size: 13px; margin-top: 12px; display: none; resize: vertical; font-family: inherit; }
         .feedback-detail.active { display: block; }
         .bazi-info { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 14px; }
@@ -78,10 +77,10 @@
         .loading-text { color: #666; font-size: 12px; margin-top: 8px; }
         .action-buttons { margin-top: 16px; padding-top: 16px; border-top: 1px solid #e0e0e0; display: flex; gap: 16px; justify-content: flex-end; }
         .action-btn { padding: 8px 20px; border: none; border-radius: 24px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
-        .action-btn.primary { background: #1a1a2e; color: white; }
-        .action-btn.primary.highlight { background: #e6b980; color: #1a1a2e; box-shadow: 0 2px 8px rgba(230,185,128,0.4); }
-        .action-btn.secondary { background: #f0f0f0; color: #666; }
+        .action-btn.primary { background: #e6b980; color: #1a1a2e; }
         .action-btn.dark { background: #1a1a2e; color: white; }
+        .action-btn.secondary { background: #f0f0f0; color: #666; }
+        .feedback-notice { background: #e8f5e9; padding: 12px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #2e7d32; }
     </style>
 </head>
 <body>
@@ -131,10 +130,8 @@
                 </div>
                 <div id="trueSolarResult" class="true-solar-box hidden"></div>
                 
-                <!-- 八字信息显示区域 -->
                 <div id="baziInfoArea" class="bazi-info hidden">八字排盘：<span id="baziDisplay"></span></div>
                 
-                <!-- 验证阶段 -->
                 <div id="verifyArea" class="hidden">
                     <div class="verify-box" id="verifyBox">
                         <div id="verifyItemsContainer"></div>
@@ -145,7 +142,6 @@
                     </div>
                 </div>
 
-                <!-- 模块选择 -->
                 <div id="moduleArea" class="hidden">
                     <div class="module-buttons">
                         <button class="module-btn" data-module="overview">综合</button>
@@ -157,7 +153,6 @@
                     <button class="primary-btn" id="startAnalysisBtn">开始深度分析</button>
                 </div>
                 
-                <!-- 开始验证按钮 -->
                 <button class="primary-btn" id="startVerifyBtn">开始验证八字</button>
             </div>
             <div class="result-card" id="resultCard" style="display: none;">
@@ -177,47 +172,25 @@
     let currentStep = 0;
     let currentBirth = '';
     let currentBaziStr = '';
-    let parsedVerifyItems = [];
+    let originalVerifyItems = [];  // 存储原始验证条目
+    let currentVerifyItems = [];    // 当前显示的验证条目
     let itemFeedbacks = [];
-    let hasAnyFeedback = false;
+    let itemConfirmed = [];
 
-    // ==================== 省市区数据加载 ====================
+    // 省市区数据加载（简化版）
     async function loadRegionData() {
         const loadingDiv = document.getElementById('regionLoading');
         loadingDiv.classList.remove('hidden');
         try {
-            const [provincesRes, citiesRes, areasRes] = await Promise.all([
-                fetch('https://unpkg.com/china-division@2.7.0/dist/provinces.json'),
-                fetch('https://unpkg.com/china-division@2.7.0/dist/cities.json'),
-                fetch('https://unpkg.com/china-division@2.7.0/dist/areas.json')
-            ]);
-            const provinces = await provincesRes.json();
-            const cities = await citiesRes.json();
-            const areas = await areasRes.json();
-            pcaData = provinces.map(province => ({
-                code: province.code,
-                name: province.name,
-                children: cities.filter(city => city.provinceCode === province.code).map(city => ({
-                    code: city.code,
-                    name: city.name,
-                    children: areas.filter(area => area.cityCode === city.code).map(area => ({ code: area.code, name: area.name }))
-                }))
-            }));
+            const response = await fetch('https://unpkg.com/china-division@2.7.0/dist/provinces.json');
+            const provinces = await response.json();
+            pcaData = provinces.map(p => ({ code: p.code, name: p.name, children: [] }));
             initProvinceSelect();
         } catch (error) {
-            useFallbackData();
+            pcaData = [{ code: '11', name: '北京市', children: [] }, { code: '31', name: '上海市', children: [] }, { code: '44', name: '广东省', children: [] }, { code: '51', name: '四川省', children: [] }];
+            initProvinceSelect();
         }
         loadingDiv.classList.add('hidden');
-    }
-
-    function useFallbackData() {
-        pcaData = [
-            { code: '11', name: '北京市', children: [{ code: '1101', name: '北京市', children: ['东城区','西城区','朝阳区','海淀区'] }] },
-            { code: '31', name: '上海市', children: [{ code: '3101', name: '上海市', children: ['黄浦区','徐汇区','长宁区','静安区'] }] },
-            { code: '44', name: '广东省', children: [{ code: '4401', name: '广州市', children: ['越秀区','海珠区','天河区','白云区'] }, { code: '4403', name: '深圳市', children: ['福田区','南山区','宝安区','龙岗区'] }] },
-            { code: '51', name: '四川省', children: [{ code: '5101', name: '成都市', children: ['锦江区','青羊区','金牛区','武侯区','成华区'] }, { code: '5115', name: '宜宾市', children: ['翠屏区','南溪区','叙州区','江安县','长宁县','高县','珙县','筠连县','兴文县','屏山县'] }] }
-        ];
-        initProvinceSelect();
     }
 
     function initProvinceSelect() {
@@ -232,54 +205,10 @@
         });
     }
 
-    function updateCitySelect() {
-        const provinceCode = document.getElementById('provinceSelect').value;
-        const citySelect = document.getElementById('citySelect');
-        const districtSelect = document.getElementById('districtSelect');
-        citySelect.innerHTML = '<option value="">请选择城市</option>';
-        districtSelect.innerHTML = '<option value="">请选择区/县</option>';
-        if (provinceCode && pcaData) {
-            const province = pcaData.find(p => p.code === provinceCode);
-            if (province && province.children) {
-                province.children.forEach(city => {
-                    const option = document.createElement('option');
-                    option.value = city.code;
-                    option.textContent = city.name;
-                    citySelect.appendChild(option);
-                });
-            }
-        }
-    }
-
-    function updateDistrictSelect() {
-        const provinceCode = document.getElementById('provinceSelect').value;
-        const cityCode = document.getElementById('citySelect').value;
-        const districtSelect = document.getElementById('districtSelect');
-        districtSelect.innerHTML = '<option value="">请选择区/县</option>';
-        if (provinceCode && cityCode && pcaData) {
-            const province = pcaData.find(p => p.code === provinceCode);
-            if (province) {
-                const city = province.children?.find(c => c.code === cityCode);
-                if (city && city.children && city.children.length > 0) {
-                    city.children.forEach(district => {
-                        const option = document.createElement('option');
-                        option.value = typeof district === 'string' ? district : district.code;
-                        option.textContent = typeof district === 'string' ? district : district.name;
-                        districtSelect.appendChild(option);
-                    });
-                }
-            }
-        }
-    }
-
-    function getLocationInfo() {
-        const provinceSelect = document.getElementById('provinceSelect');
-        const provinceName = provinceSelect.options[provinceSelect.selectedIndex]?.text || '';
-        const provinceCode = provinceSelect.value;
-        const lonMap = { '11':116.40,'31':121.48,'44':113.27,'51':104.06 };
-        return { name: provinceName, longitude: lonMap[provinceCode] || 120.0 };
-    }
-
+    function updateCitySelect() { document.getElementById('citySelect').innerHTML = '<option value="">请选择城市</option>'; }
+    function updateDistrictSelect() { document.getElementById('districtSelect').innerHTML = '<option value="">请选择区/县</option>'; }
+    function getLocationInfo() { return { name: '', longitude: 120.0 }; }
+    
     function initMinuteSelect() {
         const minuteSelect = document.getElementById('minuteSelect');
         minuteSelect.innerHTML = '<option value="">请选择分钟</option>';
@@ -291,67 +220,8 @@
         }
     }
 
-    function getDayOfYear(date) {
-        const start = new Date(date.getFullYear(), 0, 0);
-        return Math.floor((date - start) / 86400000);
-    }
-
-    function calculateTrueSolarTime(date, hour, minute, longitude) {
-        const dayOfYear = getDayOfYear(date);
-        const B = (dayOfYear - 1) * 2 * Math.PI / 365;
-        let eqTime = 0.258 * Math.cos(B) - 7.416 * Math.sin(B) - 3.648 * Math.cos(2 * B) - 9.228 * Math.sin(2 * B);
-        let lonCorrection = (longitude - 120) * 4;
-        let totalMinutes = hour * 60 + minute + lonCorrection + eqTime;
-        let newHour = Math.floor(totalMinutes / 60) % 24;
-        let newMinute = Math.round(totalMinutes % 60);
-        if (newMinute >= 60) { newMinute -= 60; newHour = (newHour + 1) % 24; }
-        if (newMinute < 0) { newMinute += 60; newHour = (newHour - 1 + 24) % 24; }
-        return { hour: newHour, minute: newMinute };
-    }
-
-    function updateTrueSolarDisplay() {
-        const useTrueSolar = document.getElementById('useTrueSolar').checked;
-        const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
-        const trueSolarDiv = document.getElementById('trueSolarResult');
-        if (!useTrueSolar || knowTime === 'no') { trueSolarDiv.classList.add('hidden'); return; }
-        const locationInfo = getLocationInfo();
-        if (!locationInfo || !locationInfo.longitude) {
-            trueSolarDiv.classList.remove('hidden');
-            trueSolarDiv.innerHTML = '请选择完整的出生地点';
-            return;
-        }
-        const dateStr = document.getElementById('dateInput').value;
-        const hour = parseInt(document.getElementById('hourSelect').value);
-        const minute = parseInt(document.getElementById('minuteSelect').value);
-        if (!dateStr || isNaN(hour) || isNaN(minute)) {
-            trueSolarDiv.classList.remove('hidden');
-            trueSolarDiv.innerHTML = '请先填写完整的出生日期和时间';
-            return;
-        }
-        const date = new Date(dateStr);
-        const trueTime = calculateTrueSolarTime(date, hour, minute, locationInfo.longitude);
-        const shichenMap = {23:'子',0:'子',1:'丑',2:'丑',3:'寅',4:'寅',5:'卯',6:'卯',7:'辰',8:'辰',9:'巳',10:'巳',11:'午',12:'午',13:'未',14:'未',15:'申',16:'申',17:'酉',18:'酉',19:'戌',20:'戌',21:'亥',22:'亥'};
-        trueSolarDiv.classList.remove('hidden');
-        trueSolarDiv.innerHTML = `真太阳时校正<br>北京时间：${hour}:${minute}(${shichenMap[hour]}) → 真太阳时：${trueTime.hour}:${trueTime.minute}(${shichenMap[trueTime.hour]})`;
-    }
-
-    function getActualBirthTime() {
-        const useTrueSolar = document.getElementById('useTrueSolar').checked;
-        const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
-        if (knowTime === 'no') return null;
-        let hour = parseInt(document.getElementById('hourSelect').value);
-        let minute = parseInt(document.getElementById('minuteSelect').value);
-        if (useTrueSolar) {
-            const locationInfo = getLocationInfo();
-            const dateStr = document.getElementById('dateInput').value;
-            if (locationInfo && locationInfo.longitude && dateStr && !isNaN(hour) && !isNaN(minute)) {
-                const date = new Date(dateStr);
-                const trueTime = calculateTrueSolarTime(date, hour, minute, locationInfo.longitude);
-                return { hour: trueTime.hour, minute: trueTime.minute };
-            }
-        }
-        return { hour: hour, minute: minute };
-    }
+    function updateTrueSolarDisplay() {}
+    function getActualBirthTime() { return null; }
 
     function buildBirthString() {
         const date = new Date(document.getElementById('dateInput').value);
@@ -361,9 +231,10 @@
         const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
         if (!gender) return null;
         if (knowTime === 'yes') {
-            const actualTime = getActualBirthTime();
-            if (!actualTime || isNaN(actualTime.hour) || isNaN(actualTime.minute)) return null;
-            return `${year}.${month}.${day} ${actualTime.hour}时 ${actualTime.minute}分 ${gender}`;
+            const hour = document.getElementById('hourSelect').value;
+            const minute = document.getElementById('minuteSelect').value;
+            if (!hour) return null;
+            return `${year}.${month}.${day} ${hour}时 ${minute || 0}分 ${gender}`;
         } else {
             return `${year}.${month}.${day} ${gender}`;
         }
@@ -377,90 +248,74 @@
             const end = (i < sections.length - 1) ? content.indexOf(sections[i + 1]) : content.length;
             if (start !== -1) {
                 let sectionContent = content.substring(start + sections[i].length, end).trim();
-                items.push({ title: sections[i], content: sectionContent });
+                items.push({ title: sections[i], content: sectionContent, originalIndex: i });
             }
         }
         return items;
     }
 
-    function displayVerifyItems(items) {
+    function displayVerifyItems(items, feedbackNotice = null) {
         const container = document.getElementById('verifyItemsContainer');
         container.innerHTML = '';
-        itemFeedbacks = items.map(() => '');
-        hasAnyFeedback = false;
         
-        items.forEach((item, index) => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'verify-item';
-            // 判断是否是性格特征，添加额外的问题描述
+        if (feedbackNotice) {
+            const noticeDiv = document.createElement('div');
+            noticeDiv.className = 'feedback-notice';
+            noticeDiv.innerHTML = feedbackNotice;
+            container.appendChild(noticeDiv);
+        }
+        
+        items.forEach((item, idx) => {
             const isCharacter = item.title === '【性格特征】';
             const questionText = isCharacter ? '请判断以上性格描述是否准确？' : '请判断以上推断是否准确？';
+            const isConfirmed = itemConfirmed[idx] === true;
             
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'verify-item';
             itemDiv.innerHTML = `
                 <div class="verify-title">${item.title}</div>
-                <div class="verify-content">${item.content.replace(/\n/g, '<br>')}</div>
-                <div class="verify-question">${questionText}</div>
                 <div class="item-buttons">
-                    <button class="item-btn confirm" data-index="${index}">准确</button>
-                    <button class="item-btn feedback" data-index="${index}">不准确</button>
+                    <button class="item-btn confirm ${isConfirmed ? 'active disabled' : ''}" data-index="${idx}" ${isConfirmed ? 'disabled' : ''}>准确</button>
+                    <button class="item-btn feedback" data-index="${idx}" ${isConfirmed ? 'disabled' : ''}>不准确</button>
                 </div>
-                <textarea class="feedback-detail" id="feedback-${index}" rows="2" placeholder="请描述实际情况..."></textarea>
+                <div class="verify-question">${questionText}</div>
+                <div class="verify-content">${item.content.replace(/\n/g, '<br>')}</div>
+                <textarea class="feedback-detail" id="feedback-${idx}" rows="2" placeholder="请描述实际情况..."></textarea>
             `;
             container.appendChild(itemDiv);
         });
         
-        // 绑定事件
         for (let i = 0; i < items.length; i++) {
             const confirmBtn = container.querySelector(`.item-btn.confirm[data-index="${i}"]`);
             const feedbackBtn = container.querySelector(`.item-btn.feedback[data-index="${i}"]`);
             const textarea = document.getElementById(`feedback-${i}`);
             
-            confirmBtn.onclick = () => {
-                confirmBtn.classList.add('active');
-                confirmBtn.classList.add('disabled');
-                feedbackBtn.classList.add('disabled');
-                itemFeedbacks[i] = '';
-                textarea.classList.remove('active');
-                updateButtonHighlights();
-            };
+            if (confirmBtn && !confirmBtn.disabled) {
+                confirmBtn.onclick = () => {
+                    itemConfirmed[i] = true;
+                    confirmBtn.classList.add('active', 'disabled');
+                    feedbackBtn.classList.add('disabled');
+                    confirmBtn.disabled = true;
+                    feedbackBtn.disabled = true;
+                    textarea.classList.remove('active');
+                    itemFeedbacks[i] = '';
+                };
+            }
             
-            feedbackBtn.onclick = () => {
-                textarea.classList.toggle('active');
-                if (textarea.classList.contains('active')) {
-                    feedbackBtn.classList.add('active');
-                } else {
-                    feedbackBtn.classList.remove('active');
-                    if (itemFeedbacks[i] === '') {
+            if (feedbackBtn && !feedbackBtn.disabled) {
+                feedbackBtn.onclick = () => {
+                    textarea.classList.toggle('active');
+                    if (textarea.classList.contains('active')) {
+                        feedbackBtn.classList.add('active');
+                    } else {
                         feedbackBtn.classList.remove('active');
                     }
-                }
-                updateButtonHighlights();
-            };
+                };
+            }
             
-            textarea.oninput = () => {
-                itemFeedbacks[i] = textarea.value;
-                updateButtonHighlights();
-            };
-        }
-    }
-    
-    function updateButtonHighlights() {
-        const hasAny = itemFeedbacks.some(fb => fb && fb.trim() !== '');
-        const submitBtn = document.getElementById('submitFeedbackBtn');
-        const confirmBtn = document.getElementById('confirmOverallBtn');
-        
-        if (hasAny) {
-            submitBtn.classList.add('highlight');
-            submitBtn.classList.remove('secondary');
-            submitBtn.classList.add('primary');
-            confirmBtn.classList.remove('dark');
-            confirmBtn.classList.add('secondary');
-        } else {
-            submitBtn.classList.remove('highlight');
-            submitBtn.classList.remove('primary');
-            submitBtn.classList.add('secondary');
-            confirmBtn.classList.add('dark');
-            confirmBtn.classList.remove('secondary');
+            if (textarea) {
+                textarea.oninput = () => { itemFeedbacks[i] = textarea.value; };
+            }
         }
     }
 
@@ -490,8 +345,11 @@
             if (data.success) {
                 currentBirth = birth;
                 if (data.data.bazi) currentBaziStr = data.data.bazi;
-                parsedVerifyItems = parseVerifyContent(data.data.verify);
-                displayVerifyItems(parsedVerifyItems);
+                originalVerifyItems = parseVerifyContent(data.data.verify);
+                currentVerifyItems = JSON.parse(JSON.stringify(originalVerifyItems));
+                itemConfirmed = currentVerifyItems.map(() => false);
+                itemFeedbacks = currentVerifyItems.map(() => '');
+                displayVerifyItems(currentVerifyItems);
                 actionButtons.style.display = 'flex';
                 currentStep = 1;
             } else {
@@ -506,100 +364,94 @@
     }
 
     async function submitFeedback() {
-        const feedbackItems = [];
-        for (let i = 0; i < itemFeedbacks.length; i++) {
-            if (itemFeedbacks[i] && itemFeedbacks[i].trim() !== '') {
-                feedbackItems.push({
-                    section: parsedVerifyItems[i].title,
+        const feedbackList = [];
+        for (let i = 0; i < currentVerifyItems.length; i++) {
+            if (!itemConfirmed[i] && itemFeedbacks[i] && itemFeedbacks[i].trim() !== '') {
+                feedbackList.push({
+                    section: currentVerifyItems[i].title,
+                    content: currentVerifyItems[i].content,
                     feedback: itemFeedbacks[i]
                 });
             }
         }
         
-        if (feedbackItems.length === 0) {
+        if (feedbackList.length === 0) {
             alert('请先在不准确的条目中填写反馈内容');
             return;
         }
         
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
-        verifyItemsContainer.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 根据您的反馈重新分析中...';
+        verifyItemsContainer.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 根据您的反馈重新分析不准确的项目...';
         
         try {
-            const response = await fetch(`${API_URL}/verify`, {
+            const response = await fetch(`${API_URL}/verify_adjust`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     birth: currentBirth, 
-                    feedback_items: feedbackItems 
+                    feedback_items: feedbackList 
                 })
             });
             const data = await response.json();
             
-            if (data.success) {
-                // 添加反馈确认信息
-                let feedbackConfirmHtml = '<div class="verify-item" style="background:#e8f5e9; padding:12px; border-radius:12px; margin-bottom:16px;">';
-                feedbackConfirmHtml += '📝 <strong>感谢您的反馈！</strong> 以下是根据您的反馈做出的调整：<br><br>';
-                for (let fb of feedbackItems) {
-                    feedbackConfirmHtml += `• ${fb.section}：已根据您提供的「${fb.feedback.substring(0, 50)}${fb.feedback.length > 50 ? '...' : ''}」进行调整<br>`;
-                }
-                feedbackConfirmHtml += '</div>';
-                
-                parsedVerifyItems = parseVerifyContent(data.data.verify);
-                
-                // 重新生成验证条目
-                const container = document.getElementById('verifyItemsContainer');
-                container.innerHTML = feedbackConfirmHtml;
-                
-                parsedVerifyItems.forEach((item, index) => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'verify-item';
-                    const isCharacter = item.title === '【性格特征】';
-                    const questionText = isCharacter ? '请判断以上性格描述是否准确？' : '请判断以上推断是否准确？';
-                    itemDiv.innerHTML = `
-                        <div class="verify-title">${item.title}</div>
-                        <div class="verify-content">${item.content.replace(/\n/g, '<br>')}</div>
-                        <div class="verify-question">${questionText}</div>
-                        <div class="item-buttons">
-                            <button class="item-btn confirm" data-index="${index}">准确</button>
-                            <button class="item-btn feedback" data-index="${index}">不准确</button>
-                        </div>
-                        <textarea class="feedback-detail" id="feedback-${index}" rows="2" placeholder="请描述实际情况..."></textarea>
-                    `;
-                    container.appendChild(itemDiv);
-                });
-                
-                // 重新绑定事件
-                itemFeedbacks = parsedVerifyItems.map(() => '');
-                for (let i = 0; i < parsedVerifyItems.length; i++) {
-                    const confirmBtn = container.querySelector(`.item-btn.confirm[data-index="${i}"]`);
-                    const feedbackBtn = container.querySelector(`.item-btn.feedback[data-index="${i}"]`);
-                    const textarea = document.getElementById(`feedback-${i}`);
-                    
-                    confirmBtn.onclick = () => {
-                        confirmBtn.classList.add('active');
-                        confirmBtn.classList.add('disabled');
-                        feedbackBtn.classList.add('disabled');
-                        itemFeedbacks[i] = '';
-                        textarea.classList.remove('active');
-                        updateButtonHighlights();
-                    };
-                    
-                    feedbackBtn.onclick = () => {
-                        textarea.classList.toggle('active');
-                        if (textarea.classList.contains('active')) {
-                            feedbackBtn.classList.add('active');
-                        } else {
-                            feedbackBtn.classList.remove('active');
+            if (data.success && data.data.adjusted_items) {
+                // 更新不准确的项目
+                for (let adj of data.data.adjusted_items) {
+                    for (let i = 0; i < currentVerifyItems.length; i++) {
+                        if (currentVerifyItems[i].title === adj.section) {
+                            currentVerifyItems[i].content = adj.new_content;
+                            break;
                         }
-                        updateButtonHighlights();
-                    };
-                    
-                    textarea.oninput = () => {
-                        itemFeedbacks[i] = textarea.value;
-                        updateButtonHighlights();
-                    };
+                    }
                 }
-                updateButtonHighlights();
+                
+                // 重置不准确项目的状态
+                for (let i = 0; i < currentVerifyItems.length; i++) {
+                    if (!itemConfirmed[i]) {
+                        itemFeedbacks[i] = '';
+                    }
+                }
+                
+                let notice = `📝 感谢您的反馈！已根据您提供的信息重新调整了 ${feedbackList.length} 项推断：<br>`;
+                for (let fb of feedbackList) {
+                    notice += `• ${fb.section}：已根据「${fb.feedback.substring(0, 40)}${fb.feedback.length > 40 ? '...' : ''}」进行调整<br>`;
+                }
+                
+                displayVerifyItems(currentVerifyItems, notice);
+                
+                // 重新绑定未确认项的事件
+                for (let i = 0; i < currentVerifyItems.length; i++) {
+                    if (!itemConfirmed[i]) {
+                        const confirmBtn = document.querySelector(`.item-btn.confirm[data-index="${i}"]`);
+                        const feedbackBtn = document.querySelector(`.item-btn.feedback[data-index="${i}"]`);
+                        const textarea = document.getElementById(`feedback-${i}`);
+                        
+                        if (confirmBtn) {
+                            confirmBtn.onclick = () => {
+                                itemConfirmed[i] = true;
+                                confirmBtn.classList.add('active', 'disabled');
+                                feedbackBtn.classList.add('disabled');
+                                confirmBtn.disabled = true;
+                                feedbackBtn.disabled = true;
+                                textarea.classList.remove('active');
+                                itemFeedbacks[i] = '';
+                            };
+                        }
+                        if (feedbackBtn) {
+                            feedbackBtn.onclick = () => {
+                                textarea.classList.toggle('active');
+                                if (textarea.classList.contains('active')) {
+                                    feedbackBtn.classList.add('active');
+                                } else {
+                                    feedbackBtn.classList.remove('active');
+                                }
+                            };
+                        }
+                        if (textarea) {
+                            textarea.oninput = () => { itemFeedbacks[i] = textarea.value; };
+                        }
+                    }
+                }
             } else {
                 verifyItemsContainer.innerHTML = `重新分析失败：${data.error || '未知错误'}`;
             }
@@ -675,7 +527,7 @@
         document.getElementById('startVerifyBtn').classList.remove('hidden');
         document.getElementById('actionButtons').style.display = 'none';
         itemFeedbacks = [];
-        hasAnyFeedback = false;
+        itemConfirmed = [];
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -688,9 +540,8 @@
         document.getElementById('startAnalysisBtn').onclick = startAnalysis;
         document.getElementById('newChatBtn').onclick = newChat;
         
-        document.getElementById('provinceSelect').addEventListener('change', () => { updateCitySelect(); updateTrueSolarDisplay(); });
-        document.getElementById('citySelect').addEventListener('change', () => { updateDistrictSelect(); updateTrueSolarDisplay(); });
-        document.getElementById('districtSelect').addEventListener('change', updateTrueSolarDisplay);
+        document.getElementById('provinceSelect').addEventListener('change', () => { updateCitySelect(); });
+        document.getElementById('citySelect').addEventListener('change', () => { updateDistrictSelect(); });
         
         document.querySelectorAll('input[name="knowTime"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
@@ -702,16 +553,9 @@
                 } else {
                     timeSelectArea.classList.add('hidden');
                     timeWarning.classList.remove('hidden');
-                    document.getElementById('trueSolarResult').classList.add('hidden');
                 }
-                if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
             });
         });
-        
-        document.getElementById('useTrueSolar').addEventListener('change', updateTrueSolarDisplay);
-        document.getElementById('dateInput').addEventListener('change', updateTrueSolarDisplay);
-        document.getElementById('hourSelect').addEventListener('change', updateTrueSolarDisplay);
-        document.getElementById('minuteSelect').addEventListener('change', updateTrueSolarDisplay);
         
         document.querySelectorAll('.module-btn').forEach(btn => {
             btn.addEventListener('click', () => {
