@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>八戒命理 - 八字命理助手</title>
     <style>
-        /* 样式保持不变，省略节省篇幅 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: #f5f5f7; color: #1c1c1e; height: 100vh; overflow: hidden; }
         .app { display: flex; height: 100vh; width: 100%; }
@@ -50,10 +49,9 @@
         .verify-title { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 8px; }
         .verify-question { font-size: 13px; color: #666; margin-bottom: 8px; font-style: italic; }
         .item-buttons { display: flex; gap: 16px; margin-bottom: 10px; }
-        .item-btn { padding: 4px 12px; border: none; border-radius: 16px; font-size: 12px; cursor: pointer; background: #f0f0f0; color: #666; }
+        .item-btn { padding: 4px 12px; border: none; border-radius: 16px; font-size: 12px; cursor: pointer; background: #f0f0f0; color: #666; transition: all 0.2s; }
         .item-btn.confirm.active { background: #1a1a2e; color: white; }
         .item-btn.feedback.active { background: #e6b980; color: #1a1a2e; }
-        .item-btn.disabled { opacity: 0.5; cursor: not-allowed; }
         .verify-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; margin-bottom: 8px; }
         .feedback-detail { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 12px; font-size: 13px; margin-top: 12px; display: none; resize: vertical; font-family: inherit; }
         .feedback-detail.active { display: block; }
@@ -176,7 +174,6 @@
     let originalVerifyItems = [];
     let currentVerifyItems = [];
     let itemFeedbacks = [];
-    let itemConfirmed = [];
 
     async function loadRegionData() {
         const loadingDiv = document.getElementById('regionLoading');
@@ -263,7 +260,6 @@
             submitBtn.classList.remove('secondary');
             submitBtn.classList.add('primary');
             submitBtn.disabled = false;
-            submitBtn.style.cursor = 'pointer';
             confirmBtn.classList.remove('dark');
             confirmBtn.classList.add('secondary');
         } else {
@@ -289,15 +285,14 @@
         items.forEach((item, idx) => {
             const isCharacter = item.title === '【性格特征】';
             const questionText = isCharacter ? '请判断以上性格描述是否准确？' : '请判断以上推断是否准确？';
-            const isConfirmed = itemConfirmed[idx] === true;
             
             const itemDiv = document.createElement('div');
             itemDiv.className = 'verify-item';
             itemDiv.innerHTML = `
                 <div class="verify-title">${item.title}</div>
                 <div class="item-buttons">
-                    <button class="item-btn confirm ${isConfirmed ? 'active disabled' : ''}" data-index="${idx}" ${isConfirmed ? 'disabled' : ''}>准确</button>
-                    <button class="item-btn feedback" data-index="${idx}" ${isConfirmed ? 'disabled' : ''}>不准确</button>
+                    <button class="item-btn confirm" data-index="${idx}">准确</button>
+                    <button class="item-btn feedback" data-index="${idx}">不准确</button>
                 </div>
                 <div class="verify-question">${questionText}</div>
                 <div class="verify-content">${item.content.replace(/\n/g, '<br>')}</div>
@@ -311,36 +306,36 @@
             const feedbackBtn = container.querySelector(`.item-btn.feedback[data-index="${i}"]`);
             const textarea = document.getElementById(`feedback-${i}`);
             
-            if (confirmBtn && !confirmBtn.disabled) {
-                confirmBtn.onclick = () => {
-                    itemConfirmed[i] = true;
-                    confirmBtn.classList.add('active', 'disabled');
-                    feedbackBtn.classList.add('disabled');
-                    confirmBtn.disabled = true;
-                    feedbackBtn.disabled = true;
-                    textarea.classList.remove('active');
+            confirmBtn.onclick = () => {
+                confirmBtn.classList.add('active');
+                feedbackBtn.classList.remove('active');
+                itemFeedbacks[i] = '';
+                textarea.classList.remove('active');
+                textarea.value = '';
+                updateButtonHighlights();
+            };
+            
+            feedbackBtn.onclick = () => {
+                textarea.classList.toggle('active');
+                if (textarea.classList.contains('active')) {
+                    feedbackBtn.classList.add('active');
+                    confirmBtn.classList.remove('active');
+                } else {
+                    feedbackBtn.classList.remove('active');
                     itemFeedbacks[i] = '';
-                    updateButtonHighlights();
-                };
-            }
+                }
+            };
             
-            if (feedbackBtn && !feedbackBtn.disabled) {
-                feedbackBtn.onclick = () => {
-                    textarea.classList.toggle('active');
-                    if (textarea.classList.contains('active')) {
-                        feedbackBtn.classList.add('active');
-                    } else {
-                        feedbackBtn.classList.remove('active');
-                    }
-                };
-            }
-            
-            if (textarea) {
-                textarea.oninput = () => {
-                    itemFeedbacks[i] = textarea.value;
-                    updateButtonHighlights();
-                };
-            }
+            textarea.oninput = () => {
+                itemFeedbacks[i] = textarea.value;
+                if (itemFeedbacks[i].trim() !== '') {
+                    feedbackBtn.classList.add('active');
+                    confirmBtn.classList.remove('active');
+                } else {
+                    feedbackBtn.classList.remove('active');
+                }
+                updateButtonHighlights();
+            };
         }
     }
 
@@ -372,7 +367,6 @@
                 if (data.data.bazi) currentBaziStr = data.data.bazi;
                 originalVerifyItems = parseVerifyContent(data.data.verify);
                 currentVerifyItems = JSON.parse(JSON.stringify(originalVerifyItems));
-                itemConfirmed = currentVerifyItems.map(() => false);
                 itemFeedbacks = currentVerifyItems.map(() => '');
                 displayVerifyItems(currentVerifyItems);
                 actionButtons.style.display = 'flex';
@@ -391,7 +385,7 @@
     async function submitFeedback() {
         const feedbackList = [];
         for (let i = 0; i < currentVerifyItems.length; i++) {
-            if (!itemConfirmed[i] && itemFeedbacks[i] && itemFeedbacks[i].trim() !== '') {
+            if (itemFeedbacks[i] && itemFeedbacks[i].trim() !== '') {
                 feedbackList.push({
                     section: currentVerifyItems[i].title,
                     content: currentVerifyItems[i].content,
@@ -430,9 +424,7 @@
                 }
                 
                 for (let i = 0; i < currentVerifyItems.length; i++) {
-                    if (!itemConfirmed[i]) {
-                        itemFeedbacks[i] = '';
-                    }
+                    itemFeedbacks[i] = '';
                 }
                 
                 let notice = `📝 感谢您的反馈！已根据您提供的信息重新调整了 ${feedbackList.length} 项推断：<br>`;
@@ -442,40 +434,45 @@
                 
                 displayVerifyItems(currentVerifyItems, notice);
                 
+                // 重新绑定事件（因为重新渲染了）
                 for (let i = 0; i < currentVerifyItems.length; i++) {
-                    if (!itemConfirmed[i]) {
-                        const confirmBtn = document.querySelector(`.item-btn.confirm[data-index="${i}"]`);
-                        const feedbackBtn = document.querySelector(`.item-btn.feedback[data-index="${i}"]`);
-                        const textarea = document.getElementById(`feedback-${i}`);
-                        
-                        if (confirmBtn) {
-                            confirmBtn.onclick = () => {
-                                itemConfirmed[i] = true;
-                                confirmBtn.classList.add('active', 'disabled');
-                                feedbackBtn.classList.add('disabled');
-                                confirmBtn.disabled = true;
-                                feedbackBtn.disabled = true;
-                                textarea.classList.remove('active');
+                    const confirmBtn = document.querySelector(`.item-btn.confirm[data-index="${i}"]`);
+                    const feedbackBtn = document.querySelector(`.item-btn.feedback[data-index="${i}"]`);
+                    const textarea = document.getElementById(`feedback-${i}`);
+                    
+                    if (confirmBtn) {
+                        confirmBtn.onclick = () => {
+                            confirmBtn.classList.add('active');
+                            feedbackBtn.classList.remove('active');
+                            itemFeedbacks[i] = '';
+                            textarea.classList.remove('active');
+                            textarea.value = '';
+                            updateButtonHighlights();
+                        };
+                    }
+                    if (feedbackBtn) {
+                        feedbackBtn.onclick = () => {
+                            textarea.classList.toggle('active');
+                            if (textarea.classList.contains('active')) {
+                                feedbackBtn.classList.add('active');
+                                confirmBtn.classList.remove('active');
+                            } else {
+                                feedbackBtn.classList.remove('active');
                                 itemFeedbacks[i] = '';
-                                updateButtonHighlights();
-                            };
-                        }
-                        if (feedbackBtn) {
-                            feedbackBtn.onclick = () => {
-                                textarea.classList.toggle('active');
-                                if (textarea.classList.contains('active')) {
-                                    feedbackBtn.classList.add('active');
-                                } else {
-                                    feedbackBtn.classList.remove('active');
-                                }
-                            };
-                        }
-                        if (textarea) {
-                            textarea.oninput = () => {
-                                itemFeedbacks[i] = textarea.value;
-                                updateButtonHighlights();
-                            };
-                        }
+                            }
+                        };
+                    }
+                    if (textarea) {
+                        textarea.oninput = () => {
+                            itemFeedbacks[i] = textarea.value;
+                            if (itemFeedbacks[i].trim() !== '') {
+                                feedbackBtn.classList.add('active');
+                                confirmBtn.classList.remove('active');
+                            } else {
+                                feedbackBtn.classList.remove('active');
+                            }
+                            updateButtonHighlights();
+                        };
                     }
                 }
                 updateButtonHighlights();
@@ -554,7 +551,6 @@
         document.getElementById('startVerifyBtn').classList.remove('hidden');
         document.getElementById('actionButtons').style.display = 'none';
         itemFeedbacks = [];
-        itemConfirmed = [];
     }
 
     document.addEventListener('DOMContentLoaded', function() {
