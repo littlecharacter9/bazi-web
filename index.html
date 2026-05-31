@@ -43,6 +43,17 @@
         .time-toggle input { width: 18px; height: 18px; cursor: pointer; }
         .warning-box { background: #fff3e0; border-left: 4px solid #e6b980; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #b86b00; }
         .true-solar-box { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #2e7d32; }
+        .verify-box { background: #e8f0fe; border-left: 4px solid #1a1a2e; padding: 16px; border-radius: 12px; margin-bottom: 16px; }
+        .verify-title { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 12px; }
+        .verify-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+        .verify-buttons { display: flex; gap: 16px; margin-top: 16px; }
+        .verify-btn { padding: 8px 20px; border: none; border-radius: 30px; font-size: 14px; cursor: pointer; }
+        .verify-btn.confirm { background: #1a1a2e; color: white; }
+        .verify-btn.feedback { background: #f0f0f0; color: #666; }
+        .feedback-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; font-size: 14px; margin-top: 12px; display: none; resize: vertical; font-family: inherit; }
+        .feedback-input.active { display: block; }
+        .submit-feedback-btn { width: 100%; padding: 10px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 30px; font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 12px; display: none; }
+        .submit-feedback-btn.active { display: block; }
         .checkbox-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
         .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #333; cursor: pointer; }
         .module-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
@@ -52,7 +63,7 @@
         .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .result-card { background: #f9f9fb; border-radius: 20px; padding: 24px; }
         .result-title { font-size: 16px; font-weight: 600; color: #1a1a2e; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
-        .result-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; }
+        .result-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; max-height: 500px; overflow-y: auto; }
         .loading-dots { display: inline-flex; gap: 4px; }
         .loading-dots span { width: 6px; height: 6px; background: #888; border-radius: 50%; animation: blink 1.4s infinite; }
         @keyframes blink { 0%, 60%, 100% { opacity: 0.3; } 30% { opacity: 1; } }
@@ -108,16 +119,37 @@
                     <label class="checkbox-label"><input type="checkbox" id="useEarlyLate"> 使用早晚子时</label>
                 </div>
                 <div id="trueSolarResult" class="true-solar-box hidden"></div>
-                <div class="module-buttons">
-                    <button class="module-btn" data-module="overview">综合</button>
-                    <button class="module-btn active" data-module="career">事业</button>
-                    <button class="module-btn" data-module="wealth">财运</button>
-                    <button class="module-btn" data-module="marriage">婚姻</button>
-                    <button class="module-btn" data-module="liunian">流年</button>
+                
+                <!-- 验证阶段 -->
+                <div id="verifyArea" class="hidden">
+                    <div class="verify-box">
+                        <div class="verify-title">📋 八字验证推断</div>
+                        <div class="verify-content" id="verifyContent"></div>
+                        <div class="verify-buttons">
+                            <button class="verify-btn confirm" id="confirmBtn">✓ 准确</button>
+                            <button class="verify-btn feedback" id="feedbackBtn">✗ 不准确</button>
+                        </div>
+                        <textarea id="feedbackInput" class="feedback-input" rows="2" placeholder="请告诉我哪里不准确，例如：第一条不对、环境方位不准、性格不太像..."></textarea>
+                        <button id="submitFeedbackBtn" class="submit-feedback-btn">提交反馈并重新分析</button>
+                    </div>
                 </div>
-                <button class="analyze-btn" id="analyzeBtn">开始计算八字</button>
+
+                <!-- 模块选择 -->
+                <div id="moduleArea" class="hidden">
+                    <div class="module-buttons">
+                        <button class="module-btn" data-module="overview">综合</button>
+                        <button class="module-btn active" data-module="career">事业</button>
+                        <button class="module-btn" data-module="wealth">财运</button>
+                        <button class="module-btn" data-module="marriage">婚姻</button>
+                        <button class="module-btn" data-module="liunian">流年</button>
+                    </div>
+                    <button class="analyze-btn" id="startAnalysisBtn">开始分析</button>
+                </div>
             </div>
-            <div class="result-card" id="resultCard" style="display: none;"><div class="result-title">📊 分析结果</div><div class="result-content" id="resultContent"></div></div>
+            <div class="result-card" id="resultCard" style="display: none;">
+                <div class="result-title">📊 分析结果</div>
+                <div class="result-content" id="resultContent"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -128,13 +160,19 @@
     let currentModule = 'career';
     let isLoading = false;
     let pcaData = null;
+    
+    // 验证阶段状态
+    let currentStep = 0; // 0: 输入生辰, 1: 验证阶段, 2: 模块选择
+    let currentBirth = '';
+    let currentGender = '';
+    let currentHasHour = true;
+    let currentVerifyResult = '';  // 存储验证结果，用于反馈时重新分析
 
     // ==================== 省市区数据加载 ====================
     async function loadRegionData() {
         const loadingDiv = document.getElementById('regionLoading');
         loadingDiv.classList.remove('hidden');
         try {
-            // 使用 unpkg 加载 china-division 数据
             const [provincesRes, citiesRes, areasRes] = await Promise.all([
                 fetch('https://unpkg.com/china-division@2.7.0/dist/provinces.json'),
                 fetch('https://unpkg.com/china-division@2.7.0/dist/cities.json'),
@@ -147,7 +185,6 @@
             
             console.log(`加载成功: ${provinces.length}省, ${cities.length}市, ${areas.length}区县`);
             
-            // 构建树形结构
             pcaData = provinces.map(province => ({
                 code: province.code,
                 name: province.name,
@@ -255,7 +292,6 @@
         if (cityName && cityName !== '请选择城市') locationName += cityName;
         if (districtName && districtName !== '请选择区/县') locationName += districtName;
         
-        // 经度映射
         const provinceCode = provinceSelect.value;
         const lonMap = {
             '11': 116.40, '12': 117.20, '13': 114.52, '14': 112.56, '15': 111.65,
@@ -357,8 +393,9 @@
         const year = date.getFullYear(), month = date.getMonth() + 1, day = date.getDate();
         const gender = document.getElementById('genderSelect').value;
         const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
+        const hasHour = knowTime === 'yes';
         if (!gender) return null;
-        if (knowTime === 'yes') {
+        if (hasHour) {
             const actualTime = getActualBirthTime();
             if (!actualTime || isNaN(actualTime.hour) || isNaN(actualTime.minute)) return null;
             return `${year}.${month}.${day} ${actualTime.hour}时 ${actualTime.minute}分 ${gender}`;
@@ -367,48 +404,141 @@
         }
     }
 
-    function validateForm() {
-        if (!document.getElementById('genderSelect').value) { alert('请选择性别'); return false; }
-        if (!document.getElementById('dateInput').value) { alert('请选择出生日期'); return false; }
-        const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
-        if (knowTime === 'yes') {
-            if (!document.getElementById('hourSelect').value) { alert('请选择出生时间'); return false; }
-            if (!document.getElementById('minuteSelect').value) { alert('请选择分钟'); return false; }
+    // ==================== 验证功能 ====================
+    async function callVerify() {
+        const birth = buildBirthString();
+        if (!birth) {
+            alert('请完整填写必填信息');
+            return false;
+        }
+        
+        isLoading = true;
+        const verifyArea = document.getElementById('verifyArea');
+        const verifyContent = document.getElementById('verifyContent');
+        verifyArea.classList.remove('hidden');
+        verifyContent.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 正在分析中...';
+        
+        try {
+            const response = await fetch(`${API_URL}/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ birth: birth })
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                currentBirth = birth;
+                currentGender = document.getElementById('genderSelect').value;
+                currentHasHour = document.querySelector('input[name="knowTime"]:checked').value === 'yes';
+                currentVerifyResult = data.data.verify;
+                verifyContent.innerHTML = data.data.verify.replace(/\n/g, '<br>');
+                currentStep = 1;
+            } else {
+                verifyContent.innerHTML = `❌ 验证失败：${data.error || '未知错误'}<br><br>请检查输入信息后重试。`;
+                currentStep = 0;
+            }
+        } catch (err) {
+            verifyContent.innerHTML = `❌ 网络错误：${err.message}。请稍后重试。`;
+            currentStep = 0;
+        } finally {
+            isLoading = false;
         }
         return true;
     }
 
-    function addHistory(birthStr) {
-        const historyList = document.getElementById('historyList');
-        const li = document.createElement('li');
-        li.className = 'history-item';
-        li.dataset.birth = birthStr;
-        li.textContent = birthStr.length > 30 ? birthStr.substring(0, 30) + '...' : birthStr;
-        li.onclick = () => {
-            const match = birthStr.match(/(\d{4}\.\d{1,2}\.\d{1,2})\s+(\d{1,2})时\s+(\d+)分\s+([男女])/);
-            if (match) {
-                const dateParts = match[1].split('.');
-                document.getElementById('dateInput').value = `${dateParts[0]}-${dateParts[1].padStart(2,'0')}-${dateParts[2].padStart(2,'0')}`;
-                document.getElementById('hourSelect').value = match[2];
-                document.getElementById('minuteSelect').value = match[3];
-                document.getElementById('genderSelect').value = match[4];
-                document.querySelector('input[name="knowTime"][value="yes"]').checked = true;
-                document.getElementById('timeSelectArea').classList.remove('hidden');
-                document.getElementById('timeWarning').classList.add('hidden');
-                updateTrueSolarDisplay();
+    // 确认验证通过
+    function confirmVerify() {
+        currentStep = 2;
+        document.getElementById('verifyArea').classList.add('hidden');
+        document.getElementById('moduleArea').classList.remove('hidden');
+        document.getElementById('resultCard').style.display = 'none';
+        // 重置反馈输入框
+        document.getElementById('feedbackInput').classList.remove('active');
+        document.getElementById('submitFeedbackBtn').classList.remove('active');
+        document.getElementById('feedbackInput').value = '';
+    }
+
+    // 显示反馈输入框
+    function showFeedbackInput() {
+        const feedbackInput = document.getElementById('feedbackInput');
+        const submitBtn = document.getElementById('submitFeedbackBtn');
+        feedbackInput.classList.toggle('active');
+        submitBtn.classList.toggle('active');
+    }
+
+    // 提交反馈并重新验证
+    async function submitFeedback() {
+        const feedback = document.getElementById('feedbackInput').value.trim();
+        if (!feedback) {
+            alert('请输入不准确的具体内容');
+            return;
+        }
+        
+        // 重新调用验证接口，带上反馈信息
+        isLoading = true;
+        const verifyContent = document.getElementById('verifyContent');
+        verifyContent.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 根据反馈重新分析中...';
+        
+        try {
+            // 使用 analyze 接口，传入验证模块和反馈
+            const response = await fetch(`${API_URL}/analyze`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    birth: currentBirth, 
+                    module: 'verify',
+                    feedback: feedback 
+                })
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                currentVerifyResult = data.data.analysis;
+                verifyContent.innerHTML = data.data.analysis.replace(/\n/g, '<br>');
+                // 隐藏反馈输入框
+                document.getElementById('feedbackInput').classList.remove('active');
+                document.getElementById('submitFeedbackBtn').classList.remove('active');
+                document.getElementById('feedbackInput').value = '';
             } else {
-                const simpleMatch = birthStr.match(/(\d{4}\.\d{1,2}\.\d{1,2})\s+([男女])/);
-                if (simpleMatch) {
-                    const dateParts = simpleMatch[1].split('.');
-                    document.getElementById('dateInput').value = `${dateParts[0]}-${dateParts[1].padStart(2,'0')}-${dateParts[2].padStart(2,'0')}`;
-                    document.getElementById('genderSelect').value = simpleMatch[2];
-                    document.querySelector('input[name="knowTime"][value="no"]').checked = true;
-                    document.getElementById('timeSelectArea').classList.add('hidden');
-                    document.getElementById('timeWarning').classList.remove('hidden');
-                }
+                verifyContent.innerHTML = `❌ 重新分析失败：${data.error || '未知错误'}`;
             }
-        };
-        historyList.insertBefore(li, historyList.firstChild);
+        } catch (err) {
+            verifyContent.innerHTML = `❌ 网络错误：${err.message}。请稍后重试。`;
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    // 开始深度分析
+    async function startAnalysis() {
+        if (isLoading) return;
+        
+        isLoading = true;
+        const analyzeBtn = document.getElementById('startAnalysisBtn');
+        analyzeBtn.disabled = true;
+        analyzeBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
+        
+        try {
+            const response = await fetch(`${API_URL}/analyze`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ birth: currentBirth, module: currentModule })
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                showResult(data.data.analysis);
+                addHistory(currentBirth);
+            } else {
+                showResult(`❌ 分析失败：${data.error || '未知错误'}`);
+            }
+        } catch (err) {
+            showResult(`❌ 网络错误：${err.message}。请稍后重试。`);
+        } finally {
+            isLoading = false;
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = '开始分析';
+        }
     }
 
     function showResult(content) {
@@ -418,29 +548,45 @@
         document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
     }
 
-    function newChat() {
-        document.getElementById('resultCard').style.display = 'none';
-        document.getElementById('resultContent').innerHTML = '';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    function addHistory(birthStr) {
+        const historyList = document.getElementById('historyList');
+        const existingItems = Array.from(historyList.querySelectorAll('.history-item'));
+        if (existingItems.some(item => item.dataset.birth === birthStr)) return;
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        li.dataset.birth = birthStr;
+        li.textContent = birthStr.length > 30 ? birthStr.substring(0, 30) + '...' : birthStr;
+        li.onclick = () => {
+            document.getElementById('dateInput').value = '';
+            document.getElementById('genderSelect').value = '';
+            alert('历史记录功能：请手动输入生辰重新分析');
+        };
+        historyList.insertBefore(li, historyList.firstChild);
     }
 
-    async function analyze() {
-        if (isLoading) return;
-        if (!validateForm()) return;
-        const birth = buildBirthString();
-        if (!birth) { alert('请完整填写必填信息'); return; }
-        isLoading = true;
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        analyzeBtn.disabled = true;
-        analyzeBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
-        try {
-            const response = await fetch(`${API_URL}/analyze`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ birth: birth, module: currentModule }) });
-            const data = await response.json();
-            if (data.success) { showResult(data.data.analysis); addHistory(birth); }
-            else { showResult(`❌ 分析失败：${data.error || '未知错误'}`); }
-        } catch (err) { showResult(`❌ 网络错误：${err.message}。请稍后重试。`); }
-        finally { isLoading = false; analyzeBtn.disabled = false; analyzeBtn.innerHTML = '开始计算八字'; }
+    function newChat() {
+        currentStep = 0;
+        document.getElementById('verifyArea').classList.add('hidden');
+        document.getElementById('moduleArea').classList.add('hidden');
+        document.getElementById('resultCard').style.display = 'none';
+        document.getElementById('verifyContent').innerHTML = '';
+        document.getElementById('feedbackInput').value = '';
+        document.getElementById('feedbackInput').classList.remove('active');
+        document.getElementById('submitFeedbackBtn').classList.remove('active');
     }
+
+    // ==================== 主流程 ====================
+    document.getElementById('analyzeBtn').onclick = async () => {
+        if (currentStep === 0) {
+            await callVerify();
+        }
+    };
+    
+    document.getElementById('confirmBtn').onclick = confirmVerify;
+    document.getElementById('feedbackBtn').onclick = showFeedbackInput;
+    document.getElementById('submitFeedbackBtn').onclick = submitFeedback;
+    document.getElementById('startAnalysisBtn').onclick = startAnalysis;
+    document.getElementById('newChatBtn').onclick = newChat;
 
     // ==================== 事件绑定 ====================
     document.addEventListener('DOMContentLoaded', function() {
@@ -487,9 +633,6 @@
                 currentModule = btn.dataset.module;
             });
         });
-        
-        document.getElementById('analyzeBtn').addEventListener('click', analyze);
-        document.getElementById('newChatBtn').addEventListener('click', newChat);
     });
 </script>
 </body>
