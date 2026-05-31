@@ -47,14 +47,18 @@
         .verify-box.disabled { display: none; }
         .verify-item { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e0e0e0; }
         .verify-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-        .verify-title { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 12px; }
+        .verify-title { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 8px; }
         .verify-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; margin-bottom: 12px; }
         .verify-buttons { display: flex; gap: 16px; margin-top: 8px; }
-        .verify-btn { padding: 6px 16px; border: none; border-radius: 20px; font-size: 13px; cursor: pointer; }
+        .verify-btn { padding: 6px 16px; border: none; border-radius: 20px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
         .verify-btn.confirm { background: #1a1a2e; color: white; }
+        .verify-btn.confirm.disabled { background: #aaa; cursor: not-allowed; opacity: 0.6; }
         .verify-btn.feedback { background: #f0f0f0; color: #666; }
+        .verify-btn.feedback.active { background: #e6b980; color: #1a1a2e; }
         .feedback-detail { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 12px; font-size: 13px; margin-top: 12px; display: none; resize: vertical; font-family: inherit; }
         .feedback-detail.active { display: block; }
+        .submit-feedback-btn { padding: 6px 16px; background: #e6b980; border: none; border-radius: 20px; font-size: 12px; cursor: pointer; margin-top: 8px; display: none; }
+        .submit-feedback-btn.active { display: inline-block; }
         .bazi-info { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 14px; }
         .bazi-info span { font-weight: 600; color: #1a1a2e; }
         .checkbox-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -136,7 +140,7 @@
                         <div id="verifyItemsContainer"></div>
                         <div class="overall-buttons">
                             <div class="verify-buttons">
-                                <button class="verify-btn confirm" id="confirmOverallBtn">✓ 全部准确，继续分析</button>
+                                <button class="verify-btn confirm" id="confirmOverallBtn">✅ 全部/大部分准确，继续分析</button>
                             </div>
                         </div>
                     </div>
@@ -178,15 +182,11 @@
     let currentGender = '';
     let currentHasHour = true;
     let currentBaziStr = '';
-    let parsedVerifyItems = []; // 存储解析后的验证条目
+    let parsedVerifyItems = [];
     
-    // 存储每条的用户反馈
-    let userFeedbacks = {
-        item1: '',
-        item2: '',
-        item3: '',
-        item4: ''
-    };
+    // 存储每条的状态和反馈
+    let itemStatus = [];  // 'confirmed' 或 'pending'
+    let itemFeedbacks = [];
 
     // ==================== 省市区数据加载 ====================
     async function loadRegionData() {
@@ -202,8 +202,6 @@
             const provinces = await provincesRes.json();
             const cities = await citiesRes.json();
             const areas = await areasRes.json();
-            
-            console.log(`加载成功: ${provinces.length}省, ${cities.length}市, ${areas.length}区县`);
             
             pcaData = provinces.map(province => ({
                 code: province.code,
@@ -222,7 +220,6 @@
             initProvinceSelect();
         } catch (error) {
             console.error('数据加载失败:', error);
-            loadingDiv.innerHTML = '数据加载失败，使用备用数据';
             useFallbackData();
         }
         loadingDiv.classList.add('hidden');
@@ -325,7 +322,6 @@
         return { name: locationName, longitude: lonMap[provinceCode] || 120.0 };
     }
 
-    // ==================== 其他函数 ====================
     function initMinuteSelect() {
         const minuteSelect = document.getElementById('minuteSelect');
         minuteSelect.innerHTML = '<option value="">请选择分钟</option>';
@@ -366,8 +362,6 @@
         if (!locationInfo || !locationInfo.longitude || !document.getElementById('provinceSelect').value) {
             trueSolarDiv.classList.remove('hidden');
             trueSolarDiv.innerHTML = '📍 请选择完整的出生地点（省-市），以便进行真太阳时校正';
-            trueSolarDiv.style.background = '#fff3e0';
-            trueSolarDiv.style.borderLeftColor = '#e6b980';
             return;
         }
         const dateStr = document.getElementById('dateInput').value;
@@ -384,8 +378,6 @@
         const originalShichen = shichenMap[hour] || '';
         const trueShichen = shichenMap[trueTime.hour] || '';
         trueSolarDiv.classList.remove('hidden');
-        trueSolarDiv.style.background = '#e8f5e9';
-        trueSolarDiv.style.borderLeftColor = '#4caf50';
         trueSolarDiv.innerHTML = `🌞 真太阳时校正结果<br>📍 ${locationInfo.name}<br>🕐 北京时间：${hour.toString().padStart(2,'0')}:${minute.toString().padStart(2,'0')}（${originalShichen}时）<br>🕐 真太阳时：${trueTime.hour.toString().padStart(2,'0')}:${trueTime.minute.toString().padStart(2,'0')}（${trueShichen}时）<br>⚡ 分析将使用校正后的真太阳时`;
     }
 
@@ -413,9 +405,8 @@
         const year = date.getFullYear(), month = date.getMonth() + 1, day = date.getDate();
         const gender = document.getElementById('genderSelect').value;
         const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
-        const hasHour = knowTime === 'yes';
         if (!gender) return null;
-        if (hasHour) {
+        if (knowTime === 'yes') {
             const actualTime = getActualBirthTime();
             if (!actualTime || isNaN(actualTime.hour) || isNaN(actualTime.minute)) return null;
             return `${year}.${month}.${day} ${actualTime.hour}时 ${actualTime.minute}分 ${gender}`;
@@ -424,7 +415,7 @@
         }
     }
 
-    // ==================== 解析验证内容为条目 ====================
+    // ==================== 解析验证内容 ====================
     function parseVerifyContent(content) {
         const items = [];
         const sections = ['【环境方位】', '【六亲情况】', '【过去经历】', '【性格特征】'];
@@ -442,10 +433,55 @@
         return items;
     }
 
+    // 重新生成某一条推断
+    async function regenerateItem(index, feedback) {
+        const itemDiv = document.getElementById(`verify-item-${index}`);
+        const contentDiv = itemDiv.querySelector('.verify-content');
+        const originalContent = contentDiv.innerHTML;
+        
+        contentDiv.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 重新分析中...';
+        
+        try {
+            // 调用 analyze 接口，传入重新生成请求
+            const response = await fetch(`${API_URL}/analyze`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    birth: currentBirth, 
+                    module: 'verify_regenerate',
+                    item_index: index,
+                    feedback: feedback
+                })
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                // 更新该条内容
+                contentDiv.innerHTML = data.data.analysis.replace(/\n/g, '<br>');
+                // 重置该条的状态
+                itemStatus[index] = 'pending';
+                const confirmBtn = itemDiv.querySelector('.confirm');
+                const feedbackBtn = itemDiv.querySelector('.feedback');
+                confirmBtn.disabled = false;
+                confirmBtn.classList.remove('disabled');
+                feedbackBtn.classList.remove('active');
+                const textarea = itemDiv.querySelector('.feedback-detail');
+                textarea.classList.remove('active');
+                textarea.value = '';
+            } else {
+                contentDiv.innerHTML = `重新生成失败：${data.error || '未知错误'}`;
+            }
+        } catch (err) {
+            contentDiv.innerHTML = `网络错误：${err.message}`;
+        }
+    }
+
     // 显示验证条目
     function displayVerifyItems(items) {
         const container = document.getElementById('verifyItemsContainer');
         container.innerHTML = '';
+        itemStatus = items.map(() => 'pending');
+        itemFeedbacks = items.map(() => '');
         
         items.forEach((item, index) => {
             const itemDiv = document.createElement('div');
@@ -455,41 +491,81 @@
                 <div class="verify-title">${item.title}</div>
                 <div class="verify-content">${item.content.replace(/\n/g, '<br>')}</div>
                 <div class="verify-buttons">
-                    <button class="verify-btn confirm" data-index="${index}" data-type="confirm">✓ 准确</button>
-                    <button class="verify-btn feedback" data-index="${index}" data-type="feedback">✗ 不准确</button>
+                    <button class="verify-btn confirm" data-index="${index}" id="confirm-${index}">✓ 准确</button>
+                    <button class="verify-btn feedback" data-index="${index}" id="feedback-${index}">✗ 不准确</button>
                 </div>
-                <textarea class="feedback-detail" id="feedback-${index}" rows="2" placeholder="请描述实际情况..."></textarea>
+                <textarea class="feedback-detail" id="feedback-text-${index}" rows="2" placeholder="请描述实际情况..."></textarea>
+                <button class="submit-feedback-btn" id="submit-feedback-${index}">📤 提交反馈并重新生成</button>
             `;
             container.appendChild(itemDiv);
         });
         
-        // 绑定每个条目的按钮事件
+        // 绑定事件
         for (let i = 0; i < items.length; i++) {
-            const confirmBtn = document.querySelector(`#verify-item-${i} .confirm`);
-            const feedbackBtn = document.querySelector(`#verify-item-${i} .feedback`);
-            const textarea = document.getElementById(`feedback-${i}`);
+            const confirmBtn = document.getElementById(`confirm-${i}`);
+            const feedbackBtn = document.getElementById(`feedback-${i}`);
+            const textarea = document.getElementById(`feedback-text-${i}`);
+            const submitBtn = document.getElementById(`submit-feedback-${i}`);
             
             confirmBtn.onclick = () => {
-                textarea.classList.remove('active');
-                userFeedbacks[`item${i+1}`] = '';
-                confirmBtn.style.background = '#1a1a2e';
-                confirmBtn.style.opacity = '0.7';
+                itemStatus[i] = 'confirmed';
                 confirmBtn.disabled = true;
+                confirmBtn.classList.add('disabled');
                 feedbackBtn.disabled = true;
+                // 隐藏反馈区域
+                textarea.classList.remove('active');
+                submitBtn.classList.remove('active');
             };
             
             feedbackBtn.onclick = () => {
                 textarea.classList.toggle('active');
+                submitBtn.classList.toggle('active');
                 if (textarea.classList.contains('active')) {
-                    feedbackBtn.style.background = '#e6b980';
+                    feedbackBtn.classList.add('active');
                 } else {
-                    feedbackBtn.style.background = '#f0f0f0';
-                    userFeedbacks[`item${i+1}`] = textarea.value;
+                    feedbackBtn.classList.remove('active');
                 }
             };
             
-            textarea.oninput = () => {
-                userFeedbacks[`item${i+1}`] = textarea.value;
+            submitBtn.onclick = async () => {
+                const feedback = textarea.value.trim();
+                if (!feedback) {
+                    alert('请填写实际情况描述');
+                    return;
+                }
+                await regenerateItem(i, feedback);
+                // 重新绑定事件（因为内容被替换了）
+                const newConfirmBtn = document.getElementById(`confirm-${i}`);
+                const newFeedbackBtn = document.getElementById(`feedback-${i}`);
+                const newTextarea = document.getElementById(`feedback-text-${i}`);
+                const newSubmitBtn = document.getElementById(`submit-feedback-${i}`);
+                
+                if (newConfirmBtn) {
+                    newConfirmBtn.onclick = () => {
+                        itemStatus[i] = 'confirmed';
+                        newConfirmBtn.disabled = true;
+                        newConfirmBtn.classList.add('disabled');
+                        newFeedbackBtn.disabled = true;
+                        newTextarea.classList.remove('active');
+                        newSubmitBtn.classList.remove('active');
+                    };
+                }
+                if (newFeedbackBtn) {
+                    newFeedbackBtn.onclick = () => {
+                        newTextarea.classList.toggle('active');
+                        newSubmitBtn.classList.toggle('active');
+                    };
+                }
+                if (newSubmitBtn) {
+                    newSubmitBtn.onclick = async () => {
+                        const newFeedback = newTextarea.value.trim();
+                        if (!newFeedback) {
+                            alert('请填写实际情况描述');
+                            return;
+                        }
+                        await regenerateItem(i, newFeedback);
+                    };
+                }
             };
         }
     }
@@ -526,16 +602,15 @@
                 if (data.data.bazi) {
                     currentBaziStr = data.data.bazi;
                 }
-                // 解析并显示验证条目
                 parsedVerifyItems = parseVerifyContent(data.data.verify);
                 displayVerifyItems(parsedVerifyItems);
                 currentStep = 1;
             } else {
-                verifyItemsContainer.innerHTML = `❌ 验证失败：${data.error || '未知错误'}<br><br>请检查输入信息后重试。`;
+                verifyItemsContainer.innerHTML = `❌ 验证失败：${data.error || '未知错误'}`;
                 currentStep = 0;
             }
         } catch (err) {
-            verifyItemsContainer.innerHTML = `❌ 网络错误：${err.message}。请稍后重试。`;
+            verifyItemsContainer.innerHTML = `❌ 网络错误：${err.message}`;
             currentStep = 0;
         } finally {
             isLoading = false;
@@ -543,22 +618,22 @@
         return true;
     }
 
-    // 确认全部准确
     function confirmAllAccurate() {
         // 检查是否所有条目都已确认
         let allConfirmed = true;
-        for (let i = 0; i < parsedVerifyItems.length; i++) {
-            const confirmBtn = document.querySelector(`#verify-item-${i} .confirm`);
-            if (confirmBtn && !confirmBtn.disabled) {
+        for (let i = 0; i < itemStatus.length; i++) {
+            if (itemStatus[i] !== 'confirmed') {
                 allConfirmed = false;
                 break;
             }
         }
         
         if (!allConfirmed) {
-            // 如果还有未确认的，提示用户
-            alert('请先逐条确认所有推断是否准确（点击每条后面的"准确"按钮）');
-            return;
+            if (confirm('还有未确认的推断项，确认继续吗？')) {
+                // 用户选择继续
+            } else {
+                return;
+            }
         }
         
         currentStep = 2;
@@ -566,21 +641,15 @@
         const baziInfoArea = document.getElementById('baziInfoArea');
         const baziDisplay = document.getElementById('baziDisplay');
         
-        // 隐藏验证区域
         verifyArea.classList.add('hidden');
         
-        // 显示八字信息
         if (currentBaziStr) {
             baziDisplay.textContent = currentBaziStr;
             baziInfoArea.classList.remove('hidden');
         }
         
-        // 显示模块选择区域
         document.getElementById('moduleArea').classList.remove('hidden');
         document.getElementById('resultCard').style.display = 'none';
-        
-        // 重置用户反馈
-        userFeedbacks = { item1: '', item2: '', item3: '', item4: '' };
     }
 
     async function startAnalysis() {
@@ -600,13 +669,18 @@
             const data = await response.json();
             
             if (data.success) {
-                showResult(data.data.analysis);
+                let html = data.data.analysis.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                document.getElementById('resultContent').innerHTML = html;
+                document.getElementById('resultCard').style.display = 'block';
+                document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
                 addHistory(currentBirth);
             } else {
-                showResult(`❌ 分析失败：${data.error || '未知错误'}`);
+                document.getElementById('resultContent').innerHTML = `❌ 分析失败：${data.error || '未知错误'}`;
+                document.getElementById('resultCard').style.display = 'block';
             }
         } catch (err) {
-            showResult(`❌ 网络错误：${err.message}。请稍后重试。`);
+            document.getElementById('resultContent').innerHTML = `❌ 网络错误：${err.message}`;
+            document.getElementById('resultCard').style.display = 'block';
         } finally {
             isLoading = false;
             analyzeBtn.disabled = false;
@@ -614,23 +688,13 @@
         }
     }
 
-    function showResult(content) {
-        let html = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        document.getElementById('resultContent').innerHTML = html;
-        document.getElementById('resultCard').style.display = 'block';
-        document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
-    }
-
     function addHistory(birthStr) {
         const historyList = document.getElementById('historyList');
-        const existingItems = Array.from(historyList.querySelectorAll('.history-item'));
-        if (existingItems.some(item => item.dataset.birth === birthStr)) return;
         const li = document.createElement('li');
         li.className = 'history-item';
-        li.dataset.birth = birthStr;
         li.textContent = birthStr.length > 30 ? birthStr.substring(0, 30) + '...' : birthStr;
         li.onclick = () => {
-            alert('历史记录功能：请手动输入生辰重新分析');
+            alert('点击历史记录：请手动填入生辰重新分析');
         };
         historyList.insertBefore(li, historyList.firstChild);
     }
@@ -643,7 +707,7 @@
         document.getElementById('baziInfoArea').classList.add('hidden');
         document.getElementById('verifyItemsContainer').innerHTML = '';
         document.getElementById('startVerifyBtn').classList.remove('hidden');
-        userFeedbacks = { item1: '', item2: '', item3: '', item4: '' };
+        itemStatus = [];
     }
 
     // ==================== 事件绑定 ====================
@@ -660,7 +724,6 @@
         document.getElementById('startAnalysisBtn').onclick = startAnalysis;
         document.getElementById('newChatBtn').onclick = newChat;
         
-        // 省市区联动
         document.getElementById('provinceSelect').addEventListener('change', function() {
             updateCitySelect();
             updateTrueSolarDisplay();
@@ -671,7 +734,6 @@
         });
         document.getElementById('districtSelect').addEventListener('change', updateTrueSolarDisplay);
         
-        // 时间选项切换
         const radios = document.querySelectorAll('input[name="knowTime"]');
         radios.forEach(radio => {
             radio.addEventListener('change', (e) => {
