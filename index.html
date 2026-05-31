@@ -76,9 +76,11 @@
         .hidden { display: none !important; }
         .loading-text { color: #666; font-size: 12px; margin-top: 8px; }
         .action-buttons { margin-top: 16px; padding-top: 16px; border-top: 1px solid #e0e0e0; display: flex; gap: 16px; justify-content: flex-end; }
-        .action-btn { padding: 8px 20px; border: none; border-radius: 24px; font-size: 14px; cursor: pointer; }
+        .action-btn { padding: 8px 20px; border: none; border-radius: 24px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
         .action-btn.primary { background: #1a1a2e; color: white; }
+        .action-btn.primary.highlight { background: #e6b980; color: #1a1a2e; box-shadow: 0 2px 8px rgba(230,185,128,0.4); }
         .action-btn.secondary { background: #f0f0f0; color: #666; }
+        .action-btn.secondary.highlight { background: #1a1a2e; color: white; }
     </style>
 </head>
 <body>
@@ -176,7 +178,7 @@
     let currentBaziStr = '';
     let parsedVerifyItems = [];
     let itemFeedbacks = [];
-    let currentVerifyRawData = '';
+    let hasAnyFeedback = false;
 
     // ==================== 省市区数据加载 ====================
     async function loadRegionData() {
@@ -384,24 +386,33 @@
         const container = document.getElementById('verifyItemsContainer');
         container.innerHTML = '';
         itemFeedbacks = items.map(() => '');
+        hasAnyFeedback = false;
         
-        items.forEach((item, index) => {
+        // 重新排序：把性格特征放在最后
+        const reordered = [...items];
+        const characterIndex = reordered.findIndex(i => i.title === '【性格特征】');
+        if (characterIndex !== -1 && characterIndex !== reordered.length - 1) {
+            const character = reordered.splice(characterIndex, 1)[0];
+            reordered.push(character);
+        }
+        
+        reordered.forEach((item, originalIndex) => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'verify-item';
             itemDiv.innerHTML = `
                 <div class="verify-title">${item.title}</div>
                 <div class="verify-content">${item.content.replace(/\n/g, '<br>')}</div>
                 <div class="item-buttons">
-                    <button class="item-btn confirm" data-index="${index}">准确</button>
-                    <button class="item-btn feedback" data-index="${index}">不准确</button>
+                    <button class="item-btn confirm" data-index="${originalIndex}">准确</button>
+                    <button class="item-btn feedback" data-index="${originalIndex}">不准确</button>
                 </div>
-                <textarea class="feedback-detail" id="feedback-${index}" rows="2" placeholder="请描述实际情况..."></textarea>
+                <textarea class="feedback-detail" id="feedback-${originalIndex}" rows="2" placeholder="请描述实际情况..."></textarea>
             `;
             container.appendChild(itemDiv);
         });
         
         // 绑定事件
-        for (let i = 0; i < items.length; i++) {
+        for (let i = 0; i < reordered.length; i++) {
             const confirmBtn = container.querySelector(`.item-btn.confirm[data-index="${i}"]`);
             const feedbackBtn = container.querySelector(`.item-btn.feedback[data-index="${i}"]`);
             const textarea = document.getElementById(`feedback-${i}`);
@@ -412,21 +423,48 @@
                 feedbackBtn.classList.add('disabled');
                 itemFeedbacks[i] = '';
                 textarea.classList.remove('active');
+                updateButtonHighlights();
             };
             
             feedbackBtn.onclick = () => {
                 textarea.classList.toggle('active');
                 if (textarea.classList.contains('active')) {
                     feedbackBtn.classList.add('active');
-                    itemFeedbacks[i] = '';
                 } else {
                     feedbackBtn.classList.remove('active');
+                    if (itemFeedbacks[i] === '') {
+                        feedbackBtn.classList.remove('active');
+                    }
                 }
+                updateButtonHighlights();
             };
             
             textarea.oninput = () => {
                 itemFeedbacks[i] = textarea.value;
+                updateButtonHighlights();
             };
+        }
+    }
+    
+    function updateButtonHighlights() {
+        const hasAny = itemFeedbacks.some(fb => fb && fb.trim() !== '');
+        const submitBtn = document.getElementById('submitFeedbackBtn');
+        const confirmBtn = document.getElementById('confirmOverallBtn');
+        
+        if (hasAny) {
+            submitBtn.classList.add('highlight');
+            submitBtn.classList.remove('secondary');
+            submitBtn.classList.add('primary');
+            confirmBtn.classList.remove('highlight');
+            confirmBtn.classList.add('secondary');
+            confirmBtn.classList.remove('primary');
+        } else {
+            submitBtn.classList.remove('highlight');
+            submitBtn.classList.remove('primary');
+            submitBtn.classList.add('secondary');
+            confirmBtn.classList.add('highlight');
+            confirmBtn.classList.remove('secondary');
+            confirmBtn.classList.add('primary');
         }
     }
 
@@ -456,7 +494,6 @@
             if (data.success) {
                 currentBirth = birth;
                 if (data.data.bazi) currentBaziStr = data.data.bazi;
-                currentVerifyRawData = data.data.verify;
                 parsedVerifyItems = parseVerifyContent(data.data.verify);
                 displayVerifyItems(parsedVerifyItems);
                 actionButtons.style.display = 'flex';
@@ -491,7 +528,6 @@
             const data = await response.json();
             
             if (data.success) {
-                currentVerifyRawData = data.data.verify;
                 parsedVerifyItems = parseVerifyContent(data.data.verify);
                 displayVerifyItems(parsedVerifyItems);
                 itemFeedbacks = parsedVerifyItems.map(() => '');
@@ -570,6 +606,7 @@
         document.getElementById('startVerifyBtn').classList.remove('hidden');
         document.getElementById('actionButtons').style.display = 'none';
         itemFeedbacks = [];
+        hasAnyFeedback = false;
     }
 
     document.addEventListener('DOMContentLoaded', function() {
