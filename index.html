@@ -59,8 +59,8 @@
         .module-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
         .module-btn { padding: 8px 20px; background: #f0f0f0; border: none; border-radius: 30px; font-size: 14px; color: #666; cursor: pointer; }
         .module-btn.active { background: #1a1a2e; color: white; }
-        .analyze-btn { width: 100%; padding: 14px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 20px; }
-        .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .primary-btn { width: 100%; padding: 14px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 20px; }
+        .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .result-card { background: #f9f9fb; border-radius: 20px; padding: 24px; }
         .result-title { font-size: 16px; font-weight: 600; color: #1a1a2e; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
         .result-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; max-height: 500px; overflow-y: auto; }
@@ -120,6 +120,9 @@
                 </div>
                 <div id="trueSolarResult" class="true-solar-box hidden"></div>
                 
+                <!-- 按钮区域 -->
+                <button class="primary-btn" id="startVerifyBtn">开始验证八字</button>
+                
                 <!-- 验证阶段 -->
                 <div id="verifyArea" class="hidden">
                     <div class="verify-box">
@@ -143,7 +146,7 @@
                         <button class="module-btn" data-module="marriage">婚姻</button>
                         <button class="module-btn" data-module="liunian">流年</button>
                     </div>
-                    <button class="analyze-btn" id="startAnalysisBtn">开始分析</button>
+                    <button class="primary-btn" id="startAnalysisBtn">开始深度分析</button>
                 </div>
             </div>
             <div class="result-card" id="resultCard" style="display: none;">
@@ -166,7 +169,7 @@
     let currentBirth = '';
     let currentGender = '';
     let currentHasHour = true;
-    let currentVerifyResult = '';  // 存储验证结果，用于反馈时重新分析
+    let currentVerifyResult = '';
 
     // ==================== 省市区数据加载 ====================
     async function loadRegionData() {
@@ -446,19 +449,16 @@
         return true;
     }
 
-    // 确认验证通过
     function confirmVerify() {
         currentStep = 2;
         document.getElementById('verifyArea').classList.add('hidden');
         document.getElementById('moduleArea').classList.remove('hidden');
         document.getElementById('resultCard').style.display = 'none';
-        // 重置反馈输入框
         document.getElementById('feedbackInput').classList.remove('active');
         document.getElementById('submitFeedbackBtn').classList.remove('active');
         document.getElementById('feedbackInput').value = '';
     }
 
-    // 显示反馈输入框
     function showFeedbackInput() {
         const feedbackInput = document.getElementById('feedbackInput');
         const submitBtn = document.getElementById('submitFeedbackBtn');
@@ -466,7 +466,6 @@
         submitBtn.classList.toggle('active');
     }
 
-    // 提交反馈并重新验证
     async function submitFeedback() {
         const feedback = document.getElementById('feedbackInput').value.trim();
         if (!feedback) {
@@ -474,28 +473,21 @@
             return;
         }
         
-        // 重新调用验证接口，带上反馈信息
         isLoading = true;
         const verifyContent = document.getElementById('verifyContent');
         verifyContent.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 根据反馈重新分析中...';
         
         try {
-            // 使用 analyze 接口，传入验证模块和反馈
-            const response = await fetch(`${API_URL}/analyze`, {
+            const response = await fetch(`${API_URL}/verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    birth: currentBirth, 
-                    module: 'verify',
-                    feedback: feedback 
-                })
+                body: JSON.stringify({ birth: currentBirth })
             });
             const data = await response.json();
             
             if (data.success) {
-                currentVerifyResult = data.data.analysis;
-                verifyContent.innerHTML = data.data.analysis.replace(/\n/g, '<br>');
-                // 隐藏反馈输入框
+                currentVerifyResult = data.data.verify;
+                verifyContent.innerHTML = data.data.verify.replace(/\n/g, '<br>');
                 document.getElementById('feedbackInput').classList.remove('active');
                 document.getElementById('submitFeedbackBtn').classList.remove('active');
                 document.getElementById('feedbackInput').value = '';
@@ -509,7 +501,6 @@
         }
     }
 
-    // 开始深度分析
     async function startAnalysis() {
         if (isLoading) return;
         
@@ -537,7 +528,7 @@
         } finally {
             isLoading = false;
             analyzeBtn.disabled = false;
-            analyzeBtn.innerHTML = '开始分析';
+            analyzeBtn.innerHTML = '开始深度分析';
         }
     }
 
@@ -557,9 +548,7 @@
         li.dataset.birth = birthStr;
         li.textContent = birthStr.length > 30 ? birthStr.substring(0, 30) + '...' : birthStr;
         li.onclick = () => {
-            document.getElementById('dateInput').value = '';
-            document.getElementById('genderSelect').value = '';
-            alert('历史记录功能：请手动输入生辰重新分析');
+            alert('请手动输入生辰重新分析');
         };
         historyList.insertBefore(li, historyList.firstChild);
     }
@@ -575,24 +564,24 @@
         document.getElementById('submitFeedbackBtn').classList.remove('active');
     }
 
-    // ==================== 主流程 ====================
-    document.getElementById('analyzeBtn').onclick = async () => {
-        if (currentStep === 0) {
-            await callVerify();
-        }
-    };
-    
-    document.getElementById('confirmBtn').onclick = confirmVerify;
-    document.getElementById('feedbackBtn').onclick = showFeedbackInput;
-    document.getElementById('submitFeedbackBtn').onclick = submitFeedback;
-    document.getElementById('startAnalysisBtn').onclick = startAnalysis;
-    document.getElementById('newChatBtn').onclick = newChat;
-
     // ==================== 事件绑定 ====================
     document.addEventListener('DOMContentLoaded', function() {
         initMinuteSelect();
         loadRegionData();
         
+        // 按钮事件
+        document.getElementById('startVerifyBtn').onclick = async () => {
+            if (currentStep === 0) {
+                await callVerify();
+            }
+        };
+        document.getElementById('confirmBtn').onclick = confirmVerify;
+        document.getElementById('feedbackBtn').onclick = showFeedbackInput;
+        document.getElementById('submitFeedbackBtn').onclick = submitFeedback;
+        document.getElementById('startAnalysisBtn').onclick = startAnalysis;
+        document.getElementById('newChatBtn').onclick = newChat;
+        
+        // 省市区联动
         document.getElementById('provinceSelect').addEventListener('change', function() {
             updateCitySelect();
             updateTrueSolarDisplay();
@@ -603,6 +592,7 @@
         });
         document.getElementById('districtSelect').addEventListener('change', updateTrueSolarDisplay);
         
+        // 时间选项切换
         const radios = document.querySelectorAll('input[name="knowTime"]');
         radios.forEach(radio => {
             radio.addEventListener('change', (e) => {
@@ -621,11 +611,13 @@
             });
         });
         
+        // 真太阳时
         document.getElementById('useTrueSolar').addEventListener('change', updateTrueSolarDisplay);
         document.getElementById('dateInput').addEventListener('change', updateTrueSolarDisplay);
         document.getElementById('hourSelect').addEventListener('change', updateTrueSolarDisplay);
         document.getElementById('minuteSelect').addEventListener('change', updateTrueSolarDisplay);
         
+        // 模块切换
         document.querySelectorAll('.module-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.module-btn').forEach(b => b.classList.remove('active'));
