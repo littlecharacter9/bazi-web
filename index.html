@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>八戒命理 - 八字命理助手</title>
     <style>
+        /* 样式保持不变，省略节省篇幅 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: #f5f5f7; color: #1c1c1e; height: 100vh; overflow: hidden; }
         .app { display: flex; height: 100vh; width: 100%; }
@@ -79,7 +80,7 @@
         .action-btn { padding: 8px 20px; border: none; border-radius: 24px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
         .action-btn.primary { background: #e6b980; color: #1a1a2e; }
         .action-btn.dark { background: #1a1a2e; color: white; }
-        .action-btn.secondary { background: #f0f0f0; color: #666; }
+        .action-btn.secondary { background: #e0e0e0; color: #999; cursor: not-allowed; }
         .feedback-notice { background: #e8f5e9; padding: 12px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #2e7d32; }
     </style>
 </head>
@@ -172,12 +173,11 @@
     let currentStep = 0;
     let currentBirth = '';
     let currentBaziStr = '';
-    let originalVerifyItems = [];  // 存储原始验证条目
-    let currentVerifyItems = [];    // 当前显示的验证条目
+    let originalVerifyItems = [];
+    let currentVerifyItems = [];
     let itemFeedbacks = [];
     let itemConfirmed = [];
 
-    // 省市区数据加载（简化版）
     async function loadRegionData() {
         const loadingDiv = document.getElementById('regionLoading');
         loadingDiv.classList.remove('hidden');
@@ -254,6 +254,27 @@
         return items;
     }
 
+    function updateButtonHighlights() {
+        const hasAny = itemFeedbacks.some(fb => fb && fb.trim() !== '');
+        const submitBtn = document.getElementById('submitFeedbackBtn');
+        const confirmBtn = document.getElementById('confirmOverallBtn');
+        
+        if (hasAny) {
+            submitBtn.classList.remove('secondary');
+            submitBtn.classList.add('primary');
+            submitBtn.disabled = false;
+            submitBtn.style.cursor = 'pointer';
+            confirmBtn.classList.remove('dark');
+            confirmBtn.classList.add('secondary');
+        } else {
+            submitBtn.classList.remove('primary');
+            submitBtn.classList.add('secondary');
+            submitBtn.disabled = true;
+            confirmBtn.classList.remove('secondary');
+            confirmBtn.classList.add('dark');
+        }
+    }
+
     function displayVerifyItems(items, feedbackNotice = null) {
         const container = document.getElementById('verifyItemsContainer');
         container.innerHTML = '';
@@ -299,6 +320,7 @@
                     feedbackBtn.disabled = true;
                     textarea.classList.remove('active');
                     itemFeedbacks[i] = '';
+                    updateButtonHighlights();
                 };
             }
             
@@ -314,7 +336,10 @@
             }
             
             if (textarea) {
-                textarea.oninput = () => { itemFeedbacks[i] = textarea.value; };
+                textarea.oninput = () => {
+                    itemFeedbacks[i] = textarea.value;
+                    updateButtonHighlights();
+                };
             }
         }
     }
@@ -395,7 +420,6 @@
             const data = await response.json();
             
             if (data.success && data.data.adjusted_items) {
-                // 更新不准确的项目
                 for (let adj of data.data.adjusted_items) {
                     for (let i = 0; i < currentVerifyItems.length; i++) {
                         if (currentVerifyItems[i].title === adj.section) {
@@ -405,7 +429,6 @@
                     }
                 }
                 
-                // 重置不准确项目的状态
                 for (let i = 0; i < currentVerifyItems.length; i++) {
                     if (!itemConfirmed[i]) {
                         itemFeedbacks[i] = '';
@@ -419,7 +442,6 @@
                 
                 displayVerifyItems(currentVerifyItems, notice);
                 
-                // 重新绑定未确认项的事件
                 for (let i = 0; i < currentVerifyItems.length; i++) {
                     if (!itemConfirmed[i]) {
                         const confirmBtn = document.querySelector(`.item-btn.confirm[data-index="${i}"]`);
@@ -435,6 +457,7 @@
                                 feedbackBtn.disabled = true;
                                 textarea.classList.remove('active');
                                 itemFeedbacks[i] = '';
+                                updateButtonHighlights();
                             };
                         }
                         if (feedbackBtn) {
@@ -448,10 +471,14 @@
                             };
                         }
                         if (textarea) {
-                            textarea.oninput = () => { itemFeedbacks[i] = textarea.value; };
+                            textarea.oninput = () => {
+                                itemFeedbacks[i] = textarea.value;
+                                updateButtonHighlights();
+                            };
                         }
                     }
                 }
+                updateButtonHighlights();
             } else {
                 verifyItemsContainer.innerHTML = `重新分析失败：${data.error || '未知错误'}`;
             }
