@@ -172,7 +172,6 @@
                 </div>
                 <div id="trueSolarResult" class="true-solar-box hidden"></div>
                 
-                <!-- 八字信息区域（带折叠图标） -->
                 <div id="baziInfoArea" class="bazi-info hidden">
                     <span>📜 八字排盘：<span id="baziDisplay"></span></span>
                     <span class="verify-toggle-icon" id="verifyToggleIcon">
@@ -183,7 +182,6 @@
                     </span>
                 </div>
                 
-                <!-- 验证内容区域（可折叠，用于新用户验证时显示按钮） -->
                 <div id="verifyArea" class="hidden">
                     <div class="verify-box">
                         <div id="verifyItemsContainer"></div>
@@ -238,11 +236,9 @@
     let isVerifyCollapsed = false;
     let pendingVerifyContent = null;
 
-    // SVG 图标
     const expandSVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 10L12 14L16 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     const collapseSVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 8L14 12L10 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-    // ==================== 折叠功能 ====================
     function toggleVerifySection() {
         const wrapper = document.getElementById('verifyArea');
         const icon = document.getElementById('verifyToggleIcon');
@@ -257,34 +253,40 @@
         }
     }
 
-    // 格式化验证内容用于历史记录（彻底移除按钮和反馈框）
+    // 彻底清理验证内容中的按钮和交互元素
     function formatVerifyContentForHistory(htmlContent) {
         if (!htmlContent) return '';
         
         const temp = document.createElement('div');
         temp.innerHTML = htmlContent;
         
-        // 删除所有按钮区域
-        const buttonContainers = temp.querySelectorAll('.item-buttons');
-        buttonContainers.forEach(el => el.remove());
+        // 删除所有按钮相关元素
+        const selectorsToRemove = [
+            '.item-buttons', '.feedback-detail', '.verify-question', 
+            '.feedback-notice', '.item-btn', '.action-buttons', 'button'
+        ];
         
-        // 删除所有反馈输入框
-        const feedbacks = temp.querySelectorAll('.feedback-detail');
-        feedbacks.forEach(el => el.remove());
+        selectorsToRemove.forEach(selector => {
+            const elements = temp.querySelectorAll(selector);
+            elements.forEach(el => el.remove());
+        });
         
-        // 删除所有问询文字
-        const questions = temp.querySelectorAll('.verify-question');
-        questions.forEach(el => el.remove());
-        
-        // 提取每个验证项
-        const items = temp.querySelectorAll('.verify-item');
+        // 重新构建干净内容
+        const verifyItems = temp.querySelectorAll('.verify-item');
         let formattedHtml = '';
         
-        items.forEach(item => {
+        verifyItems.forEach(item => {
             const titleElem = item.querySelector('.verify-title');
             const title = titleElem ? titleElem.outerHTML : '';
             const contentElem = item.querySelector('.verify-content');
-            const content = contentElem ? contentElem.outerHTML : '';
+            let content = contentElem ? contentElem.outerHTML : '';
+            
+            if (!contentElem) {
+                const cleanItem = item.cloneNode(true);
+                const removeList = cleanItem.querySelectorAll('.item-buttons, .feedback-detail, .verify-question, button');
+                removeList.forEach(el => el.remove());
+                content = cleanItem.innerHTML;
+            }
             
             if (title && content) {
                 formattedHtml += `
@@ -293,22 +295,33 @@
                         ${content}
                     </div>
                 `;
+            } else if (content) {
+                formattedHtml += `
+                    <div class="history-verify-item">
+                        ${content}
+                    </div>
+                `;
             }
         });
+        
+        if (!formattedHtml.trim()) {
+            return temp.textContent || '';
+        }
         
         return formattedHtml;
     }
 
-    // ==================== 本地存储管理 ====================
     const STORAGE_KEY = 'bazi_analysis_history';
 
     function saveAnalysisRecord(birthStr, moduleName, resultContent, baziStr, userName, verifyContent = null) {
         const records = getAnalysisRecords();
         const displayName = userName && userName.trim() ? `${userName.trim()} · ${moduleName}` : `匿名 · ${moduleName}`;
         let formattedVerifyContent = null;
+        
         if (verifyContent) {
             formattedVerifyContent = formatVerifyContentForHistory(verifyContent);
         }
+        
         const newRecord = {
             id: Date.now(),
             timestamp: new Date().toISOString(),
@@ -321,6 +334,7 @@
             userName: userName || '',
             verifyContent: formattedVerifyContent
         };
+        
         records.unshift(newRecord);
         if (records.length > 30) records.pop();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
@@ -365,6 +379,24 @@
         }
     }
 
+    // 清理旧数据中的按钮残留
+    function migrateOldRecords() {
+        const records = getAnalysisRecords();
+        let hasChanges = false;
+        
+        records.forEach(record => {
+            if (record.verifyContent && (record.verifyContent.includes('item-btn') || record.verifyContent.includes('button') || record.verifyContent.includes('item-buttons'))) {
+                record.verifyContent = formatVerifyContentForHistory(record.verifyContent);
+                hasChanges = true;
+            }
+        });
+        
+        if (hasChanges) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+            updateHistoryList();
+        }
+    }
+
     function updateHistoryList() {
         const historyList = document.getElementById('historyList');
         if (!historyList) return;
@@ -379,7 +411,7 @@
             li.className = 'history-item';
             const displayName = record.name || `${record.userName || '匿名'} · ${record.module}`;
             li.innerHTML = `
-                <span style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px;">${displayName}</span>
+                <span style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px;">${escapeHtml(displayName)}</span>
                 <div style="display: flex; gap: 12px; align-items: center;">
                     <span class="history-icon history-rename" data-id="${record.id}" style="cursor: pointer; color: #888; font-size: 12px;">✎</span>
                     <span class="history-icon history-delete" data-id="${record.id}" style="cursor: pointer; color: #888; font-size: 14px;">🗑</span>
@@ -418,8 +450,13 @@
         historyList.appendChild(clearBtn);
     }
 
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     function viewHistoryRecord(record) {
-        // 显示八字信息
         const baziInfoArea = document.getElementById('baziInfoArea');
         const baziDisplay = document.getElementById('baziDisplay');
         if (record.bazi) {
@@ -429,19 +466,25 @@
             baziInfoArea.classList.add('hidden');
         }
         
-        // 强制隐藏全局的反馈按钮区域
         const actionButtonsGlobal = document.getElementById('actionButtons');
         if (actionButtonsGlobal) actionButtonsGlobal.style.display = 'none';
         
-        // 显示验证内容（格式化后的，无按钮）
         const verifyArea = document.getElementById('verifyArea');
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
         const toggleIcon = document.getElementById('verifyToggleIcon');
         
         if (record.verifyContent && record.verifyContent.trim() !== '') {
-            verifyItemsContainer.innerHTML = record.verifyContent;
+            let cleanContent = record.verifyContent;
+            // 二次保险清理
+            const tempCheck = document.createElement('div');
+            tempCheck.innerHTML = cleanContent;
+            const buttons = tempCheck.querySelectorAll('button, .item-btn, .item-buttons, .feedback-detail, .verify-question');
+            if (buttons.length > 0) {
+                buttons.forEach(btn => btn.remove());
+                cleanContent = tempCheck.innerHTML;
+            }
+            verifyItemsContainer.innerHTML = cleanContent;
             verifyArea.classList.remove('hidden');
-            // 默认折叠状态
             verifyArea.classList.add('hidden');
             isVerifyCollapsed = true;
             if (toggleIcon) toggleIcon.innerHTML = collapseSVG;
@@ -507,7 +550,6 @@
         return moduleMap[currentModule] || currentModule;
     }
 
-    // ==================== 省市区数据加载（简化版）====================
     async function loadRegionData() {
         const loadingDiv = document.getElementById('regionLoading');
         loadingDiv.classList.remove('hidden');
@@ -745,12 +787,12 @@
             const itemDiv = document.createElement('div');
             itemDiv.className = 'verify-item';
             itemDiv.innerHTML = `
-                <div class="verify-title">${item.title}</div>
+                <div class="verify-title">${escapeHtml(item.title)}</div>
                 <div class="item-buttons">
                     <button class="item-btn confirm" data-index="${idx}">准确</button>
                     <button class="item-btn feedback" data-index="${idx}">不准确</button>
                 </div>
-                <div class="verify-question">${questionText}</div>
+                <div class="verify-question">${escapeHtml(questionText)}</div>
                 <div class="verify-content">${item.content.replace(/\n/g, '<br>')}</div>
                 <textarea class="feedback-detail" id="feedback-${idx}" rows="2" placeholder="请描述实际情况..."></textarea>
             `;
@@ -926,7 +968,12 @@
         currentStep = 2;
         const verifyArea = document.getElementById('verifyArea');
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
-        pendingVerifyContent = verifyItemsContainer.innerHTML;
+        const currentVerifyHtml = verifyItemsContainer.innerHTML;
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = currentVerifyHtml;
+        const elementsToRemove = tempDiv.querySelectorAll('.item-buttons, .feedback-detail, .verify-question, .action-buttons, button');
+        elementsToRemove.forEach(el => el.remove());
+        pendingVerifyContent = tempDiv.innerHTML;
         verifyArea.classList.add('hidden');
         document.getElementById('moduleArea').classList.remove('hidden');
         document.getElementById('resultCard').style.display = 'none';
@@ -1064,23 +1111,28 @@
         if (toggleIcon) toggleIcon.innerHTML = expandSVG;
         const container = document.getElementById('analysisBtnContainer');
         container.innerHTML = '<button class="btn-start" id="startAnalysisBtn">开始深度分析</button>';
-        document.getElementById('startAnalysisBtn').onclick = startAnalysis;
+        const startBtn = document.getElementById('startAnalysisBtn');
+        if (startBtn) startBtn.onclick = startAnalysis;
     }
 
     document.addEventListener('DOMContentLoaded', function() {
         initMinuteSelect();
         loadRegionData();
         updateHistoryList();
+        migrateOldRecords();
+        
         const toggleIcon = document.getElementById('verifyToggleIcon');
         if (toggleIcon) toggleIcon.onclick = toggleVerifySection;
         document.getElementById('startVerifyBtn').onclick = () => { if (currentStep === 0) callVerify(); };
         document.getElementById('submitFeedbackBtn').onclick = submitFeedback;
         document.getElementById('confirmOverallBtn').onclick = confirmAllAccurate;
-        document.getElementById('startAnalysisBtn').onclick = startAnalysis;
+        const startAnalysisBtn = document.getElementById('startAnalysisBtn');
+        if (startAnalysisBtn) startAnalysisBtn.onclick = startAnalysis;
         document.getElementById('copyResultBtn').onclick = copyResult;
         document.getElementById('regenerateResultBtn').onclick = regenerateAnalysis;
         document.getElementById('shareResultBtn').onclick = shareResult;
         document.getElementById('newChatBtn').onclick = newChat;
+        
         document.getElementById('provinceSelect').addEventListener('change', () => { updateCitySelect(); if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
         document.getElementById('citySelect').addEventListener('change', () => { updateDistrictSelect(); if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
         document.getElementById('districtSelect').addEventListener('change', () => { if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
@@ -1088,6 +1140,7 @@
         document.getElementById('dateInput').addEventListener('change', () => { if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
         document.getElementById('hourSelect').addEventListener('change', () => { if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
         document.getElementById('minuteSelect').addEventListener('change', () => { if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
+        
         document.querySelectorAll('input[name="knowTime"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 const timeSelectArea = document.getElementById('timeSelectArea');
@@ -1103,6 +1156,7 @@
                 if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
             });
         });
+        
         document.querySelectorAll('.module-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.module-btn').forEach(b => b.classList.remove('active'));
