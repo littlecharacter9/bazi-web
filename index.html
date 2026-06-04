@@ -345,82 +345,93 @@
         historyList.appendChild(clearBtn);
     }
 
-    function viewHistoryRecord(record) {
-        // 隐藏验证区域（历史记录不需要重新验证）
-        document.getElementById('verifyArea').classList.add('hidden');
-        
-        // 显示分析结果
-        document.getElementById('resultContent').innerHTML = record.result.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        document.getElementById('resultCard').style.display = 'block';
-        
-        // 显示八字信息
-        if (record.bazi) {
-            document.getElementById('baziDisplay').textContent = record.bazi;
-            document.getElementById('baziInfoArea').classList.remove('hidden');
+function viewHistoryRecord(record) {
+    // 隐藏验证区域（历史记录不需要重新验证）
+    const verifyArea = document.getElementById('verifyArea');
+    if (verifyArea) verifyArea.classList.add('hidden');
+    
+    // 隐藏开始验证按钮（因为已经验证过了）
+    const startVerifyBtn = document.getElementById('startVerifyBtn');
+    if (startVerifyBtn) startVerifyBtn.classList.add('hidden');
+    
+    // 显示模块选择区域
+    const moduleArea = document.getElementById('moduleArea');
+    if (moduleArea) moduleArea.classList.remove('hidden');
+    
+    // 显示八字信息
+    const baziInfoArea = document.getElementById('baziInfoArea');
+    const baziDisplay = document.getElementById('baziDisplay');
+    if (record.bazi) {
+        baziDisplay.textContent = record.bazi;
+        baziInfoArea.classList.remove('hidden');
+    } else {
+        baziInfoArea.classList.add('hidden');
+    }
+    
+    // 显示分析结果
+    const resultCard = document.getElementById('resultCard');
+    const resultContent = document.getElementById('resultContent');
+    resultContent.innerHTML = record.result.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    resultCard.style.display = 'block';
+    
+    // 设置按钮为已分析状态
+    const container = document.getElementById('analysisBtnContainer');
+    container.innerHTML = `
+        <button class="btn-done" disabled>深度分析已完成</button>
+        <button class="btn-continue" id="continueAnalysisBtn">继续深度分析</button>
+    `;
+    const continueBtn = document.getElementById('continueAnalysisBtn');
+    if (continueBtn) {
+        continueBtn.onclick = continueAnalysis;
+    }
+    
+    // 恢复当前生辰信息
+    currentBirth = record.birth;
+    currentBaziStr = record.bazi;
+    lastAnalysisResult = record.result;
+    
+    // 自动填充用户信息到表单
+    if (record.birth) {
+        const birthMatch = record.birth.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})\s+(\d{1,2})时\s+(\d+)分\s+([男女])/);
+        if (birthMatch) {
+            const year = birthMatch[1];
+            const month = birthMatch[2].padStart(2, '0');
+            const day = birthMatch[3].padStart(2, '0');
+            const hour = birthMatch[4];
+            const minute = birthMatch[5];
+            const gender = birthMatch[6];
+            
+            document.getElementById('dateInput').value = `${year}-${month}-${day}`;
+            document.getElementById('hourSelect').value = hour;
+            document.getElementById('minuteSelect').value = minute;
+            document.getElementById('genderSelect').value = gender;
+            document.querySelector('input[name="knowTime"][value="yes"]').checked = true;
+            document.getElementById('timeSelectArea').classList.remove('hidden');
+            document.getElementById('timeWarning').classList.add('hidden');
         } else {
-            document.getElementById('baziInfoArea').classList.add('hidden');
-        }
-        
-        // 自动填充用户信息
-        if (record.birth) {
-            const birthMatch = record.birth.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})\s+(\d{1,2})时\s+(\d+)分\s+([男女])/);
-            if (birthMatch) {
-                const year = birthMatch[1];
-                const month = birthMatch[2].padStart(2, '0');
-                const day = birthMatch[3].padStart(2, '0');
-                const hour = birthMatch[4];
-                const minute = birthMatch[5];
-                const gender = birthMatch[6];
+            const simpleMatch = record.birth.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})\s+([男女])/);
+            if (simpleMatch) {
+                const year = simpleMatch[1];
+                const month = simpleMatch[2].padStart(2, '0');
+                const day = simpleMatch[3].padStart(2, '0');
+                const gender = simpleMatch[4];
                 
                 document.getElementById('dateInput').value = `${year}-${month}-${day}`;
-                document.getElementById('hourSelect').value = hour;
-                document.getElementById('minuteSelect').value = minute;
                 document.getElementById('genderSelect').value = gender;
-                document.querySelector('input[name="knowTime"][value="yes"]').checked = true;
-                document.getElementById('timeSelectArea').classList.remove('hidden');
-                document.getElementById('timeWarning').classList.add('hidden');
-            } else {
-                const simpleMatch = record.birth.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})\s+([男女])/);
-                if (simpleMatch) {
-                    const year = simpleMatch[1];
-                    const month = simpleMatch[2].padStart(2, '0');
-                    const day = simpleMatch[3].padStart(2, '0');
-                    const gender = simpleMatch[4];
-                    
-                    document.getElementById('dateInput').value = `${year}-${month}-${day}`;
-                    document.getElementById('genderSelect').value = gender;
-                    document.querySelector('input[name="knowTime"][value="no"]').checked = true;
-                    document.getElementById('timeSelectArea').classList.add('hidden');
-                    document.getElementById('timeWarning').classList.remove('hidden');
-                }
-            }
-            
-            if (record.userName) {
-                document.getElementById('nameInput').value = record.userName;
+                document.querySelector('input[name="knowTime"][value="no"]').checked = true;
+                document.getElementById('timeSelectArea').classList.add('hidden');
+                document.getElementById('timeWarning').classList.remove('hidden');
             }
         }
         
-        currentBirth = record.birth;
-        currentBaziStr = record.bazi;
-        
-        // 显示模块选择区域
-        document.getElementById('moduleArea').classList.remove('hidden');
-        
-        // 设置按钮为已分析状态
-        const container = document.getElementById('analysisBtnContainer');
-        container.innerHTML = `
-            <button class="btn-done" disabled>深度分析已完成</button>
-            <button class="btn-continue" id="continueAnalysisBtn">继续深度分析</button>
-        `;
-        const continueBtn = document.getElementById('continueAnalysisBtn');
-        if (continueBtn) {
-            continueBtn.onclick = continueAnalysis;
+        if (record.userName) {
+            document.getElementById('nameInput').value = record.userName;
         }
-        
-        // 滚动到结果区域
-        document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
-        lastAnalysisResult = record.result;
     }
+    
+    // 滚动到结果区域
+    resultCard.scrollIntoView({ behavior: 'smooth' });
+}
 
     function currentModuleName() {
         const moduleMap = {
@@ -994,6 +1005,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        // 确保开始验证按钮初始显示
+        document.getElementById('startVerifyBtn').classList.remove('hidden');
         initMinuteSelect();
         loadRegionData();
         updateHistoryList();
