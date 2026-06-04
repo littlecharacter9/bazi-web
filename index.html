@@ -14,11 +14,12 @@
         .logo-sub { font-size: 12px; color: #888; margin-top: 6px; }
         .new-chat-btn { margin: 20px; padding: 12px 16px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; cursor: pointer; display: flex; align-items: center; gap: 10px; }
         .new-chat-btn:hover { background: rgba(255,255,255,0.15); }
-        .history-section { flex: 1; padding: 0 12px; }
-        .history-title { font-size: 12px; color: #888; padding: 12px 12px 8px; }
-        .history-list { list-style: none; }
-        .history-item { padding: 10px 12px; border-radius: 10px; margin-bottom: 4px; cursor: pointer; font-size: 13px; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .history-item:hover { background: rgba(255,255,255,0.08); }
+        .history-section { flex: 1; padding: 0 12px; display: flex; flex-direction: column; min-height: 0; }
+        .history-title { font-size: 12px; color: #888; padding: 12px 12px 8px; letter-spacing: 0.5px; }
+        .history-list { list-style: none; overflow-y: auto; max-height: 400px; }
+        .history-item { padding: 10px 12px; border-radius: 10px; margin-bottom: 4px; cursor: pointer; font-size: 13px; color: #ccc; border: 1px solid transparent; }
+        .history-item:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.1); }
+        .history-empty { padding: 12px; color: #888; text-align: center; font-size: 12px; }
         .user-section { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto; }
         .user-info { display: flex; align-items: center; gap: 12px; }
         .user-avatar { width: 40px; height: 40px; background: #e6b980; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #1a1a2e; }
@@ -97,7 +98,10 @@
     <div class="sidebar">
         <div class="logo-area"><div class="logo">八戒命理</div><div class="logo-sub">AI解析 · 仅供参考</div></div>
         <div class="new-chat-btn" id="newChatBtn">+ 新对话</div>
-        <div class="history-section"><div class="history-title">最近对话</div><ul class="history-list" id="historyList"></ul></div>
+        <div class="history-section">
+            <div class="history-title">最近对话</div>
+            <ul class="history-list" id="historyList"></ul>
+        </div>
         <div class="user-section"><div class="user-info"><div class="user-avatar">八</div><div><div class="user-name">游客模式</div><div class="user-email">登录功能开发中</div></div></div></div>
     </div>
     <div class="main">
@@ -159,7 +163,6 @@
                         <button class="module-btn" data-module="marriage">婚姻</button>
                         <button class="module-btn" data-module="liunian">流年</button>
                     </div>
-                    <!-- 分析按钮区域：初始只显示开始按钮，完成后替换为两个按钮 -->
                     <div id="analysisBtnContainer" class="analysis-buttons">
                         <button class="btn-start" id="startAnalysisBtn">开始深度分析</button>
                     </div>
@@ -168,7 +171,6 @@
                 <button class="btn-start" id="startVerifyBtn">开始验证八字</button>
             </div>
             
-            <!-- 结果区域 -->
             <div id="resultCard" class="result-card" style="display: none;">
                 <div class="result-title">分析结果</div>
                 <div class="result-content" id="resultContent"></div>
@@ -195,6 +197,109 @@
     let itemFeedbacks = [];
     let lastAnalysisResult = '';
 
+    // ==================== 本地存储管理 ====================
+    const STORAGE_KEY = 'bazi_analysis_history';
+
+    function saveAnalysisRecord(birthStr, moduleName, resultContent, baziStr) {
+        const records = getAnalysisRecords();
+        const newRecord = {
+            id: Date.now(),
+            timestamp: new Date().toISOString(),
+            date: new Date().toLocaleString('zh-CN'),
+            birth: birthStr,
+            module: moduleName,
+            bazi: baziStr || '',
+            result: resultContent
+        };
+        records.unshift(newRecord);
+        if (records.length > 30) records.pop();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        updateHistoryList();
+    }
+
+    function getAnalysisRecords() {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (!data) return [];
+        try {
+            return JSON.parse(data);
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function deleteAnalysisRecord(id) {
+        let records = getAnalysisRecords();
+        records = records.filter(r => r.id !== id);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        updateHistoryList();
+    }
+
+    function clearAllHistory() {
+        if (confirm('确定要清空所有历史记录吗？')) {
+            localStorage.removeItem(STORAGE_KEY);
+            updateHistoryList();
+        }
+    }
+
+    function updateHistoryList() {
+        const historyList = document.getElementById('historyList');
+        if (!historyList) return;
+        
+        const records = getAnalysisRecords();
+        if (records.length === 0) {
+            historyList.innerHTML = '<li class="history-empty">暂无历史记录</li>';
+            return;
+        }
+        
+        historyList.innerHTML = '';
+        records.forEach(record => {
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            const displayDate = record.date.split(' ')[0] + ' ' + (record.date.split(' ')[1] || '').slice(0, 5);
+            li.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${displayDate} ${record.module}</span>
+                    <span style="color: #e6b980; cursor: pointer; margin-left: 8px;" onclick="event.stopPropagation(); deleteAnalysisRecord(${record.id})">🗑️</span>
+                </div>
+            `;
+            li.onclick = () => viewHistoryRecord(record);
+            historyList.appendChild(li);
+        });
+        
+        const clearBtn = document.createElement('li');
+        clearBtn.className = 'history-item';
+        clearBtn.style.borderTop = '1px solid rgba(255,255,255,0.1)';
+        clearBtn.style.marginTop = '8px';
+        clearBtn.innerHTML = '<span style="color: #e6b980;">🗑️ 清空所有记录</span>';
+        clearBtn.onclick = (e) => {
+            e.stopPropagation();
+            clearAllHistory();
+        };
+        historyList.appendChild(clearBtn);
+    }
+
+    function viewHistoryRecord(record) {
+        document.getElementById('resultContent').innerHTML = record.result.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        document.getElementById('resultCard').style.display = 'block';
+        if (record.bazi) {
+            document.getElementById('baziDisplay').textContent = record.bazi;
+            document.getElementById('baziInfoArea').classList.remove('hidden');
+        }
+        document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+        lastAnalysisResult = record.result;
+    }
+
+    function currentModuleName() {
+        const moduleMap = {
+            'overview': '综合分析',
+            'career': '事业分析',
+            'wealth': '财运分析',
+            'marriage': '婚姻分析',
+            'liunian': '流年分析'
+        };
+        return moduleMap[currentModule] || currentModule;
+    }
+
     // ==================== 省市区数据加载 ====================
     async function loadRegionData() {
         const loadingDiv = document.getElementById('regionLoading');
@@ -205,28 +310,20 @@
                 fetch('https://unpkg.com/china-division@2.7.0/dist/cities.json'),
                 fetch('https://unpkg.com/china-division@2.7.0/dist/areas.json')
             ]);
-            
             const provinces = await provincesRes.json();
             const cities = await citiesRes.json();
             const areas = await areasRes.json();
-            
             pcaData = provinces.map(province => ({
                 code: province.code,
                 name: province.name,
-                children: cities
-                    .filter(city => city.provinceCode === province.code)
-                    .map(city => ({
-                        code: city.code,
-                        name: city.name,
-                        children: areas
-                            .filter(area => area.cityCode === city.code)
-                            .map(area => ({ code: area.code, name: area.name }))
-                    }))
+                children: cities.filter(city => city.provinceCode === province.code).map(city => ({
+                    code: city.code,
+                    name: city.name,
+                    children: areas.filter(area => area.cityCode === city.code).map(area => ({ code: area.code, name: area.name }))
+                }))
             }));
-            
             initProvinceSelect();
         } catch (error) {
-            console.error('数据加载失败:', error);
             useFallbackData();
         }
         loadingDiv.classList.add('hidden');
@@ -236,14 +333,8 @@
         pcaData = [
             { code: '11', name: '北京市', children: [{ code: '1101', name: '北京市', children: ['东城区','西城区','朝阳区','海淀区'] }] },
             { code: '31', name: '上海市', children: [{ code: '3101', name: '上海市', children: ['黄浦区','徐汇区','长宁区','静安区'] }] },
-            { code: '44', name: '广东省', children: [
-                { code: '4401', name: '广州市', children: ['越秀区','海珠区','天河区','白云区'] },
-                { code: '4403', name: '深圳市', children: ['福田区','南山区','宝安区','龙岗区'] }
-            ] },
-            { code: '51', name: '四川省', children: [
-                { code: '5101', name: '成都市', children: ['锦江区','青羊区','金牛区','武侯区','成华区'] },
-                { code: '5115', name: '宜宾市', children: ['翠屏区','南溪区','叙州区','江安县','长宁县','高县','珙县','筠连县','兴文县','屏山县'] }
-            ] }
+            { code: '44', name: '广东省', children: [{ code: '4401', name: '广州市', children: ['越秀区','海珠区','天河区','白云区'] }, { code: '4403', name: '深圳市', children: ['福田区','南山区','宝安区','龙岗区'] }] },
+            { code: '51', name: '四川省', children: [{ code: '5101', name: '成都市', children: ['锦江区','青羊区','金牛区','武侯区','成华区'] }, { code: '5115', name: '宜宾市', children: ['翠屏区','南溪区','叙州区','江安县','长宁县','高县','珙县','筠连县','兴文县','屏山县'] }] }
         ];
         initProvinceSelect();
     }
@@ -264,13 +355,11 @@
         const provinceCode = document.getElementById('provinceSelect').value;
         const citySelect = document.getElementById('citySelect');
         const districtSelect = document.getElementById('districtSelect');
-        
         citySelect.innerHTML = '<option value="">请选择城市</option>';
         districtSelect.innerHTML = '<option value="">请选择区/县</option>';
-        
         if (provinceCode && pcaData) {
             const province = pcaData.find(p => p.code === provinceCode);
-            if (province && province.children && province.children.length > 0) {
+            if (province && province.children) {
                 province.children.forEach(city => {
                     const option = document.createElement('option');
                     option.value = city.code;
@@ -285,9 +374,7 @@
         const provinceCode = document.getElementById('provinceSelect').value;
         const cityCode = document.getElementById('citySelect').value;
         const districtSelect = document.getElementById('districtSelect');
-        
         districtSelect.innerHTML = '<option value="">请选择区/县</option>';
-        
         if (provinceCode && cityCode && pcaData) {
             const province = pcaData.find(p => p.code === provinceCode);
             if (province) {
@@ -306,27 +393,10 @@
 
     function getLocationInfo() {
         const provinceSelect = document.getElementById('provinceSelect');
-        const citySelect = document.getElementById('citySelect');
-        const districtSelect = document.getElementById('districtSelect');
         const provinceName = provinceSelect.options[provinceSelect.selectedIndex]?.text || '';
-        const cityName = citySelect.options[citySelect.selectedIndex]?.text || '';
-        const districtName = districtSelect.options[districtSelect.selectedIndex]?.text || '';
-        
-        let locationName = provinceName;
-        if (cityName && cityName !== '请选择城市') locationName += cityName;
-        if (districtName && districtName !== '请选择区/县') locationName += districtName;
-        
         const provinceCode = provinceSelect.value;
-        const lonMap = {
-            '11': 116.40, '12': 117.20, '13': 114.52, '14': 112.56, '15': 111.65,
-            '21': 123.43, '22': 125.35, '23': 126.64, '31': 121.48, '32': 118.78,
-            '33': 120.15, '34': 117.27, '35': 119.30, '36': 115.89, '37': 120.38,
-            '41': 113.65, '42': 114.30, '43': 112.98, '44': 113.27, '45': 108.32,
-            '46': 110.35, '50': 106.55, '51': 104.06, '52': 106.63, '53': 102.73,
-            '54': 91.14, '61': 108.95, '62': 103.82, '63': 101.78, '64': 106.27,
-            '65': 87.62, '71': 121.52, '81': 114.17, '82': 113.54
-        };
-        return { name: locationName, longitude: lonMap[provinceCode] || 120.0 };
+        const lonMap = { '11':116.40,'31':121.48,'44':113.27,'51':104.06 };
+        return { name: provinceName, longitude: lonMap[provinceCode] || 120.0 };
     }
 
     function initMinuteSelect() {
@@ -367,7 +437,6 @@
         if (!locationInfo || !locationInfo.longitude) {
             trueSolarDiv.classList.remove('hidden');
             trueSolarDiv.innerHTML = '📍 请选择完整的出生地点，以便进行真太阳时校正';
-            trueSolarDiv.style.background = '#fff3e0';
             return;
         }
         const dateStr = document.getElementById('dateInput').value;
@@ -384,7 +453,6 @@
         const originalShichen = shichenMap[hour] || '';
         const trueShichen = shichenMap[trueTime.hour] || '';
         trueSolarDiv.classList.remove('hidden');
-        trueSolarDiv.style.background = '#e8f5e9';
         trueSolarDiv.innerHTML = `🌞 真太阳时校正<br>北京时间：${hour}:${minute}（${originalShichen}时）→ 真太阳时：${trueTime.hour}:${trueTime.minute}（${trueShichen}时）`;
     }
 
@@ -440,7 +508,6 @@
         const hasAny = itemFeedbacks.some(fb => fb && fb.trim() !== '');
         const submitBtn = document.getElementById('submitFeedbackBtn');
         const confirmBtn = document.getElementById('confirmOverallBtn');
-        
         if (hasAny) {
             submitBtn.classList.remove('secondary');
             submitBtn.classList.add('primary');
@@ -459,18 +526,15 @@
     function displayVerifyItems(items, feedbackNotice = null) {
         const container = document.getElementById('verifyItemsContainer');
         container.innerHTML = '';
-        
         if (feedbackNotice) {
             const noticeDiv = document.createElement('div');
             noticeDiv.className = 'feedback-notice';
             noticeDiv.innerHTML = feedbackNotice;
             container.appendChild(noticeDiv);
         }
-        
         items.forEach((item, idx) => {
             const isCharacter = item.title === '【性格特征】';
             const questionText = isCharacter ? '请判断以上性格描述是否准确？' : '请判断以上推断是否准确？';
-            
             const itemDiv = document.createElement('div');
             itemDiv.className = 'verify-item';
             itemDiv.innerHTML = `
@@ -485,12 +549,10 @@
             `;
             container.appendChild(itemDiv);
         });
-        
         for (let i = 0; i < items.length; i++) {
             const confirmBtn = container.querySelector(`.item-btn.confirm[data-index="${i}"]`);
             const feedbackBtn = container.querySelector(`.item-btn.feedback[data-index="${i}"]`);
             const textarea = document.getElementById(`feedback-${i}`);
-            
             confirmBtn.onclick = () => {
                 confirmBtn.classList.add('active');
                 feedbackBtn.classList.remove('active');
@@ -499,7 +561,6 @@
                 textarea.value = '';
                 updateButtonHighlights();
             };
-            
             feedbackBtn.onclick = () => {
                 textarea.classList.toggle('active');
                 if (textarea.classList.contains('active')) {
@@ -510,7 +571,6 @@
                     itemFeedbacks[i] = '';
                 }
             };
-            
             textarea.oninput = () => {
                 itemFeedbacks[i] = textarea.value;
                 if (itemFeedbacks[i].trim() !== '') {
@@ -527,18 +587,15 @@
     async function callVerify() {
         const birth = buildBirthString();
         if (!birth) { alert('请完整填写必填信息'); return false; }
-        
         isLoading = true;
         const verifyArea = document.getElementById('verifyArea');
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
         const startVerifyBtn = document.getElementById('startVerifyBtn');
         const actionButtons = document.getElementById('actionButtons');
-        
         verifyArea.classList.remove('hidden');
         startVerifyBtn.classList.add('hidden');
         actionButtons.style.display = 'none';
         verifyItemsContainer.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 正在分析中...';
-        
         try {
             const response = await fetch(`${API_URL}/verify`, {
                 method: 'POST',
@@ -546,7 +603,6 @@
                 body: JSON.stringify({ birth: birth })
             });
             const data = await response.json();
-            
             if (data.success) {
                 currentBirth = birth;
                 if (data.data.bazi) currentBaziStr = data.data.bazi;
@@ -577,26 +633,19 @@
                 });
             }
         }
-        
         if (feedbackList.length === 0) {
             alert('请先在不准确的条目中填写反馈内容');
             return;
         }
-        
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
         verifyItemsContainer.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 根据您的反馈重新分析...';
-        
         try {
             const response = await fetch(`${API_URL}/verify_adjust`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    birth: currentBirth, 
-                    feedback_items: feedbackList 
-                })
+                body: JSON.stringify({ birth: currentBirth, feedback_items: feedbackList })
             });
             const data = await response.json();
-            
             if (data.success && data.data.adjusted_items) {
                 for (let adj of data.data.adjusted_items) {
                     for (let i = 0; i < currentVerifyItems.length; i++) {
@@ -606,23 +655,14 @@
                         }
                     }
                 }
-                
-                for (let i = 0; i < currentVerifyItems.length; i++) {
-                    itemFeedbacks[i] = '';
-                }
-                
+                for (let i = 0; i < currentVerifyItems.length; i++) itemFeedbacks[i] = '';
                 let notice = `📝 感谢您的反馈！已根据您提供的信息重新调整了 ${feedbackList.length} 项推断：<br>`;
-                for (let fb of feedbackList) {
-                    notice += `• ${fb.section}：已根据「${fb.feedback.substring(0, 40)}${fb.feedback.length > 40 ? '...' : ''}」进行调整<br>`;
-                }
-                
+                for (let fb of feedbackList) notice += `• ${fb.section}：已根据「${fb.feedback.substring(0, 40)}${fb.feedback.length > 40 ? '...' : ''}」进行调整<br>`;
                 displayVerifyItems(currentVerifyItems, notice);
-                
                 for (let i = 0; i < currentVerifyItems.length; i++) {
                     const confirmBtn = document.querySelector(`.item-btn.confirm[data-index="${i}"]`);
                     const feedbackBtn = document.querySelector(`.item-btn.feedback[data-index="${i}"]`);
                     const textarea = document.getElementById(`feedback-${i}`);
-                    
                     if (confirmBtn) {
                         confirmBtn.onclick = () => {
                             confirmBtn.classList.add('active');
@@ -672,7 +712,6 @@
         const verifyArea = document.getElementById('verifyArea');
         const baziInfoArea = document.getElementById('baziInfoArea');
         const baziDisplay = document.getElementById('baziDisplay');
-        
         verifyArea.classList.add('hidden');
         if (currentBaziStr) {
             baziDisplay.textContent = currentBaziStr;
@@ -688,18 +727,18 @@
         document.getElementById('resultContent').innerHTML = html;
         document.getElementById('resultCard').style.display = 'block';
         document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+        if (currentBirth && content) {
+            saveAnalysisRecord(currentBirth, currentModuleName(), content, currentBaziStr);
+        }
     }
 
-    // 首次分析
     async function startAnalysis() {
         if (isLoading) return;
         isLoading = true;
         const container = document.getElementById('analysisBtnContainer');
         const startBtn = document.getElementById('startAnalysisBtn');
-        
         startBtn.disabled = true;
         startBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
-        
         try {
             const response = await fetch(`${API_URL}/analyze`, {
                 method: 'POST',
@@ -710,7 +749,6 @@
             if (data.success) {
                 showAnalysisResult(data.data.analysis);
                 addHistory(currentBirth);
-                // 替换按钮：隐藏开始按钮，显示完成按钮和继续按钮
                 container.innerHTML = `
                     <button class="btn-done" disabled>深度分析已完成</button>
                     <button class="btn-continue" id="continueAnalysisBtn">继续深度分析</button>
@@ -730,14 +768,12 @@
         }
     }
 
-    // 继续分析
     async function continueAnalysis() {
         if (isLoading) return;
         isLoading = true;
         const continueBtn = document.getElementById('continueAnalysisBtn');
         continueBtn.disabled = true;
         continueBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
-        
         try {
             const response = await fetch(`${API_URL}/analyze`, {
                 method: 'POST',
@@ -760,13 +796,11 @@
         }
     }
 
-    // 重新生成（结果区域的操作按钮）
     async function regenerateAnalysis() {
         if (isLoading) return;
         isLoading = true;
         const resultContent = document.getElementById('resultContent');
         resultContent.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 重新生成中...';
-        
         try {
             const response = await fetch(`${API_URL}/analyze`, {
                 method: 'POST',
@@ -789,27 +823,14 @@
     }
 
     function copyResult() {
-        if (!lastAnalysisResult) {
-            alert('没有可复制的内容');
-            return;
-        }
-        navigator.clipboard.writeText(lastAnalysisResult).then(() => {
-            alert('已复制到剪贴板');
-        }).catch(() => {
-            alert('复制失败');
-        });
+        if (!lastAnalysisResult) { alert('没有可复制的内容'); return; }
+        navigator.clipboard.writeText(lastAnalysisResult).then(() => alert('已复制到剪贴板')).catch(() => alert('复制失败'));
     }
 
     function shareResult() {
-        if (!lastAnalysisResult) {
-            alert('没有可分享的内容');
-            return;
-        }
+        if (!lastAnalysisResult) { alert('没有可分享的内容'); return; }
         if (navigator.share) {
-            navigator.share({
-                title: '八字命理分析结果',
-                text: lastAnalysisResult.substring(0, 500),
-            }).catch(() => {});
+            navigator.share({ title: '八字命理分析结果', text: lastAnalysisResult.substring(0, 500) }).catch(() => {});
         } else {
             alert('当前浏览器不支持分享功能，请手动复制');
         }
@@ -817,11 +838,8 @@
 
     function addHistory(birthStr) {
         const historyList = document.getElementById('historyList');
-        const li = document.createElement('li');
-        li.className = 'history-item';
-        li.textContent = birthStr.length > 30 ? birthStr.substring(0, 30) + '...' : birthStr;
-        li.onclick = () => { alert('请手动输入生辰重新分析'); };
-        historyList.insertBefore(li, historyList.firstChild);
+        // 历史记录已通过 localStorage 管理，这里只更新列表
+        updateHistoryList();
     }
 
     function newChat() {
@@ -835,8 +853,6 @@
         document.getElementById('actionButtons').style.display = 'none';
         itemFeedbacks = [];
         lastAnalysisResult = '';
-        
-        // 重置按钮区域
         const container = document.getElementById('analysisBtnContainer');
         container.innerHTML = '<button class="btn-start" id="startAnalysisBtn">开始深度分析</button>';
         document.getElementById('startAnalysisBtn').onclick = startAnalysis;
@@ -845,39 +861,24 @@
     document.addEventListener('DOMContentLoaded', function() {
         initMinuteSelect();
         loadRegionData();
+        updateHistoryList();
         
         document.getElementById('startVerifyBtn').onclick = () => { if (currentStep === 0) callVerify(); };
         document.getElementById('submitFeedbackBtn').onclick = submitFeedback;
         document.getElementById('confirmOverallBtn').onclick = confirmAllAccurate;
-        
-        // 按钮事件
         document.getElementById('startAnalysisBtn').onclick = startAnalysis;
         document.getElementById('copyResultBtn').onclick = copyResult;
         document.getElementById('regenerateResultBtn').onclick = regenerateAnalysis;
         document.getElementById('shareResultBtn').onclick = shareResult;
         document.getElementById('newChatBtn').onclick = newChat;
         
-        document.getElementById('provinceSelect').addEventListener('change', function() {
-            updateCitySelect();
-            if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
-        });
-        document.getElementById('citySelect').addEventListener('change', function() {
-            updateDistrictSelect();
-            if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
-        });
-        document.getElementById('districtSelect').addEventListener('change', function() {
-            if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
-        });
+        document.getElementById('provinceSelect').addEventListener('change', () => { updateCitySelect(); if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
+        document.getElementById('citySelect').addEventListener('change', () => { updateDistrictSelect(); if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
+        document.getElementById('districtSelect').addEventListener('change', () => { if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
         document.getElementById('useTrueSolar').addEventListener('change', updateTrueSolarDisplay);
-        document.getElementById('dateInput').addEventListener('change', function() {
-            if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
-        });
-        document.getElementById('hourSelect').addEventListener('change', function() {
-            if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
-        });
-        document.getElementById('minuteSelect').addEventListener('change', function() {
-            if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
-        });
+        document.getElementById('dateInput').addEventListener('change', () => { if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
+        document.getElementById('hourSelect').addEventListener('change', () => { if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
+        document.getElementById('minuteSelect').addEventListener('change', () => { if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
         
         document.querySelectorAll('input[name="knowTime"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
