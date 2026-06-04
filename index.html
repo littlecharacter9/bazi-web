@@ -93,7 +93,10 @@
         .btn-start { width: 100%; padding: 14px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: pointer; }
         .btn-done { width: 100%; padding: 14px; background: #e0e0e0; color: #999; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: not-allowed; }
         .btn-continue { width: 100%; padding: 14px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: pointer; }
-        .btn-group { display: flex; gap: 16px; width: 100%; }
+        .verify-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 8px 0; }
+        .verify-header:hover { background: rgba(0,0,0,0.02); }
+        .verify-title-icon { font-size: 15px; font-weight: 600; color: #1a1a2e; }
+        .verify-toggle-icon { font-size: 16px; color: #666; transition: transform 0.2s; }
     </style>
 </head>
 <body>
@@ -148,12 +151,19 @@
                 
                 <div id="baziInfoArea" class="bazi-info hidden">八字排盘：<span id="baziDisplay"></span></div>
                 
+                <!-- 验证区域（可折叠） -->
                 <div id="verifyArea" class="hidden">
                     <div class="verify-box" id="verifyBox">
-                        <div id="verifyItemsContainer"></div>
-                        <div class="action-buttons" id="actionButtons" style="display: none;">
-                            <button class="action-btn secondary" id="submitFeedbackBtn">提交不准确反馈</button>
-                            <button class="action-btn dark" id="confirmOverallBtn">全部/大部分准确，继续分析</button>
+                        <div class="verify-header" id="verifyHeader">
+                            <span class="verify-title-icon">📋 八字验证推断</span>
+                            <span class="verify-toggle-icon" id="verifyToggleIcon">▼</span>
+                        </div>
+                        <div id="verifyContentWrapper">
+                            <div id="verifyItemsContainer"></div>
+                            <div class="action-buttons" id="actionButtons" style="display: none;">
+                                <button class="action-btn secondary" id="submitFeedbackBtn">提交不准确反馈</button>
+                                <button class="action-btn dark" id="confirmOverallBtn">全部/大部分准确，继续分析</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -199,6 +209,19 @@
     let currentVerifyItems = [];
     let itemFeedbacks = [];
     let lastAnalysisResult = '';
+
+    // ==================== 折叠功能 ====================
+    function toggleVerifySection() {
+        const wrapper = document.getElementById('verifyContentWrapper');
+        const icon = document.getElementById('verifyToggleIcon');
+        if (wrapper.style.display === 'none') {
+            wrapper.style.display = 'block';
+            icon.textContent = '▼';
+        } else {
+            wrapper.style.display = 'none';
+            icon.textContent = '▶';
+        }
+    }
 
     // ==================== 本地存储管理 ====================
     const STORAGE_KEY = 'bazi_analysis_history';
@@ -320,12 +343,59 @@
     }
 
     function viewHistoryRecord(record) {
+        // 显示分析结果
         document.getElementById('resultContent').innerHTML = record.result.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         document.getElementById('resultCard').style.display = 'block';
+        
+        // 显示八字信息
         if (record.bazi) {
             document.getElementById('baziDisplay').textContent = record.bazi;
             document.getElementById('baziInfoArea').classList.remove('hidden');
         }
+        
+        // 自动填充用户信息
+        if (record.birth) {
+            const birthMatch = record.birth.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})\s+(\d{1,2})时\s+(\d+)分\s+([男女])/);
+            if (birthMatch) {
+                const year = birthMatch[1];
+                const month = birthMatch[2].padStart(2, '0');
+                const day = birthMatch[3].padStart(2, '0');
+                const hour = birthMatch[4];
+                const minute = birthMatch[5];
+                const gender = birthMatch[6];
+                
+                document.getElementById('dateInput').value = `${year}-${month}-${day}`;
+                document.getElementById('hourSelect').value = hour;
+                document.getElementById('minuteSelect').value = minute;
+                document.getElementById('genderSelect').value = gender;
+                document.querySelector('input[name="knowTime"][value="yes"]').checked = true;
+                document.getElementById('timeSelectArea').classList.remove('hidden');
+                document.getElementById('timeWarning').classList.add('hidden');
+            } else {
+                const simpleMatch = record.birth.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})\s+([男女])/);
+                if (simpleMatch) {
+                    const year = simpleMatch[1];
+                    const month = simpleMatch[2].padStart(2, '0');
+                    const day = simpleMatch[3].padStart(2, '0');
+                    const gender = simpleMatch[4];
+                    
+                    document.getElementById('dateInput').value = `${year}-${month}-${day}`;
+                    document.getElementById('genderSelect').value = gender;
+                    document.querySelector('input[name="knowTime"][value="no"]').checked = true;
+                    document.getElementById('timeSelectArea').classList.add('hidden');
+                    document.getElementById('timeWarning').classList.remove('hidden');
+                }
+            }
+            
+            if (record.userName) {
+                document.getElementById('nameInput').value = record.userName;
+            }
+        }
+        
+        currentBirth = record.birth;
+        currentBaziStr = record.bazi;
+        
+        document.getElementById('moduleArea').classList.remove('hidden');
         document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
         lastAnalysisResult = record.result;
     }
@@ -897,6 +967,12 @@
         initMinuteSelect();
         loadRegionData();
         updateHistoryList();
+        
+        // 折叠功能绑定
+        const verifyHeader = document.getElementById('verifyHeader');
+        if (verifyHeader) {
+            verifyHeader.onclick = toggleVerifySection;
+        }
         
         document.getElementById('startVerifyBtn').onclick = () => { if (currentStep === 0) callVerify(); };
         document.getElementById('submitFeedbackBtn').onclick = submitFeedback;
