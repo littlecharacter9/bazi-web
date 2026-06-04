@@ -61,8 +61,29 @@
         .feedback-detail.active { display: block; }
         .bazi-info { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
         .bazi-info span { font-weight: 600; color: #1a1a2e; }
-        .verify-toggle-icon { cursor: pointer; font-size: 16px; color: #888; transition: all 0.2s; padding: 4px 8px; border-radius: 6px; background: #f0f0f0; }
-        .verify-toggle-icon:hover { background: #e0e0e0; color: #e6b980; }
+        .verify-toggle-icon {
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .verify-toggle-icon:hover {
+            background: rgba(0,0,0,0.06);
+        }
+        .verify-toggle-icon svg {
+            width: 18px;
+            height: 18px;
+            stroke: #666;
+            stroke-width: 1.5;
+            fill: none;
+        }
+        .verify-toggle-icon:hover svg {
+            stroke: #e6b980;
+        }
         .checkbox-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
         .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #333; cursor: pointer; }
         .module-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
@@ -95,7 +116,6 @@
         .btn-start { width: 100%; padding: 14px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: pointer; }
         .btn-done { width: 100%; padding: 14px; background: #e0e0e0; color: #999; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: not-allowed; }
         .btn-continue { width: 100%; padding: 14px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: pointer; }
-        /* 历史记录中的验证内容样式（无按钮） */
         .history-verify-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; }
         .history-verify-item { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e0e0e0; }
         .history-verify-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
@@ -155,7 +175,12 @@
                 <!-- 八字信息区域（带折叠图标） -->
                 <div id="baziInfoArea" class="bazi-info hidden">
                     <span>📜 八字排盘：<span id="baziDisplay"></span></span>
-                    <span class="verify-toggle-icon" id="verifyToggleIcon">▼</span>
+                    <span class="verify-toggle-icon" id="verifyToggleIcon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                            <path d="M8 10L12 14L16 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
                 </div>
                 
                 <!-- 验证内容区域（可折叠，用于新用户验证时显示按钮） -->
@@ -213,32 +238,31 @@
     let isVerifyCollapsed = false;
     let pendingVerifyContent = null;
 
+    // SVG 图标
+    const expandSVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 10L12 14L16 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const collapseSVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 8L14 12L10 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
     // ==================== 折叠功能 ====================
     function toggleVerifySection() {
         const wrapper = document.getElementById('verifyArea');
         const icon = document.getElementById('verifyToggleIcon');
         if (isVerifyCollapsed) {
             wrapper.classList.remove('hidden');
-            icon.textContent = '▼';
+            icon.innerHTML = expandSVG;
             isVerifyCollapsed = false;
         } else {
             wrapper.classList.add('hidden');
-            icon.textContent = '▶';
+            icon.innerHTML = collapseSVG;
             isVerifyCollapsed = true;
         }
     }
 
     // 格式化验证内容用于历史记录（只保留内容，移除按钮）
     function formatVerifyContentForHistory(htmlContent) {
-        // 创建一个临时容器来解析
         const temp = document.createElement('div');
         temp.innerHTML = htmlContent;
-        
-        // 移除所有 .item-buttons 和 .feedback-detail 元素
         const buttons = temp.querySelectorAll('.item-buttons, .feedback-detail, .verify-question');
         buttons.forEach(el => el.remove());
-        
-        // 提取每个验证项
         const items = temp.querySelectorAll('.verify-item');
         let formattedHtml = '';
         items.forEach(item => {
@@ -253,7 +277,6 @@
                 `;
             }
         });
-        
         return formattedHtml || htmlContent.replace(/<div class="item-buttons">.*?<\/div>/gs, '').replace(/<textarea.*?<\/textarea>/gs, '').replace(/<div class="verify-question">.*?<\/div>/gs, '');
     }
 
@@ -263,13 +286,10 @@
     function saveAnalysisRecord(birthStr, moduleName, resultContent, baziStr, userName, verifyContent = null) {
         const records = getAnalysisRecords();
         const displayName = userName && userName.trim() ? `${userName.trim()} · ${moduleName}` : `匿名 · ${moduleName}`;
-        
-        // 格式化验证内容，移除按钮
         let formattedVerifyContent = null;
         if (verifyContent) {
             formattedVerifyContent = formatVerifyContentForHistory(verifyContent);
         }
-        
         const newRecord = {
             id: Date.now(),
             timestamp: new Date().toISOString(),
@@ -329,13 +349,11 @@
     function updateHistoryList() {
         const historyList = document.getElementById('historyList');
         if (!historyList) return;
-        
         const records = getAnalysisRecords();
         if (records.length === 0) {
             historyList.innerHTML = '<li class="history-empty">暂无历史记录</li>';
             return;
         }
-        
         historyList.innerHTML = '';
         records.forEach(record => {
             const li = document.createElement('li');
@@ -354,7 +372,6 @@
             };
             historyList.appendChild(li);
         });
-        
         document.querySelectorAll('.history-delete').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
@@ -362,7 +379,6 @@
                 deleteAnalysisRecord(id);
             };
         });
-        
         document.querySelectorAll('.history-rename').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
@@ -370,7 +386,6 @@
                 renameAnalysisRecord(id);
             };
         });
-        
         const clearBtn = document.createElement('li');
         clearBtn.className = 'history-item';
         clearBtn.style.borderTop = '1px solid rgba(255,255,255,0.1)';
@@ -385,7 +400,6 @@
     }
 
     function viewHistoryRecord(record) {
-        // 显示八字信息
         const baziInfoArea = document.getElementById('baziInfoArea');
         const baziDisplay = document.getElementById('baziDisplay');
         if (record.bazi) {
@@ -394,58 +408,38 @@
         } else {
             baziInfoArea.classList.add('hidden');
         }
-        
-        // 显示验证内容（只显示内容，没有按钮）
         const verifyArea = document.getElementById('verifyArea');
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
         const toggleIcon = document.getElementById('verifyToggleIcon');
-        
         if (record.verifyContent) {
-            // 使用格式化后的内容（无按钮）
             verifyItemsContainer.innerHTML = record.verifyContent;
-            // 隐藏原有的按钮区域
             const actionButtons = document.getElementById('actionButtons');
             if (actionButtons) actionButtons.style.display = 'none';
             verifyArea.classList.remove('hidden');
-            // 默认折叠状态
             verifyArea.classList.add('hidden');
             isVerifyCollapsed = true;
-            if (toggleIcon) toggleIcon.textContent = '▶';
+            if (toggleIcon) toggleIcon.innerHTML = collapseSVG;
         } else {
             verifyArea.classList.add('hidden');
         }
-        
-        // 隐藏开始验证按钮
         const startVerifyBtn = document.getElementById('startVerifyBtn');
         if (startVerifyBtn) startVerifyBtn.classList.add('hidden');
-        
-        // 显示模块选择区域
         const moduleArea = document.getElementById('moduleArea');
         if (moduleArea) moduleArea.classList.remove('hidden');
-        
-        // 显示分析结果
         const resultCard = document.getElementById('resultCard');
         const resultContent = document.getElementById('resultContent');
         resultContent.innerHTML = record.result.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         resultCard.style.display = 'block';
-        
-        // 设置按钮为已分析状态
         const container = document.getElementById('analysisBtnContainer');
         container.innerHTML = `
             <button class="btn-done" disabled>深度分析已完成</button>
             <button class="btn-continue" id="continueAnalysisBtn">继续深度分析</button>
         `;
         const continueBtn = document.getElementById('continueAnalysisBtn');
-        if (continueBtn) {
-            continueBtn.onclick = continueAnalysis;
-        }
-        
-        // 恢复当前生辰信息
+        if (continueBtn) continueBtn.onclick = continueAnalysis;
         currentBirth = record.birth;
         currentBaziStr = record.bazi;
         lastAnalysisResult = record.result;
-        
-        // 自动填充用户信息到表单
         if (record.birth) {
             const birthMatch = record.birth.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})\s+(\d{1,2})时\s+(\d+)分\s+([男女])/);
             if (birthMatch) {
@@ -455,7 +449,6 @@
                 const hour = birthMatch[4];
                 const minute = birthMatch[5];
                 const gender = birthMatch[6];
-                
                 document.getElementById('dateInput').value = `${year}-${month}-${day}`;
                 document.getElementById('hourSelect').value = hour;
                 document.getElementById('minuteSelect').value = minute;
@@ -470,7 +463,6 @@
                     const month = simpleMatch[2].padStart(2, '0');
                     const day = simpleMatch[3].padStart(2, '0');
                     const gender = simpleMatch[4];
-                    
                     document.getElementById('dateInput').value = `${year}-${month}-${day}`;
                     document.getElementById('genderSelect').value = gender;
                     document.querySelector('input[name="knowTime"][value="no"]').checked = true;
@@ -478,24 +470,13 @@
                     document.getElementById('timeWarning').classList.remove('hidden');
                 }
             }
-            
-            if (record.userName) {
-                document.getElementById('nameInput').value = record.userName;
-            }
+            if (record.userName) document.getElementById('nameInput').value = record.userName;
         }
-        
-        // 滚动到结果区域
         resultCard.scrollIntoView({ behavior: 'smooth' });
     }
 
     function currentModuleName() {
-        const moduleMap = {
-            'overview': '综合分析',
-            'career': '事业分析',
-            'wealth': '财运分析',
-            'marriage': '婚姻分析',
-            'liunian': '流年分析'
-        };
+        const moduleMap = { 'overview': '综合分析', 'career': '事业分析', 'wealth': '财运分析', 'marriage': '婚姻分析', 'liunian': '流年分析' };
         return moduleMap[currentModule] || currentModule;
     }
 
@@ -793,16 +774,12 @@
         const actionButtons = document.getElementById('actionButtons');
         const baziInfoArea = document.getElementById('baziInfoArea');
         const toggleIcon = document.getElementById('verifyToggleIcon');
-        
         verifyArea.classList.remove('hidden');
         startVerifyBtn.classList.add('hidden');
         actionButtons.style.display = 'none';
         verifyItemsContainer.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 正在分析中...';
-        
-        // 确保展开状态
         isVerifyCollapsed = false;
-        toggleIcon.textContent = '▼';
-        
+        toggleIcon.innerHTML = expandSVG;
         try {
             const response = await fetch(`${API_URL}/verify`, {
                 method: 'POST',
@@ -818,7 +795,6 @@
                 displayVerifyItems(currentVerifyItems);
                 actionButtons.style.display = 'flex';
                 currentStep = 1;
-                // 显示八字信息区域
                 if (currentBaziStr) {
                     document.getElementById('baziDisplay').textContent = currentBaziStr;
                     baziInfoArea.classList.remove('hidden');
@@ -922,11 +898,8 @@
     function confirmAllAccurate() {
         currentStep = 2;
         const verifyArea = document.getElementById('verifyArea');
-        
-        // 保存当前验证内容（原始格式，用于保存）
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
         pendingVerifyContent = verifyItemsContainer.innerHTML;
-        
         verifyArea.classList.add('hidden');
         document.getElementById('moduleArea').classList.remove('hidden');
         document.getElementById('resultCard').style.display = 'none';
@@ -938,7 +911,6 @@
         document.getElementById('resultContent').innerHTML = html;
         document.getElementById('resultCard').style.display = 'block';
         document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
-        
         const userName = document.getElementById('nameInput').value;
         if (currentBirth && content) {
             saveAnalysisRecord(currentBirth, currentModuleName(), content, currentBaziStr, userName, pendingVerifyContent);
@@ -1062,7 +1034,7 @@
         pendingVerifyContent = null;
         isVerifyCollapsed = false;
         const toggleIcon = document.getElementById('verifyToggleIcon');
-        if (toggleIcon) toggleIcon.textContent = '▼';
+        if (toggleIcon) toggleIcon.innerHTML = expandSVG;
         const container = document.getElementById('analysisBtnContainer');
         container.innerHTML = '<button class="btn-start" id="startAnalysisBtn">开始深度分析</button>';
         document.getElementById('startAnalysisBtn').onclick = startAnalysis;
@@ -1072,13 +1044,8 @@
         initMinuteSelect();
         loadRegionData();
         updateHistoryList();
-        
-        // 折叠功能绑定（点击八字排盘旁边的图标）
         const toggleIcon = document.getElementById('verifyToggleIcon');
-        if (toggleIcon) {
-            toggleIcon.onclick = toggleVerifySection;
-        }
-        
+        if (toggleIcon) toggleIcon.onclick = toggleVerifySection;
         document.getElementById('startVerifyBtn').onclick = () => { if (currentStep === 0) callVerify(); };
         document.getElementById('submitFeedbackBtn').onclick = submitFeedback;
         document.getElementById('confirmOverallBtn').onclick = confirmAllAccurate;
@@ -1087,7 +1054,6 @@
         document.getElementById('regenerateResultBtn').onclick = regenerateAnalysis;
         document.getElementById('shareResultBtn').onclick = shareResult;
         document.getElementById('newChatBtn').onclick = newChat;
-        
         document.getElementById('provinceSelect').addEventListener('change', () => { updateCitySelect(); if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
         document.getElementById('citySelect').addEventListener('change', () => { updateDistrictSelect(); if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
         document.getElementById('districtSelect').addEventListener('change', () => { if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
@@ -1095,7 +1061,6 @@
         document.getElementById('dateInput').addEventListener('change', () => { if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
         document.getElementById('hourSelect').addEventListener('change', () => { if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
         document.getElementById('minuteSelect').addEventListener('change', () => { if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
-        
         document.querySelectorAll('input[name="knowTime"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 const timeSelectArea = document.getElementById('timeSelectArea');
@@ -1111,7 +1076,6 @@
                 if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
             });
         });
-        
         document.querySelectorAll('.module-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.module-btn').forEach(b => b.classList.remove('active'));
