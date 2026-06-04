@@ -68,20 +68,11 @@
         .result-title { font-size: 16px; font-weight: 600; color: #1a1a2e; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
         .result-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; max-height: 500px; overflow-y: auto; }
         .loading-dots { display: inline-flex; gap: 4px; }
-        .loading-dots span { 
-            width: 6px; 
-            height: 6px; 
-            background: #888; 
-            border-radius: 50%; 
-            animation: dotPulse 1.4s infinite ease-in-out;
-        }
+        .loading-dots span { width: 6px; height: 6px; background: #888; border-radius: 50%; animation: dotPulse 1.4s infinite ease-in-out; }
         .loading-dots span:nth-child(1) { animation-delay: 0s; }
         .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
         .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes dotPulse {
-            0%, 60%, 100% { transform: scale(1); opacity: 0.3; }
-            30% { transform: scale(1.2); opacity: 1; }
-        }
+        @keyframes dotPulse { 0%, 60%, 100% { transform: scale(1); opacity: 0.3; } 30% { transform: scale(1.2); opacity: 1; } }
         .location-row { display: flex; gap: 12px; flex-wrap: wrap; }
         .location-select { flex: 1; min-width: 100px; }
         .hidden { display: none !important; }
@@ -183,23 +174,61 @@
     let currentStep = 0;
     let currentBirth = '';
     let currentBaziStr = '';
-    let originalVerifyItems = [];
     let currentVerifyItems = [];
     let itemFeedbacks = [];
 
+    // ==================== 省市区数据加载（完整版）====================
     async function loadRegionData() {
         const loadingDiv = document.getElementById('regionLoading');
         loadingDiv.classList.remove('hidden');
         try {
-            const response = await fetch('https://unpkg.com/china-division@2.7.0/dist/provinces.json');
-            const provinces = await response.json();
-            pcaData = provinces.map(p => ({ code: p.code, name: p.name, children: [] }));
+            const [provincesRes, citiesRes, areasRes] = await Promise.all([
+                fetch('https://unpkg.com/china-division@2.7.0/dist/provinces.json'),
+                fetch('https://unpkg.com/china-division@2.7.0/dist/cities.json'),
+                fetch('https://unpkg.com/china-division@2.7.0/dist/areas.json')
+            ]);
+            
+            const provinces = await provincesRes.json();
+            const cities = await citiesRes.json();
+            const areas = await areasRes.json();
+            
+            pcaData = provinces.map(province => ({
+                code: province.code,
+                name: province.name,
+                children: cities
+                    .filter(city => city.provinceCode === province.code)
+                    .map(city => ({
+                        code: city.code,
+                        name: city.name,
+                        children: areas
+                            .filter(area => area.cityCode === city.code)
+                            .map(area => ({ code: area.code, name: area.name }))
+                    }))
+            }));
+            
+            console.log('省市区数据加载完成:', pcaData.length, '个省份');
             initProvinceSelect();
         } catch (error) {
-            pcaData = [{ code: '11', name: '北京市', children: [] }, { code: '31', name: '上海市', children: [] }, { code: '44', name: '广东省', children: [] }, { code: '51', name: '四川省', children: [] }];
-            initProvinceSelect();
+            console.error('数据加载失败:', error);
+            useFallbackData();
         }
         loadingDiv.classList.add('hidden');
+    }
+
+    function useFallbackData() {
+        pcaData = [
+            { code: '11', name: '北京市', children: [{ code: '1101', name: '北京市', children: ['东城区','西城区','朝阳区','海淀区','丰台区'] }] },
+            { code: '31', name: '上海市', children: [{ code: '3101', name: '上海市', children: ['黄浦区','徐汇区','长宁区','静安区','普陀区'] }] },
+            { code: '44', name: '广东省', children: [
+                { code: '4401', name: '广州市', children: ['越秀区','海珠区','天河区','白云区'] },
+                { code: '4403', name: '深圳市', children: ['福田区','南山区','宝安区','龙岗区'] }
+            ] },
+            { code: '51', name: '四川省', children: [
+                { code: '5101', name: '成都市', children: ['锦江区','青羊区','金牛区','武侯区','成华区'] },
+                { code: '5115', name: '宜宾市', children: ['翠屏区','南溪区','叙州区','江安县','长宁县','高县','珙县','筠连县','兴文县','屏山县'] }
+            ] }
+        ];
+        initProvinceSelect();
     }
 
     function initProvinceSelect() {
@@ -214,10 +243,75 @@
         });
     }
 
-    function updateCitySelect() { document.getElementById('citySelect').innerHTML = '<option value="">请选择城市</option>'; }
-    function updateDistrictSelect() { document.getElementById('districtSelect').innerHTML = '<option value="">请选择区/县</option>'; }
-    function getLocationInfo() { return { name: '', longitude: 120.0 }; }
-    
+    function updateCitySelect() {
+        const provinceCode = document.getElementById('provinceSelect').value;
+        const citySelect = document.getElementById('citySelect');
+        const districtSelect = document.getElementById('districtSelect');
+        
+        citySelect.innerHTML = '<option value="">请选择城市</option>';
+        districtSelect.innerHTML = '<option value="">请选择区/县</option>';
+        
+        if (provinceCode && pcaData) {
+            const province = pcaData.find(p => p.code === provinceCode);
+            if (province && province.children && province.children.length > 0) {
+                province.children.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.code;
+                    option.textContent = city.name;
+                    citySelect.appendChild(option);
+                });
+            }
+        }
+    }
+
+    function updateDistrictSelect() {
+        const provinceCode = document.getElementById('provinceSelect').value;
+        const cityCode = document.getElementById('citySelect').value;
+        const districtSelect = document.getElementById('districtSelect');
+        
+        districtSelect.innerHTML = '<option value="">请选择区/县</option>';
+        
+        if (provinceCode && cityCode && pcaData) {
+            const province = pcaData.find(p => p.code === provinceCode);
+            if (province) {
+                const city = province.children?.find(c => c.code === cityCode);
+                if (city && city.children && city.children.length > 0) {
+                    city.children.forEach(district => {
+                        const option = document.createElement('option');
+                        option.value = typeof district === 'string' ? district : district.code;
+                        option.textContent = typeof district === 'string' ? district : district.name;
+                        districtSelect.appendChild(option);
+                    });
+                }
+            }
+        }
+    }
+
+    function getLocationInfo() {
+        const provinceSelect = document.getElementById('provinceSelect');
+        const citySelect = document.getElementById('citySelect');
+        const districtSelect = document.getElementById('districtSelect');
+        const provinceName = provinceSelect.options[provinceSelect.selectedIndex]?.text || '';
+        const cityName = citySelect.options[citySelect.selectedIndex]?.text || '';
+        const districtName = districtSelect.options[districtSelect.selectedIndex]?.text || '';
+        
+        let locationName = provinceName;
+        if (cityName && cityName !== '请选择城市') locationName += cityName;
+        if (districtName && districtName !== '请选择区/县') locationName += districtName;
+        
+        const provinceCode = provinceSelect.value;
+        const lonMap = {
+            '11': 116.40, '12': 117.20, '13': 114.52, '14': 112.56, '15': 111.65,
+            '21': 123.43, '22': 125.35, '23': 126.64, '31': 121.48, '32': 118.78,
+            '33': 120.15, '34': 117.27, '35': 119.30, '36': 115.89, '37': 120.38,
+            '41': 113.65, '42': 114.30, '43': 112.98, '44': 113.27, '45': 108.32,
+            '46': 110.35, '50': 106.55, '51': 104.06, '52': 106.63, '53': 102.73,
+            '54': 91.14, '61': 108.95, '62': 103.82, '63': 101.78, '64': 106.27,
+            '65': 87.62, '71': 121.52, '81': 114.17, '82': 113.54
+        };
+        return { name: locationName, longitude: lonMap[provinceCode] || 120.0 };
+    }
+
     function initMinuteSelect() {
         const minuteSelect = document.getElementById('minuteSelect');
         minuteSelect.innerHTML = '<option value="">请选择分钟</option>';
@@ -257,7 +351,7 @@
             const end = (i < sections.length - 1) ? content.indexOf(sections[i + 1]) : content.length;
             if (start !== -1) {
                 let sectionContent = content.substring(start + sections[i].length, end).trim();
-                items.push({ title: sections[i], content: sectionContent, originalIndex: i });
+                items.push({ title: sections[i], content: sectionContent });
             }
         }
         return items;
@@ -377,8 +471,7 @@
             if (data.success) {
                 currentBirth = birth;
                 if (data.data.bazi) currentBaziStr = data.data.bazi;
-                originalVerifyItems = parseVerifyContent(data.data.verify);
-                currentVerifyItems = JSON.parse(JSON.stringify(originalVerifyItems));
+                currentVerifyItems = parseVerifyContent(data.data.verify);
                 itemFeedbacks = currentVerifyItems.map(() => '');
                 displayVerifyItems(currentVerifyItems);
                 actionButtons.style.display = 'flex';
@@ -412,7 +505,7 @@
         }
         
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
-        verifyItemsContainer.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 根据您的反馈重新分析不准确的项目...';
+        verifyItemsContainer.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 根据您的反馈重新分析...';
         
         try {
             const response = await fetch(`${API_URL}/verify_adjust`, {
@@ -446,7 +539,6 @@
                 
                 displayVerifyItems(currentVerifyItems, notice);
                 
-                // 重新绑定事件（因为重新渲染了）
                 for (let i = 0; i < currentVerifyItems.length; i++) {
                     const confirmBtn = document.querySelector(`.item-btn.confirm[data-index="${i}"]`);
                     const feedbackBtn = document.querySelector(`.item-btn.feedback[data-index="${i}"]`);
@@ -575,8 +667,12 @@
         document.getElementById('startAnalysisBtn').onclick = startAnalysis;
         document.getElementById('newChatBtn').onclick = newChat;
         
-        document.getElementById('provinceSelect').addEventListener('change', () => { updateCitySelect(); });
-        document.getElementById('citySelect').addEventListener('change', () => { updateDistrictSelect(); });
+        document.getElementById('provinceSelect').addEventListener('change', function() {
+            updateCitySelect();
+        });
+        document.getElementById('citySelect').addEventListener('change', function() {
+            updateDistrictSelect();
+        });
         
         document.querySelectorAll('input[name="knowTime"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
