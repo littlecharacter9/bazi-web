@@ -257,20 +257,22 @@
         }
     }
 
-    // 格式化验证内容用于历史记录（只保留内容，移除按钮）
+    // 格式化验证内容用于历史记录（彻底移除按钮和反馈框）
     function formatVerifyContentForHistory(htmlContent) {
+        if (!htmlContent) return '';
+        
         const temp = document.createElement('div');
         temp.innerHTML = htmlContent;
         
-        // 移除所有按钮区域
-        const buttons = temp.querySelectorAll('.item-buttons');
-        buttons.forEach(el => el.remove());
+        // 删除所有按钮区域
+        const buttonContainers = temp.querySelectorAll('.item-buttons');
+        buttonContainers.forEach(el => el.remove());
         
-        // 移除所有反馈输入框
+        // 删除所有反馈输入框
         const feedbacks = temp.querySelectorAll('.feedback-detail');
         feedbacks.forEach(el => el.remove());
         
-        // 移除所有问题文字
+        // 删除所有问询文字
         const questions = temp.querySelectorAll('.verify-question');
         questions.forEach(el => el.remove());
         
@@ -280,15 +282,15 @@
         
         items.forEach(item => {
             const titleElem = item.querySelector('.verify-title');
-            const title = titleElem ? titleElem.innerHTML : '';
+            const title = titleElem ? titleElem.outerHTML : '';
             const contentElem = item.querySelector('.verify-content');
-            const content = contentElem ? contentElem.innerHTML : '';
+            const content = contentElem ? contentElem.outerHTML : '';
             
             if (title && content) {
                 formattedHtml += `
                     <div class="history-verify-item">
-                        <div class="history-verify-title">${title}</div>
-                        <div class="history-verify-content">${content}</div>
+                        ${title}
+                        ${content}
                     </div>
                 `;
             }
@@ -417,6 +419,7 @@
     }
 
     function viewHistoryRecord(record) {
+        // 显示八字信息
         const baziInfoArea = document.getElementById('baziInfoArea');
         const baziDisplay = document.getElementById('baziDisplay');
         if (record.bazi) {
@@ -426,16 +429,17 @@
             baziInfoArea.classList.add('hidden');
         }
         
+        // 强制隐藏全局的反馈按钮区域
+        const actionButtonsGlobal = document.getElementById('actionButtons');
+        if (actionButtonsGlobal) actionButtonsGlobal.style.display = 'none';
+        
         // 显示验证内容（格式化后的，无按钮）
         const verifyArea = document.getElementById('verifyArea');
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
         const toggleIcon = document.getElementById('verifyToggleIcon');
         
-        if (record.verifyContent) {
+        if (record.verifyContent && record.verifyContent.trim() !== '') {
             verifyItemsContainer.innerHTML = record.verifyContent;
-            // 隐藏反馈按钮区域
-            const actionButtons = document.getElementById('actionButtons');
-            if (actionButtons) actionButtons.style.display = 'none';
             verifyArea.classList.remove('hidden');
             // 默认折叠状态
             verifyArea.classList.add('hidden');
@@ -503,7 +507,7 @@
         return moduleMap[currentModule] || currentModule;
     }
 
-    // ==================== 省市区数据加载 ====================
+    // ==================== 省市区数据加载（简化版）====================
     async function loadRegionData() {
         const loadingDiv = document.getElementById('regionLoading');
         loadingDiv.classList.remove('hidden');
