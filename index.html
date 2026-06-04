@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>八戒命理 - 八字命理助手</title>
     <style>
-        /* 样式保持不变，与上一版相同，省略节省篇幅 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: #f5f5f7; color: #1c1c1e; height: 100vh; overflow: hidden; }
         .app { display: flex; height: 100vh; width: 100%; }
@@ -63,8 +62,6 @@
         .module-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
         .module-btn { padding: 8px 20px; background: #f0f0f0; border: none; border-radius: 30px; font-size: 14px; color: #666; cursor: pointer; }
         .module-btn.active { background: #1a1a2e; color: white; }
-        .primary-btn { width: 100%; padding: 14px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 20px; }
-        .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .result-card { background: #f9f9fb; border-radius: 20px; padding: 24px; margin-bottom: 16px; }
         .result-title { font-size: 16px; font-weight: 600; color: #1a1a2e; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
         .result-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; max-height: 500px; overflow-y: auto; }
@@ -87,6 +84,10 @@
         .action-btn.dark { background: #1a1a2e; color: white; }
         .action-btn.secondary { background: #e0e0e0; color: #999; cursor: not-allowed; }
         .feedback-notice { background: #e8f5e9; padding: 12px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #2e7d32; }
+        /* 分析按钮区域 */
+        .analysis-buttons { display: flex; gap: 16px; margin-bottom: 20px; }
+        .analysis-buttons .primary-btn { flex: 1; margin-bottom: 0; }
+        .analysis-buttons .disabled-btn { flex: 1; background: #e0e0e0; color: #999; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; padding: 14px; cursor: not-allowed; margin-bottom: 0; }
     </style>
 </head>
 <body>
@@ -156,7 +157,12 @@
                         <button class="module-btn" data-module="marriage">婚姻</button>
                         <button class="module-btn" data-module="liunian">流年</button>
                     </div>
-                    <button class="primary-btn" id="startAnalysisBtn">开始深度分析</button>
+                    <!-- 两个按钮并排 -->
+                    <div class="analysis-buttons">
+                        <button class="primary-btn" id="startAnalysisBtn">开始深度分析</button>
+                        <button class="disabled-btn" id="analysisDoneBtn" disabled>深度分析已完成</button>
+                        <button class="primary-btn" id="continueAnalysisBtn" style="display: none;">继续深度分析</button>
+                    </div>
                 </div>
                 
                 <button class="primary-btn" id="startVerifyBtn">开始验证八字</button>
@@ -688,9 +694,12 @@
     async function startAnalysis() {
         if (isLoading) return;
         isLoading = true;
-        const analyzeBtn = document.getElementById('startAnalysisBtn');
-        analyzeBtn.disabled = true;
-        analyzeBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
+        const startBtn = document.getElementById('startAnalysisBtn');
+        const doneBtn = document.getElementById('analysisDoneBtn');
+        const continueBtn = document.getElementById('continueAnalysisBtn');
+        
+        startBtn.disabled = true;
+        startBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
         
         try {
             const response = await fetch(`${API_URL}/analyze`, {
@@ -702,29 +711,31 @@
             if (data.success) {
                 showAnalysisResult(data.data.analysis);
                 addHistory(currentBirth);
-                analyzeBtn.innerHTML = '继续深度分析';
-                analyzeBtn.disabled = false;
+                // 隐藏开始按钮，显示完成按钮和继续按钮
+                startBtn.style.display = 'none';
+                doneBtn.style.display = 'block';
+                continueBtn.style.display = 'block';
             } else {
                 showAnalysisResult(`分析失败：${data.error || '未知错误'}`);
-                analyzeBtn.innerHTML = '开始深度分析';
-                analyzeBtn.disabled = false;
+                startBtn.disabled = false;
+                startBtn.innerHTML = '开始深度分析';
             }
         } catch (err) {
             showAnalysisResult(`网络错误：${err.message}`);
-            analyzeBtn.innerHTML = '开始深度分析';
-            analyzeBtn.disabled = false;
+            startBtn.disabled = false;
+            startBtn.innerHTML = '开始深度分析';
         } finally {
             isLoading = false;
         }
     }
 
-    // 继续分析（按钮文字变为"继续深度分析"后点击）
+    // 继续分析
     async function continueAnalysis() {
         if (isLoading) return;
         isLoading = true;
-        const analyzeBtn = document.getElementById('startAnalysisBtn');
-        analyzeBtn.disabled = true;
-        analyzeBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
+        const continueBtn = document.getElementById('continueAnalysisBtn');
+        continueBtn.disabled = true;
+        continueBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
         
         try {
             const response = await fetch(`${API_URL}/analyze`, {
@@ -736,19 +747,15 @@
             if (data.success) {
                 showAnalysisResult(data.data.analysis);
                 addHistory(currentBirth);
-                analyzeBtn.innerHTML = '继续深度分析';
-                analyzeBtn.disabled = false;
             } else {
                 showAnalysisResult(`分析失败：${data.error || '未知错误'}`);
-                analyzeBtn.innerHTML = '继续深度分析';
-                analyzeBtn.disabled = false;
             }
         } catch (err) {
             showAnalysisResult(`网络错误：${err.message}`);
-            analyzeBtn.innerHTML = '继续深度分析';
-            analyzeBtn.disabled = false;
         } finally {
             isLoading = false;
+            continueBtn.disabled = false;
+            continueBtn.innerHTML = '继续深度分析';
         }
     }
 
@@ -827,9 +834,16 @@
         document.getElementById('actionButtons').style.display = 'none';
         itemFeedbacks = [];
         lastAnalysisResult = '';
-        // 重置按钮文字
-        const analyzeBtn = document.getElementById('startAnalysisBtn');
-        analyzeBtn.innerHTML = '开始深度分析';
+        
+        // 重置按钮状态
+        const startBtn = document.getElementById('startAnalysisBtn');
+        const doneBtn = document.getElementById('analysisDoneBtn');
+        const continueBtn = document.getElementById('continueAnalysisBtn');
+        startBtn.style.display = 'block';
+        startBtn.disabled = false;
+        startBtn.innerHTML = '开始深度分析';
+        doneBtn.style.display = 'none';
+        continueBtn.style.display = 'none';
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -840,16 +854,9 @@
         document.getElementById('submitFeedbackBtn').onclick = submitFeedback;
         document.getElementById('confirmOverallBtn').onclick = confirmAllAccurate;
         
-        // 智能按钮：根据文字判断调用哪个函数
-        const analyzeBtn = document.getElementById('startAnalysisBtn');
-        analyzeBtn.onclick = () => {
-            if (analyzeBtn.innerHTML === '继续深度分析') {
-                continueAnalysis();
-            } else {
-                startAnalysis();
-            }
-        };
-        
+        // 按钮事件
+        document.getElementById('startAnalysisBtn').onclick = startAnalysis;
+        document.getElementById('continueAnalysisBtn').onclick = continueAnalysis;
         document.getElementById('copyResultBtn').onclick = copyResult;
         document.getElementById('regenerateResultBtn').onclick = regenerateAnalysis;
         document.getElementById('shareResultBtn').onclick = shareResult;
