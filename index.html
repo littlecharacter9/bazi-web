@@ -64,9 +64,16 @@
         .module-btn.active { background: #1a1a2e; color: white; }
         .primary-btn { width: 100%; padding: 14px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 20px; }
         .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .result-card { background: #f9f9fb; border-radius: 20px; padding: 24px; }
+        .result-card { background: #f9f9fb; border-radius: 20px; padding: 24px; margin-bottom: 16px; }
         .result-title { font-size: 16px; font-weight: 600; color: #1a1a2e; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
         .result-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; max-height: 500px; overflow-y: auto; }
+        .action-icons { display: flex; gap: 16px; justify-content: flex-end; margin-top: 16px; padding-top: 12px; border-top: 1px solid #eee; }
+        .action-icon { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #666; cursor: pointer; transition: color 0.2s; }
+        .action-icon:hover { color: #e6b980; }
+        .result-buttons { display: flex; gap: 16px; margin-top: 16px; }
+        .result-btn { flex: 1; padding: 10px; border: none; border-radius: 30px; font-size: 14px; cursor: pointer; text-align: center; }
+        .result-btn.gray { background: #e0e0e0; color: #999; cursor: not-allowed; }
+        .result-btn.primary { background: #e6b980; color: #1a1a2e; }
         .loading-dots { display: inline-flex; gap: 4px; }
         .loading-dots span { width: 6px; height: 6px; background: #888; border-radius: 50%; animation: dotPulse 1.4s infinite ease-in-out; }
         .loading-dots span:nth-child(1) { animation-delay: 0s; }
@@ -157,9 +164,20 @@
                 
                 <button class="primary-btn" id="startVerifyBtn">开始验证八字</button>
             </div>
-            <div class="result-card" id="resultCard" style="display: none;">
+            
+            <!-- 结果区域 -->
+            <div id="resultCard" class="result-card" style="display: none;">
                 <div class="result-title">分析结果</div>
                 <div class="result-content" id="resultContent"></div>
+                <div class="action-icons">
+                    <div class="action-icon" id="copyResultBtn">📋 复制</div>
+                    <div class="action-icon" id="regenerateResultBtn">🔄 重新生成</div>
+                    <div class="action-icon" id="shareResultBtn">📤 转发</div>
+                </div>
+                <div class="result-buttons" id="resultButtons">
+                    <button class="result-btn gray" id="analysisDoneBtn" disabled>✓ 本次分析已生成</button>
+                    <button class="result-btn primary" id="continueAnalysisBtn">继续深度分析</button>
+                </div>
             </div>
         </div>
     </div>
@@ -176,8 +194,9 @@
     let currentBaziStr = '';
     let currentVerifyItems = [];
     let itemFeedbacks = [];
+    let lastAnalysisResult = '';
 
-    // ==================== 省市区数据加载（完整版）====================
+    // ==================== 省市区数据加载 ====================
     async function loadRegionData() {
         const loadingDiv = document.getElementById('regionLoading');
         loadingDiv.classList.remove('hidden');
@@ -206,7 +225,6 @@
                     }))
             }));
             
-            console.log('省市区数据加载完成:', pcaData.length, '个省份');
             initProvinceSelect();
         } catch (error) {
             console.error('数据加载失败:', error);
@@ -217,8 +235,8 @@
 
     function useFallbackData() {
         pcaData = [
-            { code: '11', name: '北京市', children: [{ code: '1101', name: '北京市', children: ['东城区','西城区','朝阳区','海淀区','丰台区'] }] },
-            { code: '31', name: '上海市', children: [{ code: '3101', name: '上海市', children: ['黄浦区','徐汇区','长宁区','静安区','普陀区'] }] },
+            { code: '11', name: '北京市', children: [{ code: '1101', name: '北京市', children: ['东城区','西城区','朝阳区','海淀区'] }] },
+            { code: '31', name: '上海市', children: [{ code: '3101', name: '上海市', children: ['黄浦区','徐汇区','长宁区','静安区'] }] },
             { code: '44', name: '广东省', children: [
                 { code: '4401', name: '广州市', children: ['越秀区','海珠区','天河区','白云区'] },
                 { code: '4403', name: '深圳市', children: ['福田区','南山区','宝安区','龙岗区'] }
@@ -323,8 +341,71 @@
         }
     }
 
-    function updateTrueSolarDisplay() {}
-    function getActualBirthTime() { return null; }
+    function getDayOfYear(date) {
+        const start = new Date(date.getFullYear(), 0, 0);
+        return Math.floor((date - start) / 86400000);
+    }
+
+    function calculateTrueSolarTime(date, hour, minute, longitude) {
+        const dayOfYear = getDayOfYear(date);
+        const B = (dayOfYear - 1) * 2 * Math.PI / 365;
+        let eqTime = 0.258 * Math.cos(B) - 7.416 * Math.sin(B) - 3.648 * Math.cos(2 * B) - 9.228 * Math.sin(2 * B);
+        let lonCorrection = (longitude - 120) * 4;
+        let totalMinutes = hour * 60 + minute + lonCorrection + eqTime;
+        let newHour = Math.floor(totalMinutes / 60) % 24;
+        let newMinute = Math.round(totalMinutes % 60);
+        if (newMinute >= 60) { newMinute -= 60; newHour = (newHour + 1) % 24; }
+        if (newMinute < 0) { newMinute += 60; newHour = (newHour - 1 + 24) % 24; }
+        return { hour: newHour, minute: newMinute };
+    }
+
+    function updateTrueSolarDisplay() {
+        const useTrueSolar = document.getElementById('useTrueSolar').checked;
+        const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
+        const trueSolarDiv = document.getElementById('trueSolarResult');
+        if (!useTrueSolar || knowTime === 'no') { trueSolarDiv.classList.add('hidden'); return; }
+        const locationInfo = getLocationInfo();
+        if (!locationInfo || !locationInfo.longitude) {
+            trueSolarDiv.classList.remove('hidden');
+            trueSolarDiv.innerHTML = '📍 请选择完整的出生地点，以便进行真太阳时校正';
+            trueSolarDiv.style.background = '#fff3e0';
+            return;
+        }
+        const dateStr = document.getElementById('dateInput').value;
+        const hour = parseInt(document.getElementById('hourSelect').value);
+        const minute = parseInt(document.getElementById('minuteSelect').value);
+        if (!dateStr || isNaN(hour) || isNaN(minute)) {
+            trueSolarDiv.classList.remove('hidden');
+            trueSolarDiv.innerHTML = '⏰ 请先填写完整的出生日期和时间';
+            return;
+        }
+        const date = new Date(dateStr);
+        const trueTime = calculateTrueSolarTime(date, hour, minute, locationInfo.longitude);
+        const shichenMap = {23:'子',0:'子',1:'丑',2:'丑',3:'寅',4:'寅',5:'卯',6:'卯',7:'辰',8:'辰',9:'巳',10:'巳',11:'午',12:'午',13:'未',14:'未',15:'申',16:'申',17:'酉',18:'酉',19:'戌',20:'戌',21:'亥',22:'亥'};
+        const originalShichen = shichenMap[hour] || '';
+        const trueShichen = shichenMap[trueTime.hour] || '';
+        trueSolarDiv.classList.remove('hidden');
+        trueSolarDiv.style.background = '#e8f5e9';
+        trueSolarDiv.innerHTML = `🌞 真太阳时校正<br>北京时间：${hour}:${minute}（${originalShichen}时）→ 真太阳时：${trueTime.hour}:${trueTime.minute}（${trueShichen}时）`;
+    }
+
+    function getActualBirthTime() {
+        const useTrueSolar = document.getElementById('useTrueSolar').checked;
+        const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
+        if (knowTime === 'no') return null;
+        let hour = parseInt(document.getElementById('hourSelect').value);
+        let minute = parseInt(document.getElementById('minuteSelect').value);
+        if (useTrueSolar) {
+            const locationInfo = getLocationInfo();
+            const dateStr = document.getElementById('dateInput').value;
+            if (locationInfo && locationInfo.longitude && dateStr && !isNaN(hour) && !isNaN(minute)) {
+                const date = new Date(dateStr);
+                const trueTime = calculateTrueSolarTime(date, hour, minute, locationInfo.longitude);
+                return { hour: trueTime.hour, minute: trueTime.minute };
+            }
+        }
+        return { hour: hour, minute: minute };
+    }
 
     function buildBirthString() {
         const date = new Date(document.getElementById('dateInput').value);
@@ -334,10 +415,9 @@
         const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
         if (!gender) return null;
         if (knowTime === 'yes') {
-            const hour = document.getElementById('hourSelect').value;
-            const minute = document.getElementById('minuteSelect').value;
-            if (!hour) return null;
-            return `${year}.${month}.${day} ${hour}时 ${minute || 0}分 ${gender}`;
+            const actualTime = getActualBirthTime();
+            if (!actualTime || isNaN(actualTime.hour) || isNaN(actualTime.minute)) return null;
+            return `${year}.${month}.${day} ${actualTime.hour}时 ${actualTime.minute}分 ${gender}`;
         } else {
             return `${year}.${month}.${day} ${gender}`;
         }
@@ -603,6 +683,14 @@
         document.getElementById('resultCard').style.display = 'none';
     }
 
+    function showAnalysisResult(content) {
+        lastAnalysisResult = content;
+        let html = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        document.getElementById('resultContent').innerHTML = html;
+        document.getElementById('resultCard').style.display = 'block';
+        document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+    }
+
     async function startAnalysis() {
         if (isLoading) return;
         isLoading = true;
@@ -618,21 +706,100 @@
             });
             const data = await response.json();
             if (data.success) {
-                let html = data.data.analysis.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                document.getElementById('resultContent').innerHTML = html;
-                document.getElementById('resultCard').style.display = 'block';
+                showAnalysisResult(data.data.analysis);
                 addHistory(currentBirth);
             } else {
-                document.getElementById('resultContent').innerHTML = `分析失败：${data.error || '未知错误'}`;
-                document.getElementById('resultCard').style.display = 'block';
+                showAnalysisResult(`分析失败：${data.error || '未知错误'}`);
             }
         } catch (err) {
-            document.getElementById('resultContent').innerHTML = `网络错误：${err.message}`;
-            document.getElementById('resultCard').style.display = 'block';
+            showAnalysisResult(`网络错误：${err.message}`);
         } finally {
             isLoading = false;
             analyzeBtn.disabled = false;
             analyzeBtn.innerHTML = '开始深度分析';
+        }
+    }
+
+    async function continueAnalysis() {
+        if (isLoading) return;
+        isLoading = true;
+        const continueBtn = document.getElementById('continueAnalysisBtn');
+        continueBtn.disabled = true;
+        continueBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
+        
+        try {
+            const response = await fetch(`${API_URL}/analyze`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ birth: currentBirth, module: currentModule })
+            });
+            const data = await response.json();
+            if (data.success) {
+                showAnalysisResult(data.data.analysis);
+                addHistory(currentBirth);
+            } else {
+                showAnalysisResult(`分析失败：${data.error || '未知错误'}`);
+            }
+        } catch (err) {
+            showAnalysisResult(`网络错误：${err.message}`);
+        } finally {
+            isLoading = false;
+            continueBtn.disabled = false;
+            continueBtn.innerHTML = '继续深度分析';
+        }
+    }
+
+    async function regenerateAnalysis() {
+        if (isLoading) return;
+        isLoading = true;
+        const resultContent = document.getElementById('resultContent');
+        resultContent.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 重新生成中...';
+        
+        try {
+            const response = await fetch(`${API_URL}/analyze`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ birth: currentBirth, module: currentModule })
+            });
+            const data = await response.json();
+            if (data.success) {
+                lastAnalysisResult = data.data.analysis;
+                let html = data.data.analysis.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                resultContent.innerHTML = html;
+            } else {
+                resultContent.innerHTML = `分析失败：${data.error || '未知错误'}`;
+            }
+        } catch (err) {
+            resultContent.innerHTML = `网络错误：${err.message}`;
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    function copyResult() {
+        if (!lastAnalysisResult) {
+            alert('没有可复制的内容');
+            return;
+        }
+        navigator.clipboard.writeText(lastAnalysisResult).then(() => {
+            alert('已复制到剪贴板');
+        }).catch(() => {
+            alert('复制失败');
+        });
+    }
+
+    function shareResult() {
+        if (!lastAnalysisResult) {
+            alert('没有可分享的内容');
+            return;
+        }
+        if (navigator.share) {
+            navigator.share({
+                title: '八字命理分析结果',
+                text: lastAnalysisResult.substring(0, 500),
+            }).catch(() => {});
+        } else {
+            alert('当前浏览器不支持分享功能，请手动复制');
         }
     }
 
@@ -655,6 +822,7 @@
         document.getElementById('startVerifyBtn').classList.remove('hidden');
         document.getElementById('actionButtons').style.display = 'none';
         itemFeedbacks = [];
+        lastAnalysisResult = '';
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -665,13 +833,32 @@
         document.getElementById('submitFeedbackBtn').onclick = submitFeedback;
         document.getElementById('confirmOverallBtn').onclick = confirmAllAccurate;
         document.getElementById('startAnalysisBtn').onclick = startAnalysis;
+        document.getElementById('continueAnalysisBtn').onclick = continueAnalysis;
+        document.getElementById('copyResultBtn').onclick = copyResult;
+        document.getElementById('regenerateResultBtn').onclick = regenerateAnalysis;
+        document.getElementById('shareResultBtn').onclick = shareResult;
         document.getElementById('newChatBtn').onclick = newChat;
         
         document.getElementById('provinceSelect').addEventListener('change', function() {
             updateCitySelect();
+            if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
         });
         document.getElementById('citySelect').addEventListener('change', function() {
             updateDistrictSelect();
+            if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
+        });
+        document.getElementById('districtSelect').addEventListener('change', function() {
+            if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
+        });
+        document.getElementById('useTrueSolar').addEventListener('change', updateTrueSolarDisplay);
+        document.getElementById('dateInput').addEventListener('change', function() {
+            if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
+        });
+        document.getElementById('hourSelect').addEventListener('change', function() {
+            if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
+        });
+        document.getElementById('minuteSelect').addEventListener('change', function() {
+            if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
         });
         
         document.querySelectorAll('input[name="knowTime"]').forEach(radio => {
@@ -684,7 +871,9 @@
                 } else {
                     timeSelectArea.classList.add('hidden');
                     timeWarning.classList.remove('hidden');
+                    document.getElementById('trueSolarResult').classList.add('hidden');
                 }
+                if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
             });
         });
         
