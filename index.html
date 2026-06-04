@@ -261,13 +261,29 @@
     function formatVerifyContentForHistory(htmlContent) {
         const temp = document.createElement('div');
         temp.innerHTML = htmlContent;
-        const buttons = temp.querySelectorAll('.item-buttons, .feedback-detail, .verify-question');
+        
+        // 移除所有按钮区域
+        const buttons = temp.querySelectorAll('.item-buttons');
         buttons.forEach(el => el.remove());
+        
+        // 移除所有反馈输入框
+        const feedbacks = temp.querySelectorAll('.feedback-detail');
+        feedbacks.forEach(el => el.remove());
+        
+        // 移除所有问题文字
+        const questions = temp.querySelectorAll('.verify-question');
+        questions.forEach(el => el.remove());
+        
+        // 提取每个验证项
         const items = temp.querySelectorAll('.verify-item');
         let formattedHtml = '';
+        
         items.forEach(item => {
-            const title = item.querySelector('.verify-title')?.innerHTML || '';
-            const content = item.querySelector('.verify-content')?.innerHTML || '';
+            const titleElem = item.querySelector('.verify-title');
+            const title = titleElem ? titleElem.innerHTML : '';
+            const contentElem = item.querySelector('.verify-content');
+            const content = contentElem ? contentElem.innerHTML : '';
+            
             if (title && content) {
                 formattedHtml += `
                     <div class="history-verify-item">
@@ -277,7 +293,8 @@
                 `;
             }
         });
-        return formattedHtml || htmlContent.replace(/<div class="item-buttons">.*?<\/div>/gs, '').replace(/<textarea.*?<\/textarea>/gs, '').replace(/<div class="verify-question">.*?<\/div>/gs, '');
+        
+        return formattedHtml;
     }
 
     // ==================== 本地存储管理 ====================
@@ -408,20 +425,26 @@
         } else {
             baziInfoArea.classList.add('hidden');
         }
+        
+        // 显示验证内容（格式化后的，无按钮）
         const verifyArea = document.getElementById('verifyArea');
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
         const toggleIcon = document.getElementById('verifyToggleIcon');
+        
         if (record.verifyContent) {
             verifyItemsContainer.innerHTML = record.verifyContent;
+            // 隐藏反馈按钮区域
             const actionButtons = document.getElementById('actionButtons');
             if (actionButtons) actionButtons.style.display = 'none';
             verifyArea.classList.remove('hidden');
+            // 默认折叠状态
             verifyArea.classList.add('hidden');
             isVerifyCollapsed = true;
             if (toggleIcon) toggleIcon.innerHTML = collapseSVG;
         } else {
             verifyArea.classList.add('hidden');
         }
+        
         const startVerifyBtn = document.getElementById('startVerifyBtn');
         if (startVerifyBtn) startVerifyBtn.classList.add('hidden');
         const moduleArea = document.getElementById('moduleArea');
