@@ -47,7 +47,7 @@
         .time-toggle input { width: 18px; height: 18px; cursor: pointer; }
         .warning-box { background: #fff3e0; border-left: 4px solid #e6b980; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #b86b00; }
         .true-solar-box { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #2e7d32; }
-        .verify-box { background: #e8f0fe; border-left: 4px solid #1a1a2e; padding: 16px; border-radius: 12px; margin-bottom: 16px; }
+        .verify-box { background: #e8f0fe; border-left: 4px solid #1a1a2e; border-radius: 12px; margin-top: 12px; overflow: hidden; transition: all 0.3s ease; }
         .verify-item { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e0e0e0; }
         .verify-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .verify-title { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 8px; }
@@ -59,8 +59,10 @@
         .verify-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; margin-bottom: 8px; }
         .feedback-detail { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 12px; font-size: 13px; margin-top: 12px; display: none; resize: vertical; font-family: inherit; }
         .feedback-detail.active { display: block; }
-        .bazi-info { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 14px; }
+        .bazi-info { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
         .bazi-info span { font-weight: 600; color: #1a1a2e; }
+        .verify-toggle-icon { cursor: pointer; font-size: 18px; color: #888; transition: transform 0.3s ease; padding: 4px 8px; border-radius: 20px; }
+        .verify-toggle-icon:hover { background: rgba(0,0,0,0.05); color: #e6b980; }
         .checkbox-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
         .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #333; cursor: pointer; }
         .module-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
@@ -93,10 +95,6 @@
         .btn-start { width: 100%; padding: 14px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: pointer; }
         .btn-done { width: 100%; padding: 14px; background: #e0e0e0; color: #999; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: not-allowed; }
         .btn-continue { width: 100%; padding: 14px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: pointer; }
-        .verify-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 8px 0; margin-bottom: 12px; }
-        .verify-header:hover { opacity: 0.8; }
-        .verify-title-icon { font-size: 15px; font-weight: 600; color: #1a1a2e; }
-        .verify-toggle-icon { font-size: 16px; color: #666; transition: transform 0.2s; }
     </style>
 </head>
 <body>
@@ -149,21 +147,19 @@
                 </div>
                 <div id="trueSolarResult" class="true-solar-box hidden"></div>
                 
-                <div id="baziInfoArea" class="bazi-info hidden">八字排盘：<span id="baziDisplay"></span></div>
+                <!-- 八字信息区域（带折叠图标） -->
+                <div id="baziInfoArea" class="bazi-info hidden">
+                    <span>📜 八字排盘：<span id="baziDisplay"></span></span>
+                    <span class="verify-toggle-icon" id="verifyToggleIcon">▼</span>
+                </div>
                 
-                <!-- 验证区域（可折叠） -->
+                <!-- 验证内容区域（可折叠） -->
                 <div id="verifyArea" class="hidden">
-                    <div class="verify-box" id="verifyBox">
-                        <div class="verify-header" id="verifyHeader">
-                            <span class="verify-title-icon">📋 八字验证推断</span>
-                            <span class="verify-toggle-icon" id="verifyToggleIcon">▼</span>
-                        </div>
-                        <div id="verifyContentWrapper">
-                            <div id="verifyItemsContainer"></div>
-                            <div class="action-buttons" id="actionButtons" style="display: none;">
-                                <button class="action-btn secondary" id="submitFeedbackBtn">提交不准确反馈</button>
-                                <button class="action-btn dark" id="confirmOverallBtn">全部/大部分准确，继续分析</button>
-                            </div>
+                    <div class="verify-box">
+                        <div id="verifyItemsContainer"></div>
+                        <div class="action-buttons" id="actionButtons" style="display: none;">
+                            <button class="action-btn secondary" id="submitFeedbackBtn">提交不准确反馈</button>
+                            <button class="action-btn dark" id="confirmOverallBtn">全部/大部分准确，继续分析</button>
                         </div>
                     </div>
                 </div>
@@ -210,18 +206,18 @@
     let itemFeedbacks = [];
     let lastAnalysisResult = '';
     let isVerifyCollapsed = false;
-    let pendingVerifyContent = null;  // 保存验证内容用于保存记录
+    let pendingVerifyContent = null;
 
     // ==================== 折叠功能 ====================
     function toggleVerifySection() {
-        const wrapper = document.getElementById('verifyContentWrapper');
+        const wrapper = document.getElementById('verifyArea');
         const icon = document.getElementById('verifyToggleIcon');
         if (isVerifyCollapsed) {
-            wrapper.style.display = 'block';
+            wrapper.classList.remove('hidden');
             icon.textContent = '▼';
             isVerifyCollapsed = false;
         } else {
-            wrapper.style.display = 'none';
+            wrapper.classList.add('hidden');
             icon.textContent = '▶';
             isVerifyCollapsed = true;
         }
@@ -348,24 +344,27 @@
     }
 
     function viewHistoryRecord(record) {
-        // 显示验证区域（如果有保存的验证内容）
+        // 显示八字信息
+        const baziInfoArea = document.getElementById('baziInfoArea');
+        const baziDisplay = document.getElementById('baziDisplay');
+        if (record.bazi) {
+            baziDisplay.textContent = record.bazi;
+            baziInfoArea.classList.remove('hidden');
+        } else {
+            baziInfoArea.classList.add('hidden');
+        }
+        
+        // 显示验证内容（如果有）
         const verifyArea = document.getElementById('verifyArea');
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
+        const toggleIcon = document.getElementById('verifyToggleIcon');
         
         if (record.verifyContent) {
             verifyItemsContainer.innerHTML = record.verifyContent;
-            verifyArea.classList.remove('hidden');
-            // 确保验证区域展开
-            const wrapper = document.getElementById('verifyContentWrapper');
-            const icon = document.getElementById('verifyToggleIcon');
-            if (wrapper) {
-                wrapper.style.display = 'block';
-                icon.textContent = '▼';
-                isVerifyCollapsed = false;
-            }
-            // 隐藏验证按钮（因为已经验证过了）
-            const actionButtons = document.getElementById('actionButtons');
-            if (actionButtons) actionButtons.style.display = 'none';
+            // 默认折叠状态
+            verifyArea.classList.add('hidden');
+            isVerifyCollapsed = true;
+            if (toggleIcon) toggleIcon.textContent = '▶';
         } else {
             verifyArea.classList.add('hidden');
         }
@@ -377,16 +376,6 @@
         // 显示模块选择区域
         const moduleArea = document.getElementById('moduleArea');
         if (moduleArea) moduleArea.classList.remove('hidden');
-        
-        // 显示八字信息
-        const baziInfoArea = document.getElementById('baziInfoArea');
-        const baziDisplay = document.getElementById('baziDisplay');
-        if (record.bazi) {
-            baziDisplay.textContent = record.bazi;
-            baziInfoArea.classList.remove('hidden');
-        } else {
-            baziInfoArea.classList.add('hidden');
-        }
         
         // 显示分析结果
         const resultCard = document.getElementById('resultCard');
@@ -756,10 +745,18 @@
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
         const startVerifyBtn = document.getElementById('startVerifyBtn');
         const actionButtons = document.getElementById('actionButtons');
+        const baziInfoArea = document.getElementById('baziInfoArea');
+        const toggleIcon = document.getElementById('verifyToggleIcon');
+        
         verifyArea.classList.remove('hidden');
         startVerifyBtn.classList.add('hidden');
         actionButtons.style.display = 'none';
         verifyItemsContainer.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 正在分析中...';
+        
+        // 确保展开状态
+        isVerifyCollapsed = false;
+        toggleIcon.textContent = '▼';
+        
         try {
             const response = await fetch(`${API_URL}/verify`, {
                 method: 'POST',
@@ -775,13 +772,10 @@
                 displayVerifyItems(currentVerifyItems);
                 actionButtons.style.display = 'flex';
                 currentStep = 1;
-                // 确保验证区域展开
-                const wrapper = document.getElementById('verifyContentWrapper');
-                const icon = document.getElementById('verifyToggleIcon');
-                if (wrapper) {
-                    wrapper.style.display = 'block';
-                    icon.textContent = '▼';
-                    isVerifyCollapsed = false;
+                // 显示八字信息区域
+                if (currentBaziStr) {
+                    document.getElementById('baziDisplay').textContent = currentBaziStr;
+                    baziInfoArea.classList.remove('hidden');
                 }
             } else {
                 verifyItemsContainer.innerHTML = `验证失败：${data.error || '未知错误'}`;
@@ -883,17 +877,13 @@
         currentStep = 2;
         const verifyArea = document.getElementById('verifyArea');
         const baziInfoArea = document.getElementById('baziInfoArea');
-        const baziDisplay = document.getElementById('baziDisplay');
         
         // 保存当前验证内容
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
         pendingVerifyContent = verifyItemsContainer.innerHTML;
         
         verifyArea.classList.add('hidden');
-        if (currentBaziStr) {
-            baziDisplay.textContent = currentBaziStr;
-            baziInfoArea.classList.remove('hidden');
-        }
+        // 八字信息区域保留显示
         document.getElementById('moduleArea').classList.remove('hidden');
         document.getElementById('resultCard').style.display = 'none';
     }
@@ -1026,22 +1016,23 @@
         itemFeedbacks = [];
         lastAnalysisResult = '';
         pendingVerifyContent = null;
+        isVerifyCollapsed = false;
+        const toggleIcon = document.getElementById('verifyToggleIcon');
+        if (toggleIcon) toggleIcon.textContent = '▼';
         const container = document.getElementById('analysisBtnContainer');
         container.innerHTML = '<button class="btn-start" id="startAnalysisBtn">开始深度分析</button>';
         document.getElementById('startAnalysisBtn').onclick = startAnalysis;
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        // 确保开始验证按钮初始显示
-        document.getElementById('startVerifyBtn').classList.remove('hidden');
         initMinuteSelect();
         loadRegionData();
         updateHistoryList();
         
-        // 折叠功能绑定
-        const verifyHeader = document.getElementById('verifyHeader');
-        if (verifyHeader) {
-            verifyHeader.onclick = toggleVerifySection;
+        // 折叠功能绑定（点击八字排盘旁边的图标）
+        const toggleIcon = document.getElementById('verifyToggleIcon');
+        if (toggleIcon) {
+            toggleIcon.onclick = toggleVerifySection;
         }
         
         document.getElementById('startVerifyBtn').onclick = () => { if (currentStep === 0) callVerify(); };
