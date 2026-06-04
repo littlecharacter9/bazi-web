@@ -47,13 +47,13 @@
         .time-toggle input { width: 18px; height: 18px; cursor: pointer; }
         .warning-box { background: #fff3e0; border-left: 4px solid #e6b980; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #b86b00; }
         .true-solar-box { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #2e7d32; }
-        .verify-box { background: #e8f0fe; border-left: 4px solid #1a1a2e; border-radius: 12px; margin-top: 12px; margin-bottom: 20px; overflow: hidden; transition: all 0.3s ease; }
+        .verify-box { background: #e8f0fe; border-left: 4px solid #1a1a2e; border-radius: 12px; margin-top: 12px; margin-bottom: 20px; overflow: hidden; transition: all 0.3s ease; padding: 16px; }
         .verify-item { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e0e0e0; }
         .verify-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .verify-title { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 8px; }
         .verify-question { font-size: 13px; color: #666; margin-bottom: 8px; font-style: italic; }
         .item-buttons { display: flex; gap: 16px; margin-bottom: 10px; }
-        .item-btn { padding: 4px 12px; border: none; border-radius: 16px; font-size: 12px; cursor: pointer; background: #f0f0f0; color: #666; transition: all 0.2s; }
+        .item-btn { padding: 4px 12px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; background: #f0f0f0; color: #666; transition: all 0.2s; }
         .item-btn.confirm.active { background: #1a1a2e; color: white; }
         .item-btn.feedback.active { background: #e6b980; color: #1a1a2e; }
         .verify-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; margin-bottom: 8px; }
@@ -61,8 +61,8 @@
         .feedback-detail.active { display: block; }
         .bazi-info { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
         .bazi-info span { font-weight: 600; color: #1a1a2e; }
-        .verify-toggle-icon { cursor: pointer; font-size: 16px; color: #888; transition: all 0.2s; padding: 4px 6px; border-radius: 6px; }
-        .verify-toggle-icon:hover { background: rgba(0,0,0,0.05); color: #e6b980; }
+        .verify-toggle-icon { cursor: pointer; font-size: 16px; color: #888; transition: all 0.2s; padding: 4px 8px; border-radius: 6px; background: #f0f0f0; }
+        .verify-toggle-icon:hover { background: #e0e0e0; color: #e6b980; }
         .checkbox-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
         .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #333; cursor: pointer; }
         .module-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
@@ -95,6 +95,11 @@
         .btn-start { width: 100%; padding: 14px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: pointer; }
         .btn-done { width: 100%; padding: 14px; background: #e0e0e0; color: #999; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: not-allowed; }
         .btn-continue { width: 100%; padding: 14px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        /* 历史记录中的验证内容样式（无按钮） */
+        .history-verify-content { font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; }
+        .history-verify-item { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e0e0e0; }
+        .history-verify-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .history-verify-title { font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -153,7 +158,7 @@
                     <span class="verify-toggle-icon" id="verifyToggleIcon">▼</span>
                 </div>
                 
-                <!-- 验证内容区域（可折叠） -->
+                <!-- 验证内容区域（可折叠，用于新用户验证时显示按钮） -->
                 <div id="verifyArea" class="hidden">
                     <div class="verify-box">
                         <div id="verifyItemsContainer"></div>
@@ -223,12 +228,48 @@
         }
     }
 
+    // 格式化验证内容用于历史记录（只保留内容，移除按钮）
+    function formatVerifyContentForHistory(htmlContent) {
+        // 创建一个临时容器来解析
+        const temp = document.createElement('div');
+        temp.innerHTML = htmlContent;
+        
+        // 移除所有 .item-buttons 和 .feedback-detail 元素
+        const buttons = temp.querySelectorAll('.item-buttons, .feedback-detail, .verify-question');
+        buttons.forEach(el => el.remove());
+        
+        // 提取每个验证项
+        const items = temp.querySelectorAll('.verify-item');
+        let formattedHtml = '';
+        items.forEach(item => {
+            const title = item.querySelector('.verify-title')?.innerHTML || '';
+            const content = item.querySelector('.verify-content')?.innerHTML || '';
+            if (title && content) {
+                formattedHtml += `
+                    <div class="history-verify-item">
+                        <div class="history-verify-title">${title}</div>
+                        <div class="history-verify-content">${content}</div>
+                    </div>
+                `;
+            }
+        });
+        
+        return formattedHtml || htmlContent.replace(/<div class="item-buttons">.*?<\/div>/gs, '').replace(/<textarea.*?<\/textarea>/gs, '').replace(/<div class="verify-question">.*?<\/div>/gs, '');
+    }
+
     // ==================== 本地存储管理 ====================
     const STORAGE_KEY = 'bazi_analysis_history';
 
     function saveAnalysisRecord(birthStr, moduleName, resultContent, baziStr, userName, verifyContent = null) {
         const records = getAnalysisRecords();
         const displayName = userName && userName.trim() ? `${userName.trim()} · ${moduleName}` : `匿名 · ${moduleName}`;
+        
+        // 格式化验证内容，移除按钮
+        let formattedVerifyContent = null;
+        if (verifyContent) {
+            formattedVerifyContent = formatVerifyContentForHistory(verifyContent);
+        }
+        
         const newRecord = {
             id: Date.now(),
             timestamp: new Date().toISOString(),
@@ -239,7 +280,7 @@
             result: resultContent,
             name: displayName,
             userName: userName || '',
-            verifyContent: verifyContent
+            verifyContent: formattedVerifyContent
         };
         records.unshift(newRecord);
         if (records.length > 30) records.pop();
@@ -354,13 +395,18 @@
             baziInfoArea.classList.add('hidden');
         }
         
-        // 显示验证内容（如果有）
+        // 显示验证内容（只显示内容，没有按钮）
         const verifyArea = document.getElementById('verifyArea');
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
         const toggleIcon = document.getElementById('verifyToggleIcon');
         
         if (record.verifyContent) {
+            // 使用格式化后的内容（无按钮）
             verifyItemsContainer.innerHTML = record.verifyContent;
+            // 隐藏原有的按钮区域
+            const actionButtons = document.getElementById('actionButtons');
+            if (actionButtons) actionButtons.style.display = 'none';
+            verifyArea.classList.remove('hidden');
             // 默认折叠状态
             verifyArea.classList.add('hidden');
             isVerifyCollapsed = true;
@@ -877,7 +923,7 @@
         currentStep = 2;
         const verifyArea = document.getElementById('verifyArea');
         
-        // 保存当前验证内容
+        // 保存当前验证内容（原始格式，用于保存）
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
         pendingVerifyContent = verifyItemsContainer.innerHTML;
         
