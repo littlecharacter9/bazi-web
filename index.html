@@ -84,10 +84,12 @@
         .action-btn.dark { background: #1a1a2e; color: white; }
         .action-btn.secondary { background: #e0e0e0; color: #999; cursor: not-allowed; }
         .feedback-notice { background: #e8f5e9; padding: 12px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #2e7d32; }
-        /* 分析按钮区域 */
-        .analysis-buttons { display: flex; gap: 16px; margin-bottom: 20px; }
-        .analysis-buttons .primary-btn { flex: 1; margin-bottom: 0; }
-        .analysis-buttons .disabled-btn { flex: 1; background: #e0e0e0; color: #999; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; padding: 14px; cursor: not-allowed; margin-bottom: 0; }
+        .analysis-buttons { display: flex; gap: 16px; margin-top: 20px; }
+        .analysis-buttons button { flex: 1; }
+        .btn-start { width: 100%; padding: 14px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .btn-done { width: 100%; padding: 14px; background: #e0e0e0; color: #999; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: not-allowed; }
+        .btn-continue { width: 100%; padding: 14px; background: #e6b980; color: #1a1a2e; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .btn-group { display: flex; gap: 16px; width: 100%; }
     </style>
 </head>
 <body>
@@ -157,15 +159,13 @@
                         <button class="module-btn" data-module="marriage">婚姻</button>
                         <button class="module-btn" data-module="liunian">流年</button>
                     </div>
-                    <!-- 两个按钮并排 -->
-                    <div class="analysis-buttons">
-                        <button class="primary-btn" id="startAnalysisBtn">开始深度分析</button>
-                        <button class="disabled-btn" id="analysisDoneBtn" disabled>深度分析已完成</button>
-                        <button class="primary-btn" id="continueAnalysisBtn" style="display: none;">继续深度分析</button>
+                    <!-- 分析按钮区域：初始只显示开始按钮，完成后替换为两个按钮 -->
+                    <div id="analysisBtnContainer" class="analysis-buttons">
+                        <button class="btn-start" id="startAnalysisBtn">开始深度分析</button>
                     </div>
                 </div>
                 
-                <button class="primary-btn" id="startVerifyBtn">开始验证八字</button>
+                <button class="btn-start" id="startVerifyBtn" style="background: #1a1a2e; color: white;">开始验证八字</button>
             </div>
             
             <!-- 结果区域 -->
@@ -694,9 +694,8 @@
     async function startAnalysis() {
         if (isLoading) return;
         isLoading = true;
+        const container = document.getElementById('analysisBtnContainer');
         const startBtn = document.getElementById('startAnalysisBtn');
-        const doneBtn = document.getElementById('analysisDoneBtn');
-        const continueBtn = document.getElementById('continueAnalysisBtn');
         
         startBtn.disabled = true;
         startBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
@@ -711,10 +710,12 @@
             if (data.success) {
                 showAnalysisResult(data.data.analysis);
                 addHistory(currentBirth);
-                // 隐藏开始按钮，显示完成按钮和继续按钮
-                startBtn.style.display = 'none';
-                doneBtn.style.display = 'block';
-                continueBtn.style.display = 'block';
+                // 替换按钮：隐藏开始按钮，显示完成按钮和继续按钮
+                container.innerHTML = `
+                    <button class="btn-done" disabled>深度分析已完成</button>
+                    <button class="btn-continue" id="continueAnalysisBtn">继续深度分析</button>
+                `;
+                document.getElementById('continueAnalysisBtn').onclick = continueAnalysis;
             } else {
                 showAnalysisResult(`分析失败：${data.error || '未知错误'}`);
                 startBtn.disabled = false;
@@ -835,15 +836,10 @@
         itemFeedbacks = [];
         lastAnalysisResult = '';
         
-        // 重置按钮状态
-        const startBtn = document.getElementById('startAnalysisBtn');
-        const doneBtn = document.getElementById('analysisDoneBtn');
-        const continueBtn = document.getElementById('continueAnalysisBtn');
-        startBtn.style.display = 'block';
-        startBtn.disabled = false;
-        startBtn.innerHTML = '开始深度分析';
-        doneBtn.style.display = 'none';
-        continueBtn.style.display = 'none';
+        // 重置按钮区域
+        const container = document.getElementById('analysisBtnContainer');
+        container.innerHTML = '<button class="btn-start" id="startAnalysisBtn">开始深度分析</button>';
+        document.getElementById('startAnalysisBtn').onclick = startAnalysis;
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -856,7 +852,6 @@
         
         // 按钮事件
         document.getElementById('startAnalysisBtn').onclick = startAnalysis;
-        document.getElementById('continueAnalysisBtn').onclick = continueAnalysis;
         document.getElementById('copyResultBtn').onclick = copyResult;
         document.getElementById('regenerateResultBtn').onclick = regenerateAnalysis;
         document.getElementById('shareResultBtn').onclick = shareResult;
