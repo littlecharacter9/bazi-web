@@ -209,9 +209,9 @@
     let currentVerifyItems = [];
     let itemFeedbacks = [];
     let lastAnalysisResult = '';
+    let isVerifyCollapsed = false;
 
     // ==================== 折叠功能 ====================
-    let isVerifyCollapsed = false;
     function toggleVerifySection() {
         const wrapper = document.getElementById('verifyContentWrapper');
         const icon = document.getElementById('verifyToggleIcon');
@@ -346,6 +346,9 @@
     }
 
     function viewHistoryRecord(record) {
+        // 隐藏验证区域（历史记录不需要重新验证）
+        document.getElementById('verifyArea').classList.add('hidden');
+        
         // 显示分析结果
         document.getElementById('resultContent').innerHTML = record.result.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         document.getElementById('resultCard').style.display = 'block';
@@ -354,6 +357,8 @@
         if (record.bazi) {
             document.getElementById('baziDisplay').textContent = record.bazi;
             document.getElementById('baziInfoArea').classList.remove('hidden');
+        } else {
+            document.getElementById('baziInfoArea').classList.add('hidden');
         }
         
         // 自动填充用户信息
@@ -407,8 +412,12 @@
             <button class="btn-done" disabled>深度分析已完成</button>
             <button class="btn-continue" id="continueAnalysisBtn">继续深度分析</button>
         `;
-        document.getElementById('continueAnalysisBtn').onclick = continueAnalysis;
+        const continueBtn = document.getElementById('continueAnalysisBtn');
+        if (continueBtn) {
+            continueBtn.onclick = continueAnalysis;
+        }
         
+        // 滚动到结果区域
         document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
         lastAnalysisResult = record.result;
     }
@@ -735,12 +744,14 @@
                 displayVerifyItems(currentVerifyItems);
                 actionButtons.style.display = 'flex';
                 currentStep = 1;
-                // 默认展开验证区域
+                // 确保验证区域展开
                 const wrapper = document.getElementById('verifyContentWrapper');
                 const icon = document.getElementById('verifyToggleIcon');
-                wrapper.style.display = 'block';
-                icon.textContent = '▼';
-                isVerifyCollapsed = false;
+                if (wrapper) {
+                    wrapper.style.display = 'block';
+                    icon.textContent = '▼';
+                    isVerifyCollapsed = false;
+                }
             } else {
                 verifyItemsContainer.innerHTML = `验证失败：${data.error || '未知错误'}`;
             }
