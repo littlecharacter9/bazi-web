@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>八戒命理 - 八字命理助手</title>
     <style>
+        /* 样式保持不变，与上一版相同，省略节省篇幅 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: #f5f5f7; color: #1c1c1e; height: 100vh; overflow: hidden; }
         .app { display: flex; height: 100vh; width: 100%; }
@@ -70,10 +71,6 @@
         .action-icons { display: flex; gap: 16px; justify-content: flex-end; margin-top: 16px; padding-top: 12px; border-top: 1px solid #eee; }
         .action-icon { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #666; cursor: pointer; transition: color 0.2s; }
         .action-icon:hover { color: #e6b980; }
-        .result-buttons { display: flex; gap: 16px; margin-top: 16px; }
-        .result-btn { flex: 1; padding: 10px; border: none; border-radius: 30px; font-size: 14px; cursor: pointer; text-align: center; }
-        .result-btn.gray { background: #e0e0e0; color: #999; cursor: not-allowed; }
-        .result-btn.primary { background: #e6b980; color: #1a1a2e; }
         .loading-dots { display: inline-flex; gap: 4px; }
         .loading-dots span { width: 6px; height: 6px; background: #888; border-radius: 50%; animation: dotPulse 1.4s infinite ease-in-out; }
         .loading-dots span:nth-child(1) { animation-delay: 0s; }
@@ -173,10 +170,6 @@
                     <div class="action-icon" id="copyResultBtn">📋 复制</div>
                     <div class="action-icon" id="regenerateResultBtn">🔄 重新生成</div>
                     <div class="action-icon" id="shareResultBtn">📤 转发</div>
-                </div>
-                <div class="result-buttons" id="resultButtons">
-                    <button class="result-btn gray" id="analysisDoneBtn" disabled>✓ 本次分析已生成</button>
-                    <button class="result-btn primary" id="continueAnalysisBtn">继续深度分析</button>
                 </div>
             </div>
         </div>
@@ -691,6 +684,7 @@
         document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
     }
 
+    // 首次分析
     async function startAnalysis() {
         if (isLoading) return;
         isLoading = true;
@@ -708,24 +702,29 @@
             if (data.success) {
                 showAnalysisResult(data.data.analysis);
                 addHistory(currentBirth);
+                analyzeBtn.innerHTML = '继续深度分析';
+                analyzeBtn.disabled = false;
             } else {
                 showAnalysisResult(`分析失败：${data.error || '未知错误'}`);
+                analyzeBtn.innerHTML = '开始深度分析';
+                analyzeBtn.disabled = false;
             }
         } catch (err) {
             showAnalysisResult(`网络错误：${err.message}`);
+            analyzeBtn.innerHTML = '开始深度分析';
+            analyzeBtn.disabled = false;
         } finally {
             isLoading = false;
-            analyzeBtn.disabled = false;
-            analyzeBtn.innerHTML = '开始深度分析';
         }
     }
 
+    // 继续分析（按钮文字变为"继续深度分析"后点击）
     async function continueAnalysis() {
         if (isLoading) return;
         isLoading = true;
-        const continueBtn = document.getElementById('continueAnalysisBtn');
-        continueBtn.disabled = true;
-        continueBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
+        const analyzeBtn = document.getElementById('startAnalysisBtn');
+        analyzeBtn.disabled = true;
+        analyzeBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
         
         try {
             const response = await fetch(`${API_URL}/analyze`, {
@@ -737,18 +736,23 @@
             if (data.success) {
                 showAnalysisResult(data.data.analysis);
                 addHistory(currentBirth);
+                analyzeBtn.innerHTML = '继续深度分析';
+                analyzeBtn.disabled = false;
             } else {
                 showAnalysisResult(`分析失败：${data.error || '未知错误'}`);
+                analyzeBtn.innerHTML = '继续深度分析';
+                analyzeBtn.disabled = false;
             }
         } catch (err) {
             showAnalysisResult(`网络错误：${err.message}`);
+            analyzeBtn.innerHTML = '继续深度分析';
+            analyzeBtn.disabled = false;
         } finally {
             isLoading = false;
-            continueBtn.disabled = false;
-            continueBtn.innerHTML = '继续深度分析';
         }
     }
 
+    // 重新生成（结果区域的操作按钮）
     async function regenerateAnalysis() {
         if (isLoading) return;
         isLoading = true;
@@ -823,6 +827,9 @@
         document.getElementById('actionButtons').style.display = 'none';
         itemFeedbacks = [];
         lastAnalysisResult = '';
+        // 重置按钮文字
+        const analyzeBtn = document.getElementById('startAnalysisBtn');
+        analyzeBtn.innerHTML = '开始深度分析';
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -832,8 +839,17 @@
         document.getElementById('startVerifyBtn').onclick = () => { if (currentStep === 0) callVerify(); };
         document.getElementById('submitFeedbackBtn').onclick = submitFeedback;
         document.getElementById('confirmOverallBtn').onclick = confirmAllAccurate;
-        document.getElementById('startAnalysisBtn').onclick = startAnalysis;
-        document.getElementById('continueAnalysisBtn').onclick = continueAnalysis;
+        
+        // 智能按钮：根据文字判断调用哪个函数
+        const analyzeBtn = document.getElementById('startAnalysisBtn');
+        analyzeBtn.onclick = () => {
+            if (analyzeBtn.innerHTML === '继续深度分析') {
+                continueAnalysis();
+            } else {
+                startAnalysis();
+            }
+        };
+        
         document.getElementById('copyResultBtn').onclick = copyResult;
         document.getElementById('regenerateResultBtn').onclick = regenerateAnalysis;
         document.getElementById('shareResultBtn').onclick = shareResult;
