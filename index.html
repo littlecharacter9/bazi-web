@@ -17,9 +17,12 @@
         .history-section { flex: 1; padding: 0 12px; display: flex; flex-direction: column; min-height: 0; }
         .history-title { font-size: 12px; color: #888; padding: 12px 12px 8px; letter-spacing: 0.5px; }
         .history-list { list-style: none; overflow-y: auto; max-height: 400px; }
-        .history-item { padding: 10px 12px; border-radius: 10px; margin-bottom: 4px; cursor: pointer; font-size: 13px; color: #ccc; border: 1px solid transparent; }
+        .history-item { padding: 10px 12px; border-radius: 10px; margin-bottom: 4px; cursor: pointer; font-size: 13px; color: #ccc; border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; }
         .history-item:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.1); }
         .history-empty { padding: 12px; color: #888; text-align: center; font-size: 12px; }
+        .history-icon { opacity: 0.5; transition: opacity 0.2s; cursor: pointer; }
+        .history-item:hover .history-icon { opacity: 1; }
+        .history-icon:hover { color: #e6b980 !important; }
         .user-section { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto; }
         .user-info { display: flex; align-items: center; gap: 12px; }
         .user-avatar { width: 40px; height: 40px; background: #e6b980; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #1a1a2e; }
@@ -200,8 +203,9 @@
     // ==================== 本地存储管理 ====================
     const STORAGE_KEY = 'bazi_analysis_history';
 
-    function saveAnalysisRecord(birthStr, moduleName, resultContent, baziStr) {
+    function saveAnalysisRecord(birthStr, moduleName, resultContent, baziStr, userName) {
         const records = getAnalysisRecords();
+        const displayName = userName && userName.trim() ? `${userName.trim()} · ${moduleName}` : `匿名 · ${moduleName}`;
         const newRecord = {
             id: Date.now(),
             timestamp: new Date().toISOString(),
@@ -209,7 +213,9 @@
             birth: birthStr,
             module: moduleName,
             bazi: baziStr || '',
-            result: resultContent
+            result: resultContent,
+            name: displayName,
+            userName: userName || ''
         };
         records.unshift(newRecord);
         if (records.length > 30) records.pop();
@@ -234,6 +240,20 @@
         updateHistoryList();
     }
 
+    function renameAnalysisRecord(id) {
+        const records = getAnalysisRecords();
+        const record = records.find(r => r.id === id);
+        if (!record) return;
+        const currentName = record.userName || '匿名';
+        const newName = prompt('重命名', currentName);
+        if (newName && newName.trim()) {
+            record.userName = newName.trim();
+            record.name = `${newName.trim()} · ${record.module}`;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+            updateHistoryList();
+        }
+    }
+
     function clearAllHistory() {
         if (confirm('确定要清空所有历史记录吗？')) {
             localStorage.removeItem(STORAGE_KEY);
@@ -255,22 +275,43 @@
         records.forEach(record => {
             const li = document.createElement('li');
             li.className = 'history-item';
-            const displayDate = record.date.split(' ')[0] + ' ' + (record.date.split(' ')[1] || '').slice(0, 5);
+            const displayName = record.name || `${record.userName || '匿名'} · ${record.module}`;
             li.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${displayDate} ${record.module}</span>
-                    <span style="color: #e6b980; cursor: pointer; margin-left: 8px;" onclick="event.stopPropagation(); deleteAnalysisRecord(${record.id})">🗑️</span>
+                <span style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px;">${displayName}</span>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <span class="history-icon history-rename" data-id="${record.id}" style="cursor: pointer; color: #888; font-size: 12px;">✎</span>
+                    <span class="history-icon history-delete" data-id="${record.id}" style="cursor: pointer; color: #888; font-size: 14px;">🗑</span>
                 </div>
             `;
-            li.onclick = () => viewHistoryRecord(record);
+            li.onclick = (e) => {
+                if (e.target.classList.contains('history-icon')) return;
+                viewHistoryRecord(record);
+            };
             historyList.appendChild(li);
+        });
+        
+        document.querySelectorAll('.history-delete').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.dataset.id);
+                deleteAnalysisRecord(id);
+            };
+        });
+        
+        document.querySelectorAll('.history-rename').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.dataset.id);
+                renameAnalysisRecord(id);
+            };
         });
         
         const clearBtn = document.createElement('li');
         clearBtn.className = 'history-item';
         clearBtn.style.borderTop = '1px solid rgba(255,255,255,0.1)';
         clearBtn.style.marginTop = '8px';
-        clearBtn.innerHTML = '<span style="color: #e6b980;">🗑️ 清空所有记录</span>';
+        clearBtn.style.justifyContent = 'center';
+        clearBtn.innerHTML = '<span style="color: #e6b980;">清空所有记录</span>';
         clearBtn.onclick = (e) => {
             e.stopPropagation();
             clearAllHistory();
@@ -727,8 +768,10 @@
         document.getElementById('resultContent').innerHTML = html;
         document.getElementById('resultCard').style.display = 'block';
         document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+        
+        const userName = document.getElementById('nameInput').value;
         if (currentBirth && content) {
-            saveAnalysisRecord(currentBirth, currentModuleName(), content, currentBaziStr);
+            saveAnalysisRecord(currentBirth, currentModuleName(), content, currentBaziStr, userName);
         }
     }
 
@@ -748,7 +791,6 @@
             const data = await response.json();
             if (data.success) {
                 showAnalysisResult(data.data.analysis);
-                addHistory(currentBirth);
                 container.innerHTML = `
                     <button class="btn-done" disabled>深度分析已完成</button>
                     <button class="btn-continue" id="continueAnalysisBtn">继续深度分析</button>
@@ -783,7 +825,6 @@
             const data = await response.json();
             if (data.success) {
                 showAnalysisResult(data.data.analysis);
-                addHistory(currentBirth);
             } else {
                 showAnalysisResult(`分析失败：${data.error || '未知错误'}`);
             }
@@ -834,12 +875,6 @@
         } else {
             alert('当前浏览器不支持分享功能，请手动复制');
         }
-    }
-
-    function addHistory(birthStr) {
-        const historyList = document.getElementById('historyList');
-        // 历史记录已通过 localStorage 管理，这里只更新列表
-        updateHistoryList();
     }
 
     function newChat() {
