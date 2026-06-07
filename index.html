@@ -23,7 +23,8 @@
         .history-icon { opacity: 0.5; transition: opacity 0.2s; cursor: pointer; }
         .history-item:hover .history-icon { opacity: 1; }
         .history-icon:hover { color: #e6b980 !important; }
-        .user-section { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto; }
+        .user-section { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto; cursor: pointer; }
+        .user-section:hover { background: rgba(255,255,255,0.05); }
         .user-info { display: flex; align-items: center; gap: 12px; }
         .user-avatar { width: 40px; height: 40px; background: #e6b980; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #1a1a2e; }
         .user-name { font-size: 14px; font-weight: 500; color: white; }
@@ -120,6 +121,68 @@
         .history-verify-item { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e0e0e0; }
         .history-verify-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .history-verify-title { font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 8px; }
+        
+        /* 登录弹窗样式 */
+        .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .login-modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 28px;
+            width: 90%;
+            max-width: 380px;
+            text-align: center;
+        }
+        .login-modal-content h3 {
+            font-size: 22px;
+            margin-bottom: 8px;
+            color: #1a1a2e;
+        }
+        .login-modal-content p {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 24px;
+        }
+        .login-modal-content input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .login-modal-content button {
+            width: 100%;
+            padding: 14px;
+            background: #e6b980;
+            border: none;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+        .login-modal-content .close-modal {
+            background: transparent;
+            color: #888;
+            font-size: 14px;
+        }
+        .user-id-tip {
+            font-size: 10px;
+            color: #aaa;
+            margin-top: 8px;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -131,7 +194,16 @@
             <div class="history-title">最近对话</div>
             <ul class="history-list" id="historyList"></ul>
         </div>
-        <div class="user-section"><div class="user-info"><div class="user-avatar">八</div><div><div class="user-name">游客模式</div><div class="user-email">登录功能开发中</div></div></div></div>
+        <div class="user-section" id="userSection">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">八</div>
+                <div>
+                    <div class="user-name" id="userName">游客模式</div>
+                    <div class="user-email" id="userEmail">点击登录/注册</div>
+                </div>
+            </div>
+            <div class="user-id-tip" id="userIdTip" style="display: none;"></div>
+        </div>
     </div>
     <div class="main">
         <div class="main-header"><h2>八字命盘分析</h2><p>输入生辰信息，AI 辅助解析命盘格局</p></div>
@@ -221,6 +293,19 @@
     </div>
 </div>
 
+<!-- 登录弹窗（预留） -->
+<div id="loginModal" class="login-modal" style="display: none;">
+    <div class="login-modal-content">
+        <h3>🔐 即将开放</h3>
+        <p>登录后可在不同设备同步您的命理记录</p>
+        <input type="text" id="modalUsername" placeholder="用户名/手机号" disabled>
+        <input type="password" id="modalPassword" placeholder="密码" disabled>
+        <button disabled>登录 / 注册</button>
+        <button class="close-modal" id="closeModalBtn">暂不登录</button>
+        <div class="user-id-tip" id="modalUserIdTip"></div>
+    </div>
+</div>
+
 <script>
     const API_URL = 'https://bazi-api-production-0123.up.railway.app';
     let currentModule = 'career';
@@ -236,6 +321,120 @@
     let isVerifyCollapsed = false;
     let pendingVerifyContent = null;
 
+    // ==================== 用户ID管理（预留登录功能） ====================
+    const USER_ID_KEY = 'bazi_user_id';
+    const USER_INFO_KEY = 'bazi_user_info';
+    
+    function getUserId() {
+        let userId = localStorage.getItem(USER_ID_KEY);
+        if (!userId) {
+            userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+            localStorage.setItem(USER_ID_KEY, userId);
+            // 初始化用户信息
+            localStorage.setItem(USER_INFO_KEY, JSON.stringify({
+                isLoggedIn: false,
+                nickname: '游客',
+                createdAt: new Date().toISOString()
+            }));
+        }
+        return userId;
+    }
+    
+    function getUserInfo() {
+        const info = localStorage.getItem(USER_INFO_KEY);
+        if (info) {
+            try {
+                return JSON.parse(info);
+            } catch(e) {
+                return { isLoggedIn: false, nickname: '游客' };
+            }
+        }
+        return { isLoggedIn: false, nickname: '游客' };
+    }
+    
+    function updateUserDisplay() {
+        const userId = getUserId();
+        const userInfo = getUserInfo();
+        const userNameEl = document.getElementById('userName');
+        const userEmailEl = document.getElementById('userEmail');
+        const userIdTipEl = document.getElementById('userIdTip');
+        
+        if (userInfo.isLoggedIn) {
+            userNameEl.textContent = userInfo.nickname || '用户';
+            userEmailEl.textContent = '已登录 · 数据云端同步';
+            userIdTipEl.style.display = 'none';
+        } else {
+            userNameEl.textContent = '游客模式';
+            userEmailEl.textContent = '点击登录/注册';
+            // 可选：显示匿名ID（调试用，正式上线可隐藏）
+            userIdTipEl.textContent = `匿名ID: ${userId.substring(0, 12)}...`;
+            userIdTipEl.style.display = 'block';
+        }
+    }
+    
+    // 预留：登录成功后调用此函数
+    function setUserLoggedIn(nickname, userId = null) {
+        const userInfo = {
+            isLoggedIn: true,
+            nickname: nickname,
+            userId: userId || getUserId(),
+            loginAt: new Date().toISOString()
+        };
+        localStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
+        if (userId) {
+            localStorage.setItem(USER_ID_KEY, userId);
+        }
+        updateUserDisplay();
+        
+        // 未来：这里可以触发数据同步，将本地历史记录上传到云端
+        // syncLocalDataToCloud();
+    }
+    
+    // 预留：退出登录
+    function logout() {
+        const userInfo = getUserInfo();
+        if (userInfo.isLoggedIn) {
+            localStorage.setItem(USER_INFO_KEY, JSON.stringify({
+                isLoggedIn: false,
+                nickname: '游客',
+                createdAt: userInfo.createdAt || new Date().toISOString()
+            }));
+            updateUserDisplay();
+            // 未来：清除登录态，但保留本地数据
+        }
+    }
+    
+    // 预留：将本地历史记录与云端合并（未来实现）
+    async function syncLocalDataToCloud() {
+        const records = getAnalysisRecords();
+        const userId = getUserId();
+        if (records.length === 0) return;
+        // TODO: 调用后端API上传数据
+        console.log(`[预留] 将 ${records.length} 条记录同步到云端，用户ID: ${userId}`);
+    }
+    
+    // ==================== 登录弹窗（预留） ====================
+    function showLoginModal() {
+        const modal = document.getElementById('loginModal');
+        const userIdTip = document.getElementById('modalUserIdTip');
+        userIdTip.textContent = `您的匿名ID: ${getUserId()}\n登录后可将历史记录同步到云端`;
+        modal.style.display = 'flex';
+    }
+    
+    function hideLoginModal() {
+        document.getElementById('loginModal').style.display = 'none';
+    }
+    
+    // 测试用：演示登录效果（实际使用时替换为真实登录接口）
+    function demoLogin() {
+        const nickname = prompt('输入昵称（演示登录）', '命理爱好者');
+        if (nickname && nickname.trim()) {
+            setUserLoggedIn(nickname.trim());
+            alert(`欢迎回来，${nickname}！\n未来版本将支持云端同步。`);
+        }
+        hideLoginModal();
+    }
+    
     const expandSVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 10L12 14L16 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     const collapseSVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 8L14 12L10 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
@@ -253,61 +452,35 @@
         }
     }
 
-    // 彻底清理验证内容中的按钮和交互元素
     function formatVerifyContentForHistory(htmlContent) {
         if (!htmlContent) return '';
-        
         const temp = document.createElement('div');
         temp.innerHTML = htmlContent;
-        
-        // 删除所有按钮相关元素
-        const selectorsToRemove = [
-            '.item-buttons', '.feedback-detail', '.verify-question', 
-            '.feedback-notice', '.item-btn', '.action-buttons', 'button'
-        ];
-        
+        const selectorsToRemove = ['.item-buttons', '.feedback-detail', '.verify-question', '.feedback-notice', '.item-btn', '.action-buttons', 'button'];
         selectorsToRemove.forEach(selector => {
             const elements = temp.querySelectorAll(selector);
             elements.forEach(el => el.remove());
         });
-        
-        // 重新构建干净内容
         const verifyItems = temp.querySelectorAll('.verify-item');
         let formattedHtml = '';
-        
         verifyItems.forEach(item => {
             const titleElem = item.querySelector('.verify-title');
             const title = titleElem ? titleElem.outerHTML : '';
             const contentElem = item.querySelector('.verify-content');
             let content = contentElem ? contentElem.outerHTML : '';
-            
             if (!contentElem) {
                 const cleanItem = item.cloneNode(true);
                 const removeList = cleanItem.querySelectorAll('.item-buttons, .feedback-detail, .verify-question, button');
                 removeList.forEach(el => el.remove());
                 content = cleanItem.innerHTML;
             }
-            
             if (title && content) {
-                formattedHtml += `
-                    <div class="history-verify-item">
-                        ${title}
-                        ${content}
-                    </div>
-                `;
+                formattedHtml += `<div class="history-verify-item">${title}${content}</div>`;
             } else if (content) {
-                formattedHtml += `
-                    <div class="history-verify-item">
-                        ${content}
-                    </div>
-                `;
+                formattedHtml += `<div class="history-verify-item">${content}</div>`;
             }
         });
-        
-        if (!formattedHtml.trim()) {
-            return temp.textContent || '';
-        }
-        
+        if (!formattedHtml.trim()) return temp.textContent || '';
         return formattedHtml;
     }
 
@@ -317,11 +490,7 @@
         const records = getAnalysisRecords();
         const displayName = userName && userName.trim() ? `${userName.trim()} · ${moduleName}` : `匿名 · ${moduleName}`;
         let formattedVerifyContent = null;
-        
-        if (verifyContent) {
-            formattedVerifyContent = formatVerifyContentForHistory(verifyContent);
-        }
-        
+        if (verifyContent) formattedVerifyContent = formatVerifyContentForHistory(verifyContent);
         const newRecord = {
             id: Date.now(),
             timestamp: new Date().toISOString(),
@@ -332,9 +501,9 @@
             result: resultContent,
             name: displayName,
             userName: userName || '',
-            verifyContent: formattedVerifyContent
+            verifyContent: formattedVerifyContent,
+            userId: getUserId()  // 关联用户ID
         };
-        
         records.unshift(newRecord);
         if (records.length > 30) records.pop();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
@@ -345,7 +514,10 @@
         const data = localStorage.getItem(STORAGE_KEY);
         if (!data) return [];
         try {
-            return JSON.parse(data);
+            const records = JSON.parse(data);
+            // 兼容旧数据，补充 userId
+            const currentUserId = getUserId();
+            return records.map(r => ({ ...r, userId: r.userId || currentUserId }));
         } catch (e) {
             return [];
         }
@@ -379,18 +551,15 @@
         }
     }
 
-    // 清理旧数据中的按钮残留
     function migrateOldRecords() {
         const records = getAnalysisRecords();
         let hasChanges = false;
-        
         records.forEach(record => {
             if (record.verifyContent && (record.verifyContent.includes('item-btn') || record.verifyContent.includes('button') || record.verifyContent.includes('item-buttons'))) {
                 record.verifyContent = formatVerifyContentForHistory(record.verifyContent);
                 hasChanges = true;
             }
         });
-        
         if (hasChanges) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
             updateHistoryList();
@@ -465,17 +634,13 @@
         } else {
             baziInfoArea.classList.add('hidden');
         }
-        
         const actionButtonsGlobal = document.getElementById('actionButtons');
         if (actionButtonsGlobal) actionButtonsGlobal.style.display = 'none';
-        
         const verifyArea = document.getElementById('verifyArea');
         const verifyItemsContainer = document.getElementById('verifyItemsContainer');
         const toggleIcon = document.getElementById('verifyToggleIcon');
-        
         if (record.verifyContent && record.verifyContent.trim() !== '') {
             let cleanContent = record.verifyContent;
-            // 二次保险清理
             const tempCheck = document.createElement('div');
             tempCheck.innerHTML = cleanContent;
             const buttons = tempCheck.querySelectorAll('button, .item-btn, .item-buttons, .feedback-detail, .verify-question');
@@ -491,7 +656,6 @@
         } else {
             verifyArea.classList.add('hidden');
         }
-        
         const startVerifyBtn = document.getElementById('startVerifyBtn');
         if (startVerifyBtn) startVerifyBtn.classList.add('hidden');
         const moduleArea = document.getElementById('moduleArea');
@@ -1116,6 +1280,10 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        // 初始化用户ID和显示
+        getUserId();
+        updateUserDisplay();
+        
         initMinuteSelect();
         loadRegionData();
         updateHistoryList();
@@ -1132,6 +1300,20 @@
         document.getElementById('regenerateResultBtn').onclick = regenerateAnalysis;
         document.getElementById('shareResultBtn').onclick = shareResult;
         document.getElementById('newChatBtn').onclick = newChat;
+        
+        // 用户区域点击事件（预留登录）
+        const userSection = document.getElementById('userSection');
+        if (userSection) {
+            userSection.onclick = showLoginModal;
+        }
+        
+        // 关闭弹窗
+        document.getElementById('closeModalBtn').onclick = hideLoginModal;
+        // 可选：演示登录（点击弹窗主体区域触发演示，实际开发时替换为真实登录）
+        const modalContent = document.querySelector('.login-modal-content');
+        if (modalContent) {
+            // 只是预留，不做演示登录，保持原有逻辑
+        }
         
         document.getElementById('provinceSelect').addEventListener('change', () => { updateCitySelect(); if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
         document.getElementById('citySelect').addEventListener('change', () => { updateDistrictSelect(); if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
