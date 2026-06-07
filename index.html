@@ -16,19 +16,69 @@
         .new-chat-btn:hover { background: rgba(255,255,255,0.15); }
         .history-section { flex: 1; padding: 0 12px; display: flex; flex-direction: column; min-height: 0; }
         .history-title { font-size: 12px; color: #888; padding: 12px 12px 8px; letter-spacing: 0.5px; }
-        .history-list { list-style: none; overflow-y: auto; max-height: 400px; }
+        .history-list { list-style: none; overflow-y: auto; max-height: 300px; }
         .history-item { padding: 10px 12px; border-radius: 10px; margin-bottom: 4px; cursor: pointer; font-size: 13px; color: #ccc; border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; }
         .history-item:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.1); }
         .history-empty { padding: 12px; color: #888; text-align: center; font-size: 12px; }
         .history-icon { opacity: 0.5; transition: opacity 0.2s; cursor: pointer; }
         .history-item:hover .history-icon { opacity: 1; }
         .history-icon:hover { color: #e6b980 !important; }
+        
+        /* 实用工具区域 */
+        .tools-section { margin: 16px 12px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; }
+        .tools-title { font-size: 12px; color: #888; margin-bottom: 12px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+        .tools-item { background: rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+        .tools-item-header { padding: 12px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
+        .tools-item-header:hover { background: rgba(255,255,255,0.08); }
+        .tools-item-title { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .tools-item-icon { font-size: 18px; }
+        .tools-item-arrow { font-size: 12px; transition: transform 0.3s; color: #888; }
+        .tools-item-content { padding: 0 16px 16px 16px; display: none; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 8px; }
+        .tools-item.open .tools-item-arrow { transform: rotate(90deg); }
+        .tools-item.open .tools-item-content { display: block; }
+        
+        /* 时辰推断样式 */
+        .method-section { margin-bottom: 20px; }
+        .method-title { font-size: 13px; font-weight: 600; color: #e6b980; margin-bottom: 8px; }
+        .method-text { font-size: 12px; line-height: 1.6; color: #ccc; margin-bottom: 12px; }
+        .method-note { font-size: 11px; color: #888; font-style: italic; margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1); }
+        
+        /* 简单示意图 */
+        .diagram-row { display: flex; gap: 16px; flex-wrap: wrap; margin: 12px 0; justify-content: center; }
+        .diagram-item { text-align: center; flex: 1; min-width: 70px; }
+        .diagram-canvas { width: 60px; height: 60px; margin: 0 auto 8px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .diagram-label { font-size: 10px; color: #aaa; }
+        
+        /* 脸型示意图 */
+        .face-round { width: 50px; height: 50px; background: #d4a574; border-radius: 50%; }
+        .face-long { width: 45px; height: 55px; background: #d4a574; border-radius: 40% 40% 35% 35%; }
+        .face-square { width: 48px; height: 48px; background: #d4a574; border-radius: 20% 20% 30% 30%; }
+        .face-irregular { width: 48px; height: 50px; background: #d4a574; border-radius: 45% 40% 35% 40%; }
+        
+        /* 发旋示意图 */
+        .whorl-center { width: 50px; height: 50px; background: #8B6914; border-radius: 50%; position: relative; }
+        .whorl-center::after { content: "🌀"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; opacity: 0.8; }
+        .whorl-right { width: 50px; height: 50px; background: #8B6914; border-radius: 50%; position: relative; }
+        .whorl-right::after { content: "🌀"; position: absolute; top: 50%; left: 60%; transform: translate(-50%, -50%); font-size: 24px; opacity: 0.8; }
+        .whorl-left { width: 50px; height: 50px; background: #8B6914; border-radius: 50%; position: relative; }
+        .whorl-left::after { content: "🌀"; position: absolute; top: 50%; left: 40%; transform: translate(-50%, -50%); font-size: 24px; opacity: 0.8; }
+        
+        /* 微信联系样式 */
+        .contact-wechat { text-align: center; padding: 8px 0; }
+        .wechat-qr { width: 120px; height: 120px; background: white; border-radius: 12px; margin: 12px auto; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .wechat-qr-sim { width: 100px; height: 100px; background: repeating-linear-gradient(45deg, #000, #000 2px, #fff 2px, #fff 8px); border-radius: 8px; }
+        .wechat-id { background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 8px; font-size: 12px; margin: 8px 0; cursor: pointer; }
+        .wechat-id:hover { background: rgba(255,255,255,0.2); }
+        .wechat-note { font-size: 11px; color: #e6b980; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); }
+        
         .user-section { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto; cursor: pointer; }
         .user-section:hover { background: rgba(255,255,255,0.05); }
         .user-info { display: flex; align-items: center; gap: 12px; }
         .user-avatar { width: 40px; height: 40px; background: #e6b980; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #1a1a2e; }
         .user-name { font-size: 14px; font-weight: 500; color: white; }
         .user-email { font-size: 11px; color: #888; }
+        
+        /* 主区域样式（保持原有） */
         .main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background: #fff; }
         .main-header { padding: 20px 30px; border-bottom: 1px solid #eee; background: #fff; }
         .main-header h2 { font-size: 22px; font-weight: 600; color: #1a1a2e; }
@@ -62,29 +112,10 @@
         .feedback-detail.active { display: block; }
         .bazi-info { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
         .bazi-info span { font-weight: 600; color: #1a1a2e; }
-        .verify-toggle-icon {
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-        .verify-toggle-icon:hover {
-            background: rgba(0,0,0,0.06);
-        }
-        .verify-toggle-icon svg {
-            width: 18px;
-            height: 18px;
-            stroke: #666;
-            stroke-width: 1.5;
-            fill: none;
-        }
-        .verify-toggle-icon:hover svg {
-            stroke: #e6b980;
-        }
+        .verify-toggle-icon { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; transition: all 0.2s; }
+        .verify-toggle-icon:hover { background: rgba(0,0,0,0.06); }
+        .verify-toggle-icon svg { width: 18px; height: 18px; stroke: #666; stroke-width: 1.5; fill: none; }
+        .verify-toggle-icon:hover svg { stroke: #e6b980; }
         .checkbox-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
         .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #333; cursor: pointer; }
         .module-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
@@ -132,6 +163,130 @@
             <div class="history-title">最近对话</div>
             <ul class="history-list" id="historyList"></ul>
         </div>
+        
+        <!-- 新增：实用工具区域 -->
+        <div class="tools-section">
+            <div class="tools-title">🛠️ 实用工具</div>
+            
+            <!-- 时辰确定工具 -->
+            <div class="tools-item" id="toolTimeItem">
+                <div class="tools-item-header">
+                    <div class="tools-item-title">
+                        <span class="tools-item-icon">🕐</span>
+                        <span>时辰确定</span>
+                    </div>
+                    <span class="tools-item-arrow">▶</span>
+                </div>
+                <div class="tools-item-content">
+                    <div class="method-section">
+                        <div class="method-title">📋 方法一：询问父母</div>
+                        <div class="method-text">
+                            如果不知道具体出生时间，可以询问父母大致的时间段：<br>
+                            • 上午（5-11点）→ 卯、辰、巳时<br>
+                            • 中午（11-13点）→ 午时<br>
+                            • 下午（13-17点）→ 未、申时<br>
+                            • 晚上（17-23点）→ 酉、戌、亥时<br>
+                            • 凌晨（23-5点）→ 子、丑、寅时
+                        </div>
+                    </div>
+                    
+                    <div class="method-section">
+                        <div class="method-title">📋 方法二：脸型推断</div>
+                        <div class="method-text">
+                            <strong>口诀：</strong>子午卯酉脸蛋圆，寅申巳亥长方面，辰戌丑未面有缺，上额不窄下巴尖。
+                        </div>
+                        <div class="diagram-row">
+                            <div class="diagram-item">
+                                <div class="diagram-canvas"><div class="face-round"></div></div>
+                                <div class="diagram-label">圆脸 → 子午卯酉时</div>
+                            </div>
+                            <div class="diagram-item">
+                                <div class="diagram-canvas"><div class="face-long"></div></div>
+                                <div class="diagram-label">长脸 → 寅申巳亥时</div>
+                            </div>
+                            <div class="diagram-item">
+                                <div class="diagram-canvas"><div class="face-square"></div></div>
+                                <div class="diagram-label">方脸/有棱角 → 辰戌丑未时</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="method-section">
+                        <div class="method-title">📋 方法三：小指长度</div>
+                        <div class="method-text">
+                            <strong>口诀：</strong>子午卯酉比较长，寅申巳亥平行量，辰戌丑未短一点。<br>
+                            <strong>白话：</strong>将小指与无名指最上面那条横线比较：<br>
+                            • 小指超过横线 → 子午卯酉时<br>
+                            • 小指与横线平齐 → 寅申巳亥时<br>
+                            • 小指短于横线 → 辰戌丑未时
+                        </div>
+                    </div>
+                    
+                    <div class="method-section">
+                        <div class="method-title">📋 方法四：头顶发旋</div>
+                        <div class="method-text">
+                            <strong>口诀：</strong>子午卯酉旋居中，寅申巳亥右边行，辰戌丑未左边去，双旋透顶多四正。
+                        </div>
+                        <div class="diagram-row">
+                            <div class="diagram-item">
+                                <div class="diagram-canvas"><div class="whorl-center"></div></div>
+                                <div class="diagram-label">发旋居中 → 子午卯酉时</div>
+                            </div>
+                            <div class="diagram-item">
+                                <div class="diagram-canvas"><div class="whorl-right"></div></div>
+                                <div class="diagram-label">偏右 → 寅申巳亥时</div>
+                            </div>
+                            <div class="diagram-item">
+                                <div class="diagram-canvas"><div class="whorl-left"></div></div>
+                                <div class="diagram-label">偏左 → 辰戌丑未时</div>
+                            </div>
+                        </div>
+                        <div class="method-note">💡 双发旋的人多为子午卯酉四正时出生</div>
+                    </div>
+                    
+                    <div class="method-section">
+                        <div class="method-title">📋 时辰对照表</div>
+                        <div class="method-text">
+                            子时 23:00-01:00 &nbsp;|&nbsp; 丑时 01:00-03:00<br>
+                            寅时 03:00-05:00 &nbsp;|&nbsp; 卯时 05:00-07:00<br>
+                            辰时 07:00-09:00 &nbsp;|&nbsp; 巳时 09:00-11:00<br>
+                            午时 11:00-13:00 &nbsp;|&nbsp; 未时 13:00-15:00<br>
+                            申时 15:00-17:00 &nbsp;|&nbsp; 酉时 17:00-19:00<br>
+                            戌时 19:00-21:00 &nbsp;|&nbsp; 亥时 21:00-23:00
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 联系作者工具 -->
+            <div class="tools-item" id="toolContactItem">
+                <div class="tools-item-header">
+                    <div class="tools-item-title">
+                        <span class="tools-item-icon">📞</span>
+                        <span>联系作者</span>
+                    </div>
+                    <span class="tools-item-arrow">▶</span>
+                </div>
+                <div class="tools-item-content">
+                    <div class="contact-wechat">
+                        <div class="wechat-qr">
+                            <div class="wechat-qr-sim"></div>
+                        </div>
+                        <div class="wechat-id" id="copyWechatBtn">
+                            📱 微信号: <strong>bajie_mingli</strong>
+                            <span style="font-size: 11px;">📋 点击复制</span>
+                        </div>
+                        <div class="wechat-note">
+                            ⭐ <strong>先判断，后付费，不准不收费</strong><br>
+                            添加微信后，提供出生日期和已知信息，<br>
+                            作者会通过独特方法帮你确定准确时辰，<br>
+                            确认准确后再付费，不满意不收钱。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="user-section" id="userSection">
             <div class="user-info">
                 <div class="user-avatar" id="userAvatar">八</div>
@@ -140,7 +295,6 @@
                     <div class="user-email" id="userEmail">暂未开通登录模式</div>
                 </div>
             </div>
-            <div class="user-id-tip" id="userIdTip" style="display: none;"></div>
         </div>
     </div>
     <div class="main">
@@ -246,7 +400,33 @@
     let isVerifyCollapsed = false;
     let pendingVerifyContent = null;
 
-    // ==================== 用户ID管理（预留登录功能） ====================
+    // 工具折叠功能
+    function initTools() {
+        const toolItems = document.querySelectorAll('.tools-item');
+        toolItems.forEach(item => {
+            const header = item.querySelector('.tools-item-header');
+            header.addEventListener('click', () => {
+                item.classList.toggle('open');
+            });
+        });
+    }
+    
+    // 复制微信号
+    function initWechatCopy() {
+        const copyBtn = document.getElementById('copyWechatBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                const wechatId = 'bajie_mingli';
+                navigator.clipboard.writeText(wechatId).then(() => {
+                    alert('微信号已复制：' + wechatId);
+                }).catch(() => {
+                    alert('复制失败，请手动复制微信号：' + wechatId);
+                });
+            });
+        }
+    }
+
+    // ==================== 用户ID管理 ====================
     const USER_ID_KEY = 'bazi_user_id';
     const USER_INFO_KEY = 'bazi_user_info';
     
@@ -277,58 +457,19 @@
     }
     
     function updateUserDisplay() {
-        const userId = getUserId();
         const userInfo = getUserInfo();
         const userNameEl = document.getElementById('userName');
         const userEmailEl = document.getElementById('userEmail');
-        const userIdTipEl = document.getElementById('userIdTip');
         
         if (userInfo.isLoggedIn) {
             userNameEl.textContent = userInfo.nickname || '用户';
             userEmailEl.textContent = '已登录 · 数据云端同步';
-            userIdTipEl.style.display = 'none';
         } else {
             userNameEl.textContent = '游客模式';
             userEmailEl.textContent = '暂未开通登录模式';
-            userIdTipEl.textContent = `匿名ID: ${userId.substring(0, 12)}...`;
-            userIdTipEl.style.display = 'none';
         }
     }
     
-    function setUserLoggedIn(nickname, userId = null) {
-        const userInfo = {
-            isLoggedIn: true,
-            nickname: nickname,
-            userId: userId || getUserId(),
-            loginAt: new Date().toISOString()
-        };
-        localStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
-        if (userId) {
-            localStorage.setItem(USER_ID_KEY, userId);
-        }
-        updateUserDisplay();
-    }
-    
-    function logout() {
-        const userInfo = getUserInfo();
-        if (userInfo.isLoggedIn) {
-            localStorage.setItem(USER_INFO_KEY, JSON.stringify({
-                isLoggedIn: false,
-                nickname: '游客',
-                createdAt: userInfo.createdAt || new Date().toISOString()
-            }));
-            updateUserDisplay();
-        }
-    }
-    
-    async function syncLocalDataToCloud() {
-        const records = getAnalysisRecords();
-        const userId = getUserId();
-        if (records.length === 0) return;
-        console.log(`[预留] 将 ${records.length} 条记录同步到云端，用户ID: ${userId}`);
-    }
-    
-    // ==================== 登录提示（已修改） ====================
     function showLoginModal() {
         alert('小成本网站 暂未开通登录服务');
         return;
@@ -1185,6 +1326,8 @@
         loadRegionData();
         updateHistoryList();
         migrateOldRecords();
+        initTools();
+        initWechatCopy();
         
         const toggleIcon = document.getElementById('verifyToggleIcon');
         if (toggleIcon) toggleIcon.onclick = toggleVerifySection;
