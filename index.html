@@ -58,6 +58,7 @@
         .time-section-sub { font-size: 13px; color: #888; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
         
         .method-block { margin-bottom: 28px; }
+        .method-block.step-three { margin-top: 32px; }
         .method-name { font-size: 16px; font-weight: 600; color: #e6b980; margin-bottom: 8px; }
         .method-desc { font-size: 14px; color: #555; line-height: 1.6; margin-bottom: 8px; }
         .method-pro-con { font-size: 12px; color: #888; margin-bottom: 12px; padding-left: 8px; border-left: 2px solid #e6b980; }
@@ -68,7 +69,7 @@
         .sub-method { margin-top: 20px; padding-top: 16px; border-top: 1px dashed #e0e0e0; }
         .sub-method-title { font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 12px; }
         
-        .shichen-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+        .shichen-table { width: 100%; font-size: 13px; border-collapse: collapse; }
         .shichen-table th, .shichen-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #eee; }
         .shichen-table th { background: #f0f0f0; font-weight: 600; }
         
@@ -289,14 +290,42 @@
             <!-- 时辰确定页面 -->
             <div id="timePanel" class="hidden">
                 <div class="time-page">
-                    <!-- 顶部导航 -->
+                    <!-- 顶部导航：专业推断在左，自行推断在右 -->
                     <div class="time-tabs">
-                        <div class="time-tab active" data-tab="self">自行推断</div>
-                        <div class="time-tab" data-tab="expert">专业推断</div>
+                        <div class="time-tab active" data-tab="expert">专业推断</div>
+                        <div class="time-tab" data-tab="self">自行推断</div>
+                    </div>
+                    
+                    <!-- 专业推断内容 -->
+                    <div id="expertTab" class="time-tab-content">
+                        <div class="time-section">
+                            <div class="time-section-title">专业推断</div>
+                            <div class="time-section-sub">先推断，后付费 · 不准不收费 · 收费服务</div>
+                            
+                            <div class="method-block">
+                                <div class="method-name">联系作者</div>
+                                <div class="method-pro-con">优点：专业准确，先验证后付费；缺点：需要付费</div>
+                                <div class="method-content">
+                                    <div class="contact-area">
+                                        <div class="wechat-qr">
+                                            <div class="wechat-qr-sim"></div>
+                                        </div>
+                                        <div class="wechat-id" id="copyWechatBtn">
+                                            微信号: bajie_mingli  📋 点击复制
+                                        </div>
+                                        <p style="font-size: 12px; color: #888; margin-top: 12px;">添加微信后，提供出生日期和已知信息，作者会通过专业方法帮你确定准确时辰，确认准确后再付费。</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="method-block" style="margin-top: 20px; text-align: center; padding-top: 16px; border-top: 1px dashed #e0e0e0;">
+                                <p style="font-size: 12px; color: #888;">💡 如果想免费自行推断，请点击上方「自行推断」查看详细方法</p>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- 自行推断内容 -->
-                    <div id="selfTab" class="time-tab-content">
+                    <div id="selfTab" class="time-tab-content hidden">
                         <div class="time-section">
                             <div class="time-section-title">自行推断</div>
                             <div class="time-section-sub">免费 · 可能存在矛盾 · 准确率约60%</div>
@@ -402,8 +431,10 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
 
-                            <div class="method-block">
+                            <div class="method-block step-three">
                                 <div class="method-name">步骤三：时间段+脸型/指节/发旋推断交叉，确定出生时辰</div>
                                 <div class="method-pro-con">例如：早上清晨(子、丑、寅、卯)+发旋偏右(寅、申、巳、亥)=寅时(交叉为寅时)</div>                               
                             </div>
@@ -420,30 +451,6 @@
                                         <tr><td>辰时</td><td>07:00-09:00</td><td>戌时</td><td>19:00-21:00</td></tr>
                                         <tr><td>巳时</td><td>09:00-11:00</td><td>亥时</td><td>21:00-23:00</td></tr>
                                     </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 专业推断内容 -->
-                    <div id="expertTab" class="time-tab-content hidden">
-                        <div class="time-section">
-                            <div class="time-section-title">专业推断</div>
-                            <div class="time-section-sub">先推断，后付费 · 不准不收费 · 收费服务</div>
-                            
-                            <div class="method-block">
-                                <div class="method-name">联系作者</div>
-                                <div class="method-pro-con">优点：专业准确，先验证后付费；缺点：需要付费</div>
-                                <div class="method-content">
-                                    <div class="contact-area">
-                                        <div class="wechat-qr">
-                                            <div class="wechat-qr-sim"></div>
-                                        </div>
-                                        <div class="wechat-id" id="copyWechatBtn">
-                                            微信号: bajie_mingli  📋 点击复制
-                                        </div>
-                                        <p style="font-size: 12px; color: #888; margin-top: 12px;">添加微信后，提供出生日期和已知信息，作者会通过专业方法帮你确定准确时辰，确认准确后再付费。</p>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -485,14 +492,18 @@
         document.getElementById('defaultPanel').classList.add('hidden');
         document.getElementById('timePanel').classList.remove('hidden');
         document.getElementById('mainTitle').textContent = '时辰确定';
-        document.getElementById('mainSubtitle').textContent = '自行推断 / 专业推断';
+        document.getElementById('mainSubtitle').textContent = '专业推断 / 自行推断';
     }
     
-    // 时辰确定页面内的Tab切换
+    // 时辰确定页面内的Tab切换（专业推断在左，自行推断在右）
     function initTimeTabs() {
         const tabs = document.querySelectorAll('.time-tab');
         const selfTab = document.getElementById('selfTab');
         const expertTab = document.getElementById('expertTab');
+        
+        // 默认显示专业推断
+        selfTab.classList.add('hidden');
+        expertTab.classList.remove('hidden');
         
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
