@@ -1072,6 +1072,26 @@
                 flex-direction: column;
                 gap: 8px;
             }
+
+            /* ===== 移动端按钮修复 ===== */
+            #startVerifyBtn {
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                width: 100% !important;
+            }
+            .btn-start,
+            .btn-done,
+            .btn-continue {
+                display: block !important;
+                width: 100% !important;
+            }
+            #analysisBtnContainer .btn-start,
+            #analysisBtnContainer .btn-done,
+            #analysisBtnContainer .btn-continue {
+                display: block !important;
+                width: 100% !important;
+            }
         }
 
         @media (max-width: 480px) {
