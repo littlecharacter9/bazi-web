@@ -202,7 +202,7 @@
             background: #fff;
         }
         .main-header {
-            padding: 20px 30px 24px 30px;
+            padding: 20px 30px;
             border-bottom: 1px solid #eee;
             background: #fff;
         }
@@ -215,7 +215,6 @@
             font-size: 13px;
             color: #888;
             margin-top: 4px;
-            margin-bottom: 0;
         }
         .content-area {
             flex: 1;
@@ -857,7 +856,7 @@
 
         /* ===== 移动端适配 ===== */
         @media (max-width: 768px) {
-            /* 禁止 body 滚动，只让内容区滚动 */
+            /* 禁止 body 滚动 */
             body {
                 overflow: hidden !important;
                 height: 100vh !important;
@@ -871,6 +870,7 @@
                 overflow: hidden !important;
             }
 
+            /* ===== 侧边栏 ===== */
             .sidebar {
                 width: 100% !important;
                 max-height: 56px !important;
@@ -879,6 +879,7 @@
                 position: relative !important;
                 z-index: 10 !important;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+                transition: max-height 0.3s ease !important;
             }
             .sidebar.open {
                 max-height: 100vh !important;
@@ -922,6 +923,7 @@
                 max-height: 200px !important;
             }
 
+            /* ===== 主区域 ===== */
             .main {
                 flex: 1 !important;
                 overflow: hidden !important;
@@ -931,20 +933,25 @@
                 min-height: 0 !important;
             }
 
+            /* 顶部标题留白 */
             .main-header {
                 flex-shrink: 0 !important;
                 padding: 12px 16px 16px 16px !important;
+                border-bottom: 1px solid #eee !important;
             }
             .main-header h2 {
                 font-size: 18px !important;
-                margin-bottom: 4px !important;
+                margin-bottom: 2px !important;
+                color: #1a1a2e !important;
             }
             .main-header p {
                 font-size: 12px !important;
                 margin-top: 0 !important;
                 margin-bottom: 0 !important;
+                color: #888 !important;
             }
 
+            /* ===== 内容区 ===== */
             .content-area {
                 flex: 1 !important;
                 overflow-y: auto !important;
@@ -954,10 +961,12 @@
                 min-height: 0 !important;
             }
 
+            /* ===== 表单卡片 ===== */
             .form-card {
                 padding: 14px !important;
                 padding-bottom: 20px !important;
-                margin-bottom: 12px !important;
+                margin-bottom: 8px !important;
+                border-radius: 16px !important;
             }
             .form-row {
                 flex-direction: column !important;
@@ -966,7 +975,119 @@
             .form-group {
                 min-width: 100% !important;
             }
+            .form-group label {
+                font-size: 12px !important;
+            }
+            .form-group input,
+            .form-group select {
+                font-size: 13px !important;
+                padding: 10px 12px !important;
+            }
 
+            /* ===== 验证按钮 ===== */
+            #startVerifyBtn {
+                display: block !important;
+                width: 100% !important;
+                padding: 12px !important;
+                font-size: 15px !important;
+                font-weight: 600 !important;
+                min-height: 46px !important;
+                margin-top: 12px !important;
+                margin-bottom: 0 !important;
+                background: #e6b980 !important;
+                color: #1a1a2e !important;
+                border-radius: 40px !important;
+                border: none !important;
+                cursor: pointer !important;
+            }
+
+            /* 其他按钮统一 */
+            .btn-start,
+            .btn-done,
+            .btn-continue {
+                font-size: 15px !important;
+                padding: 12px !important;
+                width: 100% !important;
+                min-height: 46px !important;
+                border-radius: 40px !important;
+                font-weight: 600 !important;
+                display: block !important;
+                margin: 4px 0 !important;
+            }
+
+            /* ===== 验证内容 ===== */
+            .verify-box {
+                padding: 12px !important;
+                margin-top: 8px !important;
+                margin-bottom: 8px !important;
+            }
+            .verify-item {
+                margin-bottom: 10px !important;
+                padding-bottom: 8px !important;
+            }
+            .verify-title {
+                font-size: 14px !important;
+            }
+            .verify-content {
+                font-size: 13px !important;
+                line-height: 1.6 !important;
+                max-height: none !important;
+                overflow-y: visible !important;
+                white-space: pre-wrap !important;
+                word-wrap: break-word !important;
+            }
+            .verify-question {
+                font-size: 12px !important;
+            }
+            .item-buttons {
+                gap: 12px !important;
+            }
+            .item-btn {
+                font-size: 12px !important;
+                padding: 4px 14px !important;
+            }
+            .feedback-detail {
+                font-size: 12px !important;
+                padding: 8px !important;
+            }
+
+            /* ===== 底部按钮组 ===== */
+            .action-buttons {
+                margin-top: 8px !important;
+                padding: 8px 0 0 0 !important;
+                gap: 10px !important;
+                flex-direction: column !important;
+                border-top: none !important;
+            }
+            .action-buttons .action-btn {
+                width: 100% !important;
+                text-align: center !important;
+                padding: 12px !important;
+                font-size: 14px !important;
+                border-radius: 40px !important;
+            }
+
+            .analysis-buttons {
+                flex-direction: column !important;
+                gap: 8px !important;
+            }
+            .analysis-buttons button {
+                width: 100% !important;
+                padding: 12px !important;
+                font-size: 15px !important;
+                min-height: 46px !important;
+                border-radius: 40px !important;
+            }
+
+            /* ===== 时间选择 ===== */
+            .time-toggle label {
+                font-size: 13px !important;
+            }
+            .time-option-row {
+                margin-bottom: 10px !important;
+            }
+
+            /* ===== 时辰确定面板 ===== */
             .time-tabs {
                 overflow-x: auto !important;
                 flex-wrap: nowrap !important;
@@ -980,9 +1101,15 @@
             .time-section {
                 padding: 14px !important;
                 margin-bottom: 12px !important;
+                border-radius: 16px !important;
             }
             .time-section-title {
                 font-size: 15px !important;
+            }
+            .time-section-sub {
+                font-size: 12px !important;
+                margin-bottom: 12px !important;
+                padding-bottom: 8px !important;
             }
             .method-name {
                 font-size: 14px !important;
@@ -998,6 +1125,7 @@
                 margin-top: 16px !important;
             }
 
+            /* ===== 示意图 ===== */
             .diagram-row {
                 gap: 10px !important;
             }
@@ -1009,7 +1137,11 @@
                 width: 60px !important;
                 height: 60px !important;
             }
+            .diagram-label {
+                font-size: 10px !important;
+            }
 
+            /* ===== 时辰对照表 ===== */
             .shichen-table {
                 font-size: 11px !important;
             }
@@ -1018,6 +1150,7 @@
                 padding: 4px 6px !important;
             }
 
+            /* ===== 联系作者 ===== */
             .wechat-qr {
                 width: 80px !important;
                 height: 80px !important;
@@ -1030,151 +1163,100 @@
                 font-size: 11px !important;
                 padding: 6px 10px !important;
             }
-
-            /* ===== 按钮完整显示 ===== */
-            #startVerifyBtn {
-                display: block !important;
-                width: 100% !important;
-                padding: 14px 20px !important;
-                font-size: 16px !important;
-                min-height: 52px !important;
-                margin-top: 12px !important;
-                margin-bottom: 4px !important;
-                background: #e6b980 !important;
-                color: #1a1a2e !important;
-                border-radius: 40px !important;
-                border: none !important;
-                font-weight: 600 !important;
+            .contact-area {
+                padding: 4px !important;
             }
 
-            .btn-start,
-            .btn-done,
-            .btn-continue {
-                font-size: 16px !important;
-                padding: 14px !important;
-                width: 100% !important;
-                min-height: 50px !important;
-                border-radius: 40px !important;
-            }
-
+            /* ===== 结果卡片 ===== */
             .result-card {
                 padding: 12px !important;
                 margin-top: 8px !important;
+                border-radius: 16px !important;
             }
             .result-title {
                 font-size: 14px !important;
+                padding-bottom: 8px !important;
+                margin-bottom: 10px !important;
             }
             .result-content {
-                font-size: 12px !important;
+                font-size: 13px !important;
                 max-height: 300px !important;
             }
             .action-icons {
                 gap: 8px !important;
                 flex-wrap: wrap !important;
                 justify-content: flex-start !important;
+                margin-top: 10px !important;
+                padding-top: 8px !important;
             }
             .action-icon {
-                font-size: 11px !important;
-            }
-
-            .back-btn button {
                 font-size: 12px !important;
-                padding: 6px 16px !important;
             }
 
-            .contact-area {
-                padding: 4px !important;
+            /* ===== 返回按钮 ===== */
+            .back-btn button {
+                font-size: 13px !important;
+                padding: 8px 20px !important;
+            }
+            .back-btn {
+                margin-top: 12px !important;
             }
 
+            /* ===== 模块按钮 ===== */
             .module-buttons {
                 gap: 4px !important;
             }
             .module-btn {
                 padding: 4px 12px !important;
                 font-size: 11px !important;
+                border-radius: 20px !important;
             }
 
-            .analysis-buttons {
-                flex-direction: column !important;
-                gap: 8px !important;
-            }
-            .analysis-buttons button {
-                width: 100% !important;
-            }
-
-            .verify-content {
-                font-size: 13px !important;
-                line-height: 1.6 !important;
-                max-height: none !important;
-                overflow-y: visible !important;
-                white-space: pre-wrap !important;
-                word-wrap: break-word !important;
-            }
-            .verify-item {
-                margin-bottom: 10px !important;
-                padding-bottom: 8px !important;
-            }
-            .verify-box {
-                padding: 10px !important;
-                margin-top: 8px !important;
-                margin-bottom: 8px !important;
-            }
-
-            .action-buttons {
-                margin-top: 8px !important;
-                padding: 8px 0 0 0 !important;
-                gap: 10px !important;
-                flex-direction: column !important;
-            }
-            .action-buttons .action-btn {
-                width: 100% !important;
-                text-align: center !important;
-                padding: 12px !important;
-                font-size: 14px !important;
-            }
-            .form-card {
-                padding-bottom: 6px !important;
-                margin-bottom: 6px !important;
-            }
-            .verify-box {
-                margin-bottom: 4px !important;
-                padding-bottom: 6px !important;
-            }
-            #startVerifyBtn {
-                margin-bottom: 0 !important;
-            }
-            .result-card {
-                margin-top: 6px !important;
-                margin-bottom: 0 !important;
-                padding-bottom: 6px !important;
-            }
-            .analysis-buttons {
-                margin-bottom: 0 !important;
-                padding-bottom: 0 !important;
-            }
-
+            /* ===== 复选框 ===== */
             .checkbox-row {
                 gap: 6px !important;
                 flex-wrap: wrap !important;
             }
             .checkbox-label {
-                font-size: 11px !important;
+                font-size: 12px !important;
             }
 
+            /* ===== 地点选择 ===== */
             .location-row {
                 flex-direction: column !important;
                 gap: 6px !important;
             }
             .location-select {
                 width: 100% !important;
+                font-size: 13px !important;
+                padding: 10px 12px !important;
             }
 
+            /* ===== 滚动条 ===== */
             .content-area::-webkit-scrollbar {
                 width: 3px !important;
             }
             .content-area::-webkit-scrollbar-thumb {
                 background: #ccc !important;
                 border-radius: 10px !important;
+            }
+
+            /* ===== 真太阳时 ===== */
+            .true-solar-box {
+                font-size: 12px !important;
+                padding: 10px 12px !important;
+                margin-bottom: 10px !important;
+            }
+            .bazi-info {
+                font-size: 13px !important;
+                padding: 10px 12px !important;
+                margin-bottom: 12px !important;
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+            }
+            .warning-box {
+                font-size: 12px !important;
+                padding: 10px 12px !important;
             }
         }
 
@@ -2395,18 +2477,18 @@
             }
         }
 
+        // ===== 核心修复：callVerify 强制隐藏"开始验证八字"按钮 =====
         async function callVerify() {
+            // 强制隐藏"开始验证八字"按钮
+            const startVerifyBtn = document.getElementById('startVerifyBtn');
+            if (startVerifyBtn) {
+                startVerifyBtn.style.display = 'none';
+                startVerifyBtn.classList.add('hidden');
+            }
+
             const birth = buildBirthString();
             if (!birth) { alert('请完整填写必填信息'); return false; }
             isLoading = true;
-
-            // ===== 强制隐藏"开始验证八字"按钮 =====
-            const startVerifyBtn = document.getElementById('startVerifyBtn');
-            if (startVerifyBtn) {
-                startVerifyBtn.classList.add('hidden');
-                startVerifyBtn.style.display = 'none';
-            }
-
             const verifyArea = document.getElementById('verifyArea');
             const verifyItemsContainer = document.getElementById('verifyItemsContainer');
             const actionButtons = document.getElementById('actionButtons');
@@ -2535,6 +2617,7 @@
             }
         }
 
+        // ===== 核心修复：confirmAllAccurate 强制隐藏 =====
         function confirmAllAccurate() {
             currentStep = 2;
             const verifyArea = document.getElementById('verifyArea');
@@ -2548,11 +2631,11 @@
 
             verifyArea.classList.add('hidden');
 
-            // ===== 隐藏"开始验证八字"按钮 =====
+            // ===== 强制隐藏"开始验证八字"按钮 =====
             const startVerifyBtn = document.getElementById('startVerifyBtn');
             if (startVerifyBtn) {
-                startVerifyBtn.classList.add('hidden');
                 startVerifyBtn.style.display = 'none';
+                startVerifyBtn.classList.add('hidden');
             }
 
             const moduleArea = document.getElementById('moduleArea');
@@ -2586,17 +2669,18 @@
         }
 
         // ==================== 深度分析 ====================
+        // ===== 核心修复：startAnalysis 强制隐藏 =====
         async function startAnalysis() {
             if (isLoading) return;
-            isLoading = true;
 
             // ===== 强制隐藏"开始验证八字"按钮 =====
             const startVerifyBtn = document.getElementById('startVerifyBtn');
             if (startVerifyBtn) {
-                startVerifyBtn.classList.add('hidden');
                 startVerifyBtn.style.display = 'none';
+                startVerifyBtn.classList.add('hidden');
             }
 
+            isLoading = true;
             const container = document.getElementById('analysisBtnContainer');
             const startBtn = document.getElementById('startAnalysisBtn');
             startBtn.disabled = true;
@@ -2712,11 +2796,11 @@
             pendingVerifyContent = null;
             isVerifyCollapsed = false;
 
-            // ===== 重置按钮状态 =====
+            // ===== 重置按钮状态，显示"开始验证八字" =====
             const startVerifyBtn = document.getElementById('startVerifyBtn');
             if (startVerifyBtn) {
-                startVerifyBtn.classList.remove('hidden');
                 startVerifyBtn.style.display = 'block';
+                startVerifyBtn.classList.remove('hidden');
             }
 
             const moduleArea = document.getElementById('moduleArea');
