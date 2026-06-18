@@ -853,7 +853,7 @@
                 opacity: 1;
             }
         }
-
+        
         /* ===== 移动端适配 ===== */
         @media (max-width: 768px) {
             .app {
@@ -861,7 +861,7 @@
                 height: 100vh;
                 overflow: hidden;
             }
-
+        
             .sidebar {
                 width: 100%;
                 height: auto;
@@ -873,19 +873,18 @@
                 z-index: 10;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             }
-
+        
             .sidebar.open {
                 max-height: 100vh;
                 overflow-y: auto;
             }
-
-            /* 侧边栏折叠按钮 */
+        
             .sidebar-toggle {
                 display: flex !important;
                 align-items: center;
                 justify-content: center;
             }
-
+        
             .logo-area {
                 padding: 12px 16px;
                 display: flex;
@@ -898,7 +897,7 @@
             .logo-sub {
                 font-size: 10px;
             }
-
+        
             .new-chat-btn {
                 margin: 12px 16px;
                 padding: 10px 14px;
@@ -918,13 +917,13 @@
             .history-list {
                 max-height: 200px;
             }
-
+        
             .main {
                 flex: 1;
                 overflow-y: auto;
                 height: calc(100vh - 56px);
             }
-
+        
             .main-header {
                 padding: 12px 16px;
             }
@@ -934,13 +933,16 @@
             .main-header p {
                 font-size: 12px;
             }
-
+        
             .content-area {
                 padding: 12px 16px;
+                overflow: visible !important;
             }
-
+        
             .form-card {
                 padding: 16px;
+                overflow: visible !important;
+                padding-bottom: 24px !important;
             }
             .form-row {
                 flex-direction: column;
@@ -949,7 +951,7 @@
             .form-group {
                 min-width: 100%;
             }
-
+        
             .time-tabs {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
@@ -962,7 +964,7 @@
                 white-space: nowrap;
                 flex-shrink: 0;
             }
-
+        
             .time-section {
                 padding: 16px;
             }
@@ -976,7 +978,7 @@
                 font-size: 13px;
                 padding: 12px;
             }
-
+        
             .diagram-row {
                 gap: 12px;
             }
@@ -992,7 +994,7 @@
                 width: 80px !important;
                 height: 80px !important;
             }
-
+        
             .shichen-table {
                 font-size: 12px;
             }
@@ -1000,7 +1002,7 @@
             .shichen-table td {
                 padding: 6px 8px;
             }
-
+        
             .wechat-qr {
                 width: 100px;
                 height: 100px;
@@ -1013,16 +1015,18 @@
                 font-size: 12px;
                 padding: 8px 12px;
             }
-
+        
             .btn-start,
             .btn-done,
             .btn-continue {
                 font-size: 14px;
                 padding: 12px;
             }
-
+        
             .result-card {
                 padding: 16px;
+                overflow: visible !important;
+                clear: both !important;
             }
             .result-title {
                 font-size: 14px;
@@ -1038,16 +1042,16 @@
             .action-icon {
                 font-size: 12px;
             }
-
+        
             .back-btn button {
                 font-size: 13px;
                 padding: 8px 20px;
             }
-
+        
             .contact-area {
                 padding: 8px;
             }
-
+        
             .module-buttons {
                 gap: 6px;
             }
@@ -1055,42 +1059,83 @@
                 padding: 6px 14px;
                 font-size: 12px;
             }
-
+        
             .analysis-buttons {
                 flex-direction: column;
                 gap: 8px;
             }
-
+        
             .checkbox-row {
                 gap: 10px;
             }
             .checkbox-label {
                 font-size: 12px;
             }
-
+        
             .location-row {
                 flex-direction: column;
                 gap: 8px;
             }
-
-            /* ===== 移动端按钮修复 ===== */
-            #startVerifyBtn {
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                width: 100% !important;
-            }
+        
+            /* ===== 移动端按钮修复 - 加强版 ===== */
+            #startVerifyBtn,
             .btn-start,
             .btn-done,
             .btn-continue {
                 display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
                 width: 100% !important;
+                min-height: 48px !important;
+                margin-top: 16px !important;
+                margin-bottom: 8px !important;
+                clear: both !important;
+                position: relative !important;
+                z-index: 5 !important;
             }
+        
             #analysisBtnContainer .btn-start,
             #analysisBtnContainer .btn-done,
             #analysisBtnContainer .btn-continue {
                 display: block !important;
                 width: 100% !important;
+                min-height: 48px !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .sidebar {
+                max-height: 48px;
+            }
+            .main {
+                height: calc(100vh - 48px);
+            }
+            .logo {
+                font-size: 16px;
+            }
+            .logo-sub {
+                font-size: 9px;
+            }
+            .time-tab {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+            .content-area {
+                padding: 8px 12px;
+            }
+            .form-card {
+                padding: 12px;
+            }
+            .diagram-item img {
+                width: 60px !important;
+                height: 60px !important;
+            }
+            .time-section {
+                padding: 12px;
+            }
+            .method-content {
+                padding: 10px;
+                font-size: 12px;
             }
         }
 
