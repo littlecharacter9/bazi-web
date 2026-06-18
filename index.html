@@ -1076,31 +1076,6 @@
                 flex-direction: column;
                 gap: 8px;
             }
-        
-            /* ===== 移动端按钮修复 - 加强版 ===== */
-            #startVerifyBtn,
-            .btn-start,
-            .btn-done,
-            .btn-continue {
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                width: 100% !important;
-                min-height: 48px !important;
-                margin-top: 16px !important;
-                margin-bottom: 8px !important;
-                clear: both !important;
-                position: relative !important;
-                z-index: 5 !important;
-            }
-        
-            #analysisBtnContainer .btn-start,
-            #analysisBtnContainer .btn-done,
-            #analysisBtnContainer .btn-continue {
-                display: block !important;
-                width: 100% !important;
-                min-height: 48px !important;
-            }
         }
         
         @media (max-width: 480px) {
@@ -1289,9 +1264,9 @@
                                 <button class="btn-start" id="startAnalysisBtn">开始深度分析</button>
                             </div>
                         </div>
-
-                        <button class="btn-start" id="startVerifyBtn">开始验证八字</button>
                     </div>
+
+                    <button class="btn-start" id="startVerifyBtn" style="display: block; width: 100%; margin-top: 0;">开始验证八字</button>
 
                     <div id="resultCard" class="result-card" style="display: none;">
                         <div class="result-title">分析结果</div>
