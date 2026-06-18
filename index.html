@@ -202,7 +202,7 @@
             background: #fff;
         }
         .main-header {
-            padding: 20px 30px;
+            padding: 20px 30px 24px 30px;
             border-bottom: 1px solid #eee;
             background: #fff;
         }
@@ -215,9 +215,8 @@
             font-size: 13px;
             color: #888;
             margin-top: 4px;
-            margin-bottom: 6px;
+            margin-bottom: 0;
         }
-
         .content-area {
             flex: 1;
             padding: 24px 30px;
@@ -934,29 +933,30 @@
 
             .main-header {
                 flex-shrink: 0 !important;
-                padding: 10px 16px !important;
+                padding: 12px 16px 16px 16px !important;
             }
             .main-header h2 {
-                font-size: 17px !important;
+                font-size: 18px !important;
+                margin-bottom: 4px !important;
             }
             .main-header p {
                 font-size: 12px !important;
-                margin-top: 2px !important;
-                margin-bottom: 4px !important;
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
             }
 
             .content-area {
                 flex: 1 !important;
                 overflow-y: auto !important;
                 -webkit-overflow-scrolling: touch !important;
-                padding: 12px 16px 100px 16px !important;
+                padding: 12px 16px 140px 16px !important;
                 height: 100% !important;
                 min-height: 0 !important;
             }
 
             .form-card {
                 padding: 14px !important;
-                padding-bottom: 24px !important;
+                padding-bottom: 20px !important;
                 margin-bottom: 12px !important;
             }
             .form-row {
@@ -1031,29 +1031,30 @@
                 padding: 6px 10px !important;
             }
 
-            .btn-start,
-            .btn-done,
-            .btn-continue {
-                font-size: 14px !important;
-                padding: 12px !important;
-                width: 100% !important;
-                display: block !important;
-                margin: 4px 0 !important;
-            }
-
-            /* ===== 问题2修复：按钮完整显示 ===== */
+            /* ===== 按钮完整显示 ===== */
             #startVerifyBtn {
                 display: block !important;
                 width: 100% !important;
-                padding: 14px !important;
+                padding: 14px 20px !important;
                 font-size: 16px !important;
-                min-height: 50px !important;
-                margin-top: 8px !important;
-                margin-bottom: 0 !important;
+                min-height: 52px !important;
+                margin-top: 12px !important;
+                margin-bottom: 4px !important;
                 background: #e6b980 !important;
                 color: #1a1a2e !important;
                 border-radius: 40px !important;
                 border: none !important;
+                font-weight: 600 !important;
+            }
+
+            .btn-start,
+            .btn-done,
+            .btn-continue {
+                font-size: 16px !important;
+                padding: 14px !important;
+                width: 100% !important;
+                min-height: 50px !important;
+                border-radius: 40px !important;
             }
 
             .result-card {
@@ -1095,14 +1096,15 @@
 
             .analysis-buttons {
                 flex-direction: column !important;
-                gap: 6px !important;
+                gap: 8px !important;
             }
             .analysis-buttons button {
                 width: 100% !important;
             }
 
             .verify-content {
-                font-size: 12px !important;
+                font-size: 13px !important;
+                line-height: 1.6 !important;
                 max-height: none !important;
                 overflow-y: visible !important;
                 white-space: pre-wrap !important;
@@ -1119,9 +1121,16 @@
             }
 
             .action-buttons {
-                margin-top: 6px !important;
-                padding: 6px 0 0 0 !important;
-                margin-bottom: 0 !important;
+                margin-top: 8px !important;
+                padding: 8px 0 0 0 !important;
+                gap: 10px !important;
+                flex-direction: column !important;
+            }
+            .action-buttons .action-btn {
+                width: 100% !important;
+                text-align: center !important;
+                padding: 12px !important;
+                font-size: 14px !important;
             }
             .form-card {
                 padding-bottom: 6px !important;
@@ -1130,6 +1139,9 @@
             .verify-box {
                 margin-bottom: 4px !important;
                 padding-bottom: 6px !important;
+            }
+            #startVerifyBtn {
+                margin-bottom: 0 !important;
             }
             .result-card {
                 margin-top: 6px !important;
@@ -1164,12 +1176,6 @@
                 background: #ccc !important;
                 border-radius: 10px !important;
             }
-
-            /* ===== 问题3修复：强制隐藏验证按钮 ===== */
-            #startVerifyBtn.hidden,
-            #startVerifyBtn[style*="display: none"] {
-                display: none !important;
-            }
         }
 
         @media (max-width: 480px) {
@@ -1186,7 +1192,7 @@
                 font-size: 9px !important;
             }
             .content-area {
-                padding: 8px 12px 80px 12px !important;
+                padding: 8px 12px 140px 12px !important;
             }
             .time-tab {
                 font-size: 12px !important;
@@ -1205,11 +1211,6 @@
             .method-content {
                 font-size: 12px !important;
                 padding: 8px !important;
-            }
-            #startVerifyBtn {
-                font-size: 14px !important;
-                padding: 12px !important;
-                min-height: 44px !important;
             }
         }
     </style>
@@ -2024,10 +2025,7 @@
 
             // ===== 隐藏"开始验证八字"，显示深度分析按钮 =====
             const startVerifyBtn = document.getElementById('startVerifyBtn');
-            if (startVerifyBtn) {
-                startVerifyBtn.classList.add('hidden');
-                startVerifyBtn.style.display = 'none';
-            }
+            if (startVerifyBtn) startVerifyBtn.classList.add('hidden');
 
             const moduleArea = document.getElementById('moduleArea');
             if (moduleArea) {
@@ -2550,7 +2548,7 @@
 
             verifyArea.classList.add('hidden');
 
-            // ===== 强制隐藏"开始验证八字"按钮 =====
+            // ===== 隐藏"开始验证八字"按钮 =====
             const startVerifyBtn = document.getElementById('startVerifyBtn');
             if (startVerifyBtn) {
                 startVerifyBtn.classList.add('hidden');
