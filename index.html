@@ -925,14 +925,17 @@
             }
 
             .main-header {
-                padding: 12px 16px;
+                padding: 12px 16px !important;
+                border-bottom: 1px solid #eee;
             }
             .main-header h2 {
                 font-size: 18px;
+                margin-bottom: 0;
             }
             .main-header p {
                 font-size: 12px;
                 margin-top: 2px;
+                margin-bottom: 0;
             }
 
             .content-area {
@@ -1072,6 +1075,51 @@
                 flex-direction: column;
                 gap: 8px;
             }
+
+            /* 移动端按钮强制显示 */
+            #startVerifyBtn,
+            .btn-start,
+            .btn-done,
+            .btn-continue {
+                display: block !important;
+                width: 100% !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+
+            /* 验证内容完整显示 */
+            .verify-content {
+                max-height: none !important;
+                overflow-y: visible !important;
+            }
+
+            /* 按钮下方留白删除 */
+            .action-buttons {
+                margin-top: 8px !important;
+                padding-top: 8px !important;
+                padding-bottom: 0 !important;
+                margin-bottom: 0 !important;
+            }
+            .form-card {
+                padding-bottom: 8px !important;
+                margin-bottom: 8px !important;
+            }
+            .verify-box {
+                margin-bottom: 4px !important;
+                padding-bottom: 8px !important;
+            }
+            #startVerifyBtn {
+                margin-bottom: 0 !important;
+            }
+            .result-card {
+                margin-top: 8px !important;
+                margin-bottom: 0 !important;
+                padding-bottom: 8px !important;
+            }
+            .analysis-buttons {
+                margin-bottom: 0 !important;
+                padding-bottom: 0 !important;
+            }
         }
 
         @media (max-width: 480px) {
@@ -1107,71 +1155,6 @@
             .method-content {
                 padding: 10px;
                 font-size: 12px;
-            }
-        }
-
-        /* ===== 移动端专项修复 ===== */
-        @media (max-width: 768px) {
-            /* 问题1：标题栏留白优化 */
-            .main-header {
-                padding: 12px 16px;
-            }
-            .main-header h2 {
-                font-size: 18px;
-            }
-            .main-header p {
-                font-size: 12px;
-                margin-top: 2px;
-            }
-
-            /* 问题2：验证内容显示 */
-            .verify-content {
-                font-size: 13px;
-                max-height: none !important;
-                overflow-y: visible !important;
-                white-space: pre-wrap;
-                word-wrap: break-word;
-            }
-            .verify-item {
-                margin-bottom: 12px;
-                padding-bottom: 10px;
-            }
-            .verify-box {
-                padding: 12px;
-            }
-
-            /* 问题3：按钮下方留白删除 */
-            .action-buttons {
-                margin-top: 8px !important;
-                padding-top: 8px !important;
-                padding-bottom: 0 !important;
-                margin-bottom: 0 !important;
-            }
-            .form-card {
-                padding-bottom: 8px !important;
-                margin-bottom: 8px !important;
-            }
-            .verify-box {
-                margin-bottom: 4px !important;
-                padding-bottom: 8px !important;
-            }
-            #startVerifyBtn {
-                margin-bottom: 0 !important;
-            }
-            .result-card {
-                margin-top: 8px !important;
-                margin-bottom: 0 !important;
-                padding-bottom: 8px !important;
-            }
-            .analysis-buttons {
-                margin-bottom: 0 !important;
-                padding-bottom: 0 !important;
-            }
-            .btn-start,
-            .btn-done,
-            .btn-continue {
-                display: block !important;
-                width: 100% !important;
             }
         }
     </style>
