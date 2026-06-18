@@ -210,11 +210,13 @@
             font-size: 22px;
             font-weight: 600;
             color: #1a1a2e;
+            margin-bottom: 6px;  /* 标题下方留白 */
         }
         .main-header p {
             font-size: 13px;
             color: #888;
-            margin-top: 4px;
+            margin-top: 0;
+            margin-bottom: 0;
         }
         .content-area {
             flex: 1;
@@ -933,15 +935,15 @@
                 min-height: 0 !important;
             }
 
-            /* 顶部标题留白 */
+            /* ===== 问题1修复：顶部留白 ===== */
             .main-header {
                 flex-shrink: 0 !important;
-                padding: 12px 16px 16px 16px !important;
+                padding: 14px 16px 16px 16px !important;
                 border-bottom: 1px solid #eee !important;
             }
             .main-header h2 {
                 font-size: 18px !important;
-                margin-bottom: 2px !important;
+                margin-bottom: 6px !important;
                 color: #1a1a2e !important;
             }
             .main-header p {
@@ -988,12 +990,12 @@
             #startVerifyBtn {
                 display: block !important;
                 width: 100% !important;
-                padding: 12px !important;
+                padding: 14px !important;
                 font-size: 15px !important;
                 font-weight: 600 !important;
-                min-height: 46px !important;
+                min-height: 50px !important;
                 margin-top: 12px !important;
-                margin-bottom: 0 !important;
+                margin-bottom: 4px !important;
                 background: #e6b980 !important;
                 color: #1a1a2e !important;
                 border-radius: 40px !important;
@@ -1006,9 +1008,9 @@
             .btn-done,
             .btn-continue {
                 font-size: 15px !important;
-                padding: 12px !important;
+                padding: 14px !important;
                 width: 100% !important;
-                min-height: 46px !important;
+                min-height: 50px !important;
                 border-radius: 40px !important;
                 font-weight: 600 !important;
                 display: block !important;
@@ -1073,9 +1075,9 @@
             }
             .analysis-buttons button {
                 width: 100% !important;
-                padding: 12px !important;
+                padding: 14px !important;
                 font-size: 15px !important;
-                min-height: 46px !important;
+                min-height: 50px !important;
                 border-radius: 40px !important;
             }
 
@@ -1274,7 +1276,7 @@
                 font-size: 9px !important;
             }
             .content-area {
-                padding: 8px 12px 140px 12px !important;
+                padding: 8px 12px 160px 12px !important;
             }
             .time-tab {
                 font-size: 12px !important;
@@ -1690,6 +1692,23 @@
         let isVerifyCollapsed = false;
         let pendingVerifyContent = null;
 
+        // ==================== 验证按钮统一控制 ====================
+        function hideVerifyBtn() {
+            const btn = document.getElementById('startVerifyBtn');
+            if (btn) {
+                btn.style.display = 'none';
+                btn.classList.add('hidden');
+            }
+        }
+
+        function showVerifyBtn() {
+            const btn = document.getElementById('startVerifyBtn');
+            if (btn) {
+                btn.style.display = 'block';
+                btn.classList.remove('hidden');
+            }
+        }
+
         // ==================== 侧边栏折叠 ====================
         document.addEventListener('DOMContentLoaded', function() {
             const sidebarToggle = document.getElementById('sidebarToggle');
@@ -1716,6 +1735,7 @@
             document.getElementById('contactPanel').classList.add('hidden');
             document.getElementById('mainTitle').textContent = '八字命盘分析';
             document.getElementById('mainSubtitle').textContent = '输入生辰信息，AI 辅助解析命盘格局';
+            showVerifyBtn();
         }
 
         function showTimePanel() {
@@ -1724,6 +1744,7 @@
             document.getElementById('contactPanel').classList.add('hidden');
             document.getElementById('mainTitle').textContent = '时辰确定';
             document.getElementById('mainSubtitle').textContent = '专业推断 / 自行推断';
+            showVerifyBtn();
         }
 
         function showContactPanel() {
@@ -1732,6 +1753,7 @@
             document.getElementById('contactPanel').classList.remove('hidden');
             document.getElementById('mainTitle').textContent = '联系作者';
             document.getElementById('mainSubtitle').textContent = '作者简介 · 深度服务 · 开光服务';
+            showVerifyBtn();
         }
 
         // ==================== 时辰确定 Tab 切换 ====================
@@ -2106,8 +2128,7 @@
             }
 
             // ===== 隐藏"开始验证八字"，显示深度分析按钮 =====
-            const startVerifyBtn = document.getElementById('startVerifyBtn');
-            if (startVerifyBtn) startVerifyBtn.classList.add('hidden');
+            hideVerifyBtn();
 
             const moduleArea = document.getElementById('moduleArea');
             if (moduleArea) {
@@ -2477,14 +2498,10 @@
             }
         }
 
-        // ===== 核心修复：callVerify 强制隐藏"开始验证八字"按钮 =====
+        // ===== 核心修复：callVerify 强制隐藏 =====
         async function callVerify() {
             // 强制隐藏"开始验证八字"按钮
-            const startVerifyBtn = document.getElementById('startVerifyBtn');
-            if (startVerifyBtn) {
-                startVerifyBtn.style.display = 'none';
-                startVerifyBtn.classList.add('hidden');
-            }
+            hideVerifyBtn();
 
             const birth = buildBirthString();
             if (!birth) { alert('请完整填写必填信息'); return false; }
@@ -2617,7 +2634,7 @@
             }
         }
 
-        // ===== 核心修复：confirmAllAccurate 强制隐藏 =====
+        // ===== 核心修复：confirmAllAccurate =====
         function confirmAllAccurate() {
             currentStep = 2;
             const verifyArea = document.getElementById('verifyArea');
@@ -2632,11 +2649,7 @@
             verifyArea.classList.add('hidden');
 
             // ===== 强制隐藏"开始验证八字"按钮 =====
-            const startVerifyBtn = document.getElementById('startVerifyBtn');
-            if (startVerifyBtn) {
-                startVerifyBtn.style.display = 'none';
-                startVerifyBtn.classList.add('hidden');
-            }
+            hideVerifyBtn();
 
             const moduleArea = document.getElementById('moduleArea');
             if (moduleArea) {
@@ -2669,16 +2682,12 @@
         }
 
         // ==================== 深度分析 ====================
-        // ===== 核心修复：startAnalysis 强制隐藏 =====
+        // ===== 核心修复：startAnalysis =====
         async function startAnalysis() {
             if (isLoading) return;
 
             // ===== 强制隐藏"开始验证八字"按钮 =====
-            const startVerifyBtn = document.getElementById('startVerifyBtn');
-            if (startVerifyBtn) {
-                startVerifyBtn.style.display = 'none';
-                startVerifyBtn.classList.add('hidden');
-            }
+            hideVerifyBtn();
 
             isLoading = true;
             const container = document.getElementById('analysisBtnContainer');
@@ -2797,11 +2806,7 @@
             isVerifyCollapsed = false;
 
             // ===== 重置按钮状态，显示"开始验证八字" =====
-            const startVerifyBtn = document.getElementById('startVerifyBtn');
-            if (startVerifyBtn) {
-                startVerifyBtn.style.display = 'block';
-                startVerifyBtn.classList.remove('hidden');
-            }
+            showVerifyBtn();
 
             const moduleArea = document.getElementById('moduleArea');
             if (moduleArea) {
