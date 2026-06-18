@@ -222,34 +222,6 @@
             overflow-y: auto;
         }
 
-        /* 电脑端底部正常留白 */
-        .content-area .bottom-spacer {
-            display: none;
-        }
-        
-        /* ===== 移动端底部留白 ===== */
-        @media (max-width: 768px) {
-            .content-area {
-                padding: 12px 16px 20px 16px !important;
-            }
-            /* 移动端显示底部空白占位 */
-            .content-area .bottom-spacer {
-                display: block;
-                height: 100px;
-                width: 100%;
-                clear: both;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .content-area {
-                padding: 8px 12px 20px 12px !important;
-            }
-            .content-area .bottom-spacer {
-                height: 120px;
-            }
-        }
-
         /* ===== 通用组件 ===== */
         .time-page {
             max-width: 800px;
@@ -881,7 +853,7 @@
                 opacity: 1;
             }
         }
-        
+
         /* ===== 移动端适配 ===== */
         @media (max-width: 768px) {
             .app {
@@ -889,7 +861,7 @@
                 height: 100vh;
                 overflow: hidden;
             }
-        
+
             .sidebar {
                 width: 100%;
                 height: auto;
@@ -901,18 +873,18 @@
                 z-index: 10;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             }
-        
+
             .sidebar.open {
                 max-height: 100vh;
                 overflow-y: auto;
             }
-        
+
             .sidebar-toggle {
                 display: flex !important;
                 align-items: center;
                 justify-content: center;
             }
-        
+
             .logo-area {
                 padding: 12px 16px;
                 display: flex;
@@ -925,7 +897,7 @@
             .logo-sub {
                 font-size: 10px;
             }
-        
+
             .new-chat-btn {
                 margin: 12px 16px;
                 padding: 10px 14px;
@@ -945,13 +917,13 @@
             .history-list {
                 max-height: 200px;
             }
-        
+
             .main {
                 flex: 1;
                 overflow-y: auto;
                 height: calc(100vh - 56px);
             }
-        
+
             .main-header {
                 padding: 12px 16px;
             }
@@ -960,17 +932,15 @@
             }
             .main-header p {
                 font-size: 12px;
+                margin-top: 2px;
             }
-        
+
             .content-area {
                 padding: 12px 16px;
-                overflow: visible !important;
             }
-        
+
             .form-card {
                 padding: 16px;
-                overflow: visible !important;
-                padding-bottom: 24px !important;
             }
             .form-row {
                 flex-direction: column;
@@ -979,7 +949,7 @@
             .form-group {
                 min-width: 100%;
             }
-        
+
             .time-tabs {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
@@ -992,7 +962,7 @@
                 white-space: nowrap;
                 flex-shrink: 0;
             }
-        
+
             .time-section {
                 padding: 16px;
             }
@@ -1006,7 +976,7 @@
                 font-size: 13px;
                 padding: 12px;
             }
-        
+
             .diagram-row {
                 gap: 12px;
             }
@@ -1022,7 +992,7 @@
                 width: 80px !important;
                 height: 80px !important;
             }
-        
+
             .shichen-table {
                 font-size: 12px;
             }
@@ -1030,7 +1000,7 @@
             .shichen-table td {
                 padding: 6px 8px;
             }
-        
+
             .wechat-qr {
                 width: 100px;
                 height: 100px;
@@ -1043,18 +1013,16 @@
                 font-size: 12px;
                 padding: 8px 12px;
             }
-        
+
             .btn-start,
             .btn-done,
             .btn-continue {
                 font-size: 14px;
                 padding: 12px;
             }
-        
+
             .result-card {
                 padding: 16px;
-                overflow: visible !important;
-                clear: both !important;
             }
             .result-title {
                 font-size: 14px;
@@ -1070,16 +1038,16 @@
             .action-icon {
                 font-size: 12px;
             }
-        
+
             .back-btn button {
                 font-size: 13px;
                 padding: 8px 20px;
             }
-        
+
             .contact-area {
                 padding: 8px;
             }
-        
+
             .module-buttons {
                 gap: 6px;
             }
@@ -1087,58 +1055,22 @@
                 padding: 6px 14px;
                 font-size: 12px;
             }
-        
+
             .analysis-buttons {
                 flex-direction: column;
                 gap: 8px;
             }
-        
+
             .checkbox-row {
                 gap: 10px;
             }
             .checkbox-label {
                 font-size: 12px;
             }
-        
+
             .location-row {
                 flex-direction: column;
                 gap: 8px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .sidebar {
-                max-height: 48px;
-            }
-            .main {
-                height: calc(100vh - 48px);
-            }
-            .logo {
-                font-size: 16px;
-            }
-            .logo-sub {
-                font-size: 9px;
-            }
-            .time-tab {
-                padding: 8px 12px;
-                font-size: 12px;
-            }
-            .content-area {
-                padding: 8px 12px;
-            }
-            .form-card {
-                padding: 12px;
-            }
-            .diagram-item img {
-                width: 60px !important;
-                height: 60px !important;
-            }
-            .time-section {
-                padding: 12px;
-            }
-            .method-content {
-                padding: 10px;
-                font-size: 12px;
             }
         }
 
@@ -1175,6 +1107,71 @@
             .method-content {
                 padding: 10px;
                 font-size: 12px;
+            }
+        }
+
+        /* ===== 移动端专项修复 ===== */
+        @media (max-width: 768px) {
+            /* 问题1：标题栏留白优化 */
+            .main-header {
+                padding: 12px 16px;
+            }
+            .main-header h2 {
+                font-size: 18px;
+            }
+            .main-header p {
+                font-size: 12px;
+                margin-top: 2px;
+            }
+
+            /* 问题2：验证内容显示 */
+            .verify-content {
+                font-size: 13px;
+                max-height: none !important;
+                overflow-y: visible !important;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
+            .verify-item {
+                margin-bottom: 12px;
+                padding-bottom: 10px;
+            }
+            .verify-box {
+                padding: 12px;
+            }
+
+            /* 问题3：按钮下方留白删除 */
+            .action-buttons {
+                margin-top: 8px !important;
+                padding-top: 8px !important;
+                padding-bottom: 0 !important;
+                margin-bottom: 0 !important;
+            }
+            .form-card {
+                padding-bottom: 8px !important;
+                margin-bottom: 8px !important;
+            }
+            .verify-box {
+                margin-bottom: 4px !important;
+                padding-bottom: 8px !important;
+            }
+            #startVerifyBtn {
+                margin-bottom: 0 !important;
+            }
+            .result-card {
+                margin-top: 8px !important;
+                margin-bottom: 0 !important;
+                padding-bottom: 8px !important;
+            }
+            .analysis-buttons {
+                margin-bottom: 0 !important;
+                padding-bottom: 0 !important;
+            }
+            .btn-start,
+            .btn-done,
+            .btn-continue {
+                display: block !important;
+                width: 100% !important;
             }
         }
     </style>
@@ -1292,9 +1289,9 @@
                                 <button class="btn-start" id="startAnalysisBtn">开始深度分析</button>
                             </div>
                         </div>
-                    </div>
 
-                    <button class="btn-start" id="startVerifyBtn" style="display: block; width: 100%; margin-top: 0;">开始验证八字</button>
+                        <button class="btn-start" id="startVerifyBtn">开始验证八字</button>
+                    </div>
 
                     <div id="resultCard" class="result-card" style="display: none;">
                         <div class="result-title">分析结果</div>
@@ -1305,7 +1302,6 @@
                             <div class="action-icon" id="shareResultBtn">转发</div>
                         </div>
                     </div>
-                    <div class="bottom-spacer"></div>                    
                 </div>
 
                 <!-- ===== 时辰确定面板 ===== -->
@@ -1582,7 +1578,6 @@
                     e.stopPropagation();
                     sidebar.classList.toggle('open');
                 });
-                // 点击页面其他区域关闭侧边栏
                 document.addEventListener('click', function(e) {
                     if (window.innerWidth <= 768) {
                         if (!sidebar.contains(e.target) && e.target !== sidebarToggle) {
