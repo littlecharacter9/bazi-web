@@ -202,8 +202,7 @@
             background: #fff;
         }
         .main-header {
-            padding: 12px 16px !important;
-            padding-bottom: 4px !important;
+            padding: 12px 16px 6px 16px !important;
             border-bottom: 1px solid #eee;
         }
         .main-header h2 {
@@ -213,7 +212,7 @@
         .main-header p {
             font-size: 12px;
             margin-top: 0 !important;
-            margin-bottom: 0 !important;
+            margin-bottom: 4px !important;
         }
         .content-area {
             flex: 1;
@@ -1076,23 +1075,20 @@
             }
 
             /* 移动端按钮强制显示 */
+            /* ===== 移动端按钮强制显示 ===== */
             #startVerifyBtn,
-            .btn-start {
+            .btn-start,
+            .btn-done,
+            .btn-continue {
                 display: block !important;
                 width: 100% !important;
-                visibility: visible !important;
-                opacity: 1 !important;
                 min-height: 48px !important;
                 margin-top: 12px !important;
                 margin-bottom: 0 !important;
-                padding: 14px !important;
-                font-size: 16px !important;
-            }
-            
-            /* 确保按钮容器不被隐藏 */
-            .form-card,
-            #defaultPanel {
-                overflow: visible !important;
+                padding: 12px !important;
+                font-size: 15px !important;
+                visibility: visible !important;
+                opacity: 1 !important;
             }
 
             /* 验证内容完整显示 */
@@ -1127,6 +1123,17 @@
             .analysis-buttons {
                 margin-bottom: 0 !important;
                 padding-bottom: 0 !important;
+            }
+
+            /* 确保按钮的父容器不被隐藏 */
+            .form-card {
+                overflow: visible !important;
+            }
+            #defaultPanel {
+                overflow: visible !important;
+            }
+            #moduleArea {
+                display: block !important;
             }
         }
 
