@@ -412,37 +412,9 @@
             flex: 1;
             min-width: 80px;
         }
-        .diagram-canvas {
-            width: 70px;
-            height: 70px;
-            margin: 0 auto 8px;
-            background: #f0f0f0;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
         .diagram-label {
             font-size: 11px;
             color: #666;
-        }
-        .face-round {
-            width: 55px;
-            height: 55px;
-            background: #d4a574;
-            border-radius: 50%;
-        }
-        .face-long {
-            width: 50px;
-            height: 65px;
-            background: #d4a574;
-            border-radius: 40% 40% 35% 35%;
-        }
-        .face-square {
-            width: 55px;
-            height: 55px;
-            background: #d4a574;
-            border-radius: 20% 20% 30% 30%;
         }
 
         .form-card {
@@ -858,9 +830,7 @@
             animation-delay: 0.4s;
         }
         @keyframes dotPulse {
-            0%,
-            60%,
-            100% {
+            0%, 60%, 100% {
                 transform: scale(1);
                 opacity: 0.3;
             }
@@ -870,9 +840,7 @@
             }
         }
 
-        /* ================================================================ */
-        /* ===== 移动端适配（仅对 768px 以下生效，不影响桌面端） ===== */
-        /* ================================================================ */
+        /* ===== 移动端适配 ===== */
         @media (max-width: 768px) {
             body {
                 overflow: hidden !important;
@@ -887,7 +855,6 @@
                 overflow: hidden !important;
             }
 
-            /* ---- 侧边栏 ---- */
             .sidebar {
                 width: 100% !important;
                 max-height: 56px !important;
@@ -940,7 +907,7 @@
                 max-height: 200px !important;
             }
 
-            /* ---- 主区域（移动端专用：下移露出侧边栏背景） ---- */
+            /* ===== 主区域：直角 + 10px 透明间距 ===== */
             .main {
                 flex: 1 !important;
                 overflow: hidden !important;
@@ -949,13 +916,21 @@
                 flex-direction: column !important;
                 min-height: 0 !important;
                 background: #fff !important;
-                /* 关键：让白框下移，露出侧边栏深色背景 */
-                margin-top: 24px !important;
-                border-top-left-radius: 20px !important;
-                border-top-right-radius: 20px !important;
-                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06) !important;
-                /* 保证不溢出 */
-                max-height: calc(100vh - 56px - 24px) !important;
+                /* 10px 间距，透明效果 = 无背景色、无阴影 */
+                margin-top: 10px !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                max-height: calc(100vh - 56px - 10px) !important;
+                /* 让间距区域透明：主区域本身是白色，但 margin 区域会透出父级背景 */
+                /* 父级 .app 背景是 #f5f5f7，所以看起来是浅灰色透明效果 */
+                /* 如果想让间距完全透明（露出页面背景），保持现状即可 */
+            }
+
+            .mobile-top-spacer {
+                display: block !important;
+                height: 0 !important;
+                background: transparent !important;
+                flex-shrink: 0 !important;
             }
 
             .main-header {
@@ -963,20 +938,15 @@
                 padding: 14px 16px 16px 16px !important;
                 border-bottom: 1px solid #eee !important;
                 background: #fff !important;
-                border-top-left-radius: 20px !important;
-                border-top-right-radius: 20px !important;
+                border-radius: 0 !important;
                 margin-top: 0 !important;
             }
             .main-header h2 {
                 font-size: 18px !important;
                 margin-bottom: 6px !important;
-                color: #1a1a2e !important;
             }
             .main-header p {
                 font-size: 12px !important;
-                margin-top: 0 !important;
-                margin-bottom: 0 !important;
-                color: #888 !important;
             }
 
             .content-area {
@@ -987,13 +957,6 @@
                 height: 100% !important;
                 min-height: 0 !important;
                 background: #fff !important;
-            }
-
-            .mobile-top-spacer {
-                display: block !important;
-                height: 0 !important;
-                background: transparent !important;
-                flex-shrink: 0 !important;
             }
 
             .form-card {
@@ -1284,8 +1247,8 @@
             }
             .main {
                 height: calc(100vh - 48px) !important;
-                margin-top: 20px !important;
-                max-height: calc(100vh - 48px - 20px) !important;
+                margin-top: 10px !important;
+                max-height: calc(100vh - 48px - 10px) !important;
             }
             .logo {
                 font-size: 16px !important;
@@ -1357,7 +1320,6 @@
 
         <!-- ==================== 主区域 ==================== -->
         <div class="main">
-            <!-- 移动端占位 -->
             <div class="mobile-top-spacer"></div>
 
             <div class="main-header">
