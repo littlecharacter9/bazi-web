@@ -210,7 +210,7 @@
             font-size: 22px;
             font-weight: 600;
             color: #1a1a2e;
-            margin-bottom: 6px;  /* 标题下方留白 */
+            margin-bottom: 6px;
         }
         .main-header p {
             font-size: 13px;
@@ -858,7 +858,6 @@
 
         /* ===== 移动端适配 ===== */
         @media (max-width: 768px) {
-            /* 禁止 body 滚动 */
             body {
                 overflow: hidden !important;
                 height: 100vh !important;
@@ -872,7 +871,6 @@
                 overflow: hidden !important;
             }
 
-            /* ===== 侧边栏 ===== */
             .sidebar {
                 width: 100% !important;
                 max-height: 56px !important;
@@ -925,7 +923,6 @@
                 max-height: 200px !important;
             }
 
-            /* ===== 主区域 ===== */
             .main {
                 flex: 1 !important;
                 overflow: hidden !important;
@@ -935,7 +932,6 @@
                 min-height: 0 !important;
             }
 
-            /* ===== 问题1修复：顶部留白 ===== */
             .main-header {
                 flex-shrink: 0 !important;
                 padding: 14px 16px 16px 16px !important;
@@ -953,7 +949,6 @@
                 color: #888 !important;
             }
 
-            /* ===== 内容区 ===== */
             .content-area {
                 flex: 1 !important;
                 overflow-y: auto !important;
@@ -963,7 +958,6 @@
                 min-height: 0 !important;
             }
 
-            /* ===== 表单卡片 ===== */
             .form-card {
                 padding: 14px !important;
                 padding-bottom: 20px !important;
@@ -986,7 +980,6 @@
                 padding: 10px 12px !important;
             }
 
-            /* ===== 验证按钮 ===== */
             #startVerifyBtn {
                 display: block !important;
                 width: 100% !important;
@@ -1003,7 +996,6 @@
                 cursor: pointer !important;
             }
 
-            /* 其他按钮统一 */
             .btn-start,
             .btn-done,
             .btn-continue {
@@ -1017,7 +1009,6 @@
                 margin: 4px 0 !important;
             }
 
-            /* ===== 验证内容 ===== */
             .verify-box {
                 padding: 12px !important;
                 margin-top: 8px !important;
@@ -1053,7 +1044,6 @@
                 padding: 8px !important;
             }
 
-            /* ===== 底部按钮组 ===== */
             .action-buttons {
                 margin-top: 8px !important;
                 padding: 8px 0 0 0 !important;
@@ -1081,7 +1071,6 @@
                 border-radius: 40px !important;
             }
 
-            /* ===== 时间选择 ===== */
             .time-toggle label {
                 font-size: 13px !important;
             }
@@ -1089,7 +1078,6 @@
                 margin-bottom: 10px !important;
             }
 
-            /* ===== 时辰确定面板 ===== */
             .time-tabs {
                 overflow-x: auto !important;
                 flex-wrap: nowrap !important;
@@ -1127,7 +1115,6 @@
                 margin-top: 16px !important;
             }
 
-            /* ===== 示意图 ===== */
             .diagram-row {
                 gap: 10px !important;
             }
@@ -1143,7 +1130,6 @@
                 font-size: 10px !important;
             }
 
-            /* ===== 时辰对照表 ===== */
             .shichen-table {
                 font-size: 11px !important;
             }
@@ -1152,7 +1138,6 @@
                 padding: 4px 6px !important;
             }
 
-            /* ===== 联系作者 ===== */
             .wechat-qr {
                 width: 80px !important;
                 height: 80px !important;
@@ -1169,7 +1154,6 @@
                 padding: 4px !important;
             }
 
-            /* ===== 结果卡片 ===== */
             .result-card {
                 padding: 12px !important;
                 margin-top: 8px !important;
@@ -1195,7 +1179,6 @@
                 font-size: 12px !important;
             }
 
-            /* ===== 返回按钮 ===== */
             .back-btn button {
                 font-size: 13px !important;
                 padding: 8px 20px !important;
@@ -1204,7 +1187,6 @@
                 margin-top: 12px !important;
             }
 
-            /* ===== 模块按钮 ===== */
             .module-buttons {
                 gap: 4px !important;
             }
@@ -1214,7 +1196,6 @@
                 border-radius: 20px !important;
             }
 
-            /* ===== 复选框 ===== */
             .checkbox-row {
                 gap: 6px !important;
                 flex-wrap: wrap !important;
@@ -1223,7 +1204,6 @@
                 font-size: 12px !important;
             }
 
-            /* ===== 地点选择 ===== */
             .location-row {
                 flex-direction: column !important;
                 gap: 6px !important;
@@ -1234,7 +1214,6 @@
                 padding: 10px 12px !important;
             }
 
-            /* ===== 滚动条 ===== */
             .content-area::-webkit-scrollbar {
                 width: 3px !important;
             }
@@ -1243,7 +1222,6 @@
                 border-radius: 10px !important;
             }
 
-            /* ===== 真太阳时 ===== */
             .true-solar-box {
                 font-size: 12px !important;
                 padding: 10px 12px !important;
@@ -1413,7 +1391,8 @@
                             </div>
                         </div>
 
-                        <button class="btn-start" id="startVerifyBtn">开始验证八字</button>
+                        <!-- 关键修复：按钮点击后立即隐藏 -->
+                        <button class="btn-start" id="startVerifyBtn" onclick="if(currentStep===0){this.style.display='none';this.disabled=true;callVerify();}">开始验证八字</button>
                     </div>
 
                     <div id="resultCard" class="result-card" style="display: none;">
@@ -1697,7 +1676,8 @@
             const btn = document.getElementById('startVerifyBtn');
             if (btn) {
                 btn.style.display = 'none';
-                btn.classList.add('hidden');
+                btn.disabled = true;
+                btn.setAttribute('hidden', 'true');
             }
         }
 
@@ -1705,7 +1685,8 @@
             const btn = document.getElementById('startVerifyBtn');
             if (btn) {
                 btn.style.display = 'block';
-                btn.classList.remove('hidden');
+                btn.disabled = false;
+                btn.removeAttribute('hidden');
             }
         }
 
@@ -2498,28 +2479,32 @@
             }
         }
 
-        // ===== 核心修复：callVerify 强制隐藏 =====
+        // ===== 核心修复：callVerify =====
         async function callVerify() {
-            // 强制隐藏"开始验证八字"按钮
-            const btn = document.getElementById('startVerifyBtn');
-            if (btn) {
-                btn.style.display = 'none';
-                btn.disabled = true;
-            }
+            // 按钮已经在HTML的onclick中隐藏了，这里再做一次保险
+            hideVerifyBtn();
 
             const birth = buildBirthString();
-            if (!birth) { alert('请完整填写必填信息'); return false; }
+            if (!birth) {
+                // 验证失败时恢复按钮
+                showVerifyBtn();
+                alert('请完整填写必填信息');
+                return false;
+            }
+
             isLoading = true;
             const verifyArea = document.getElementById('verifyArea');
             const verifyItemsContainer = document.getElementById('verifyItemsContainer');
             const actionButtons = document.getElementById('actionButtons');
             const baziInfoArea = document.getElementById('baziInfoArea');
             const toggleIcon = document.getElementById('verifyToggleIcon');
+
             verifyArea.classList.remove('hidden');
             actionButtons.style.display = 'none';
             verifyItemsContainer.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 正在分析中...';
             isVerifyCollapsed = false;
             toggleIcon.innerHTML = expandSVG;
+
             try {
                 const response = await fetch(`${API_URL}/verify`, {
                     method: 'POST',
@@ -2539,11 +2524,16 @@
                         document.getElementById('baziDisplay').textContent = currentBaziStr;
                         baziInfoArea.classList.remove('hidden');
                     }
+                    // 验证成功后按钮保持隐藏
                 } else {
                     verifyItemsContainer.innerHTML = `验证失败：${data.error || '未知错误'}`;
+                    // 验证失败时恢复按钮
+                    showVerifyBtn();
                 }
             } catch (err) {
                 verifyItemsContainer.innerHTML = `网络错误：${err.message}`;
+                // 网络错误时恢复按钮
+                showVerifyBtn();
             } finally {
                 isLoading = false;
             }
@@ -2849,7 +2839,6 @@
 
             const toggleIcon = document.getElementById('verifyToggleIcon');
             if (toggleIcon) toggleIcon.onclick = toggleVerifySection;
-            document.getElementById('startVerifyBtn').onclick = () => { if (currentStep === 0) callVerify(); };
             document.getElementById('submitFeedbackBtn').onclick = submitFeedback;
             document.getElementById('confirmOverallBtn').onclick = confirmAllAccurate;
             const startAnalysisBtn = document.getElementById('startAnalysisBtn');
