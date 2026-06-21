@@ -87,7 +87,6 @@
             background: rgba(255, 255, 255, 0.15);
         }
 
-        /* 工具菜单 */
         .tools-menu {
             margin: 0 12px 16px 12px;
             padding-bottom: 16px;
@@ -105,7 +104,6 @@
             background: rgba(255, 255, 255, 0.08);
         }
 
-        /* 历史记录 */
         .history-section {
             padding: 0 12px;
             display: flex;
@@ -157,7 +155,6 @@
             color: #e6b980 !important;
         }
 
-        /* 用户信息 */
         .user-section {
             padding: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -329,7 +326,6 @@
             font-weight: 600;
         }
 
-        /* 联系作者 - 专属样式 */
         .contact-area {
             text-align: center;
             padding: 16px;
@@ -383,7 +379,6 @@
             background: #ccc;
         }
 
-        /* 示意图 */
         .diagram-row {
             display: flex;
             gap: 20px;
@@ -1391,8 +1386,8 @@
                             </div>
                         </div>
 
-                        <!-- 关键修复：按钮点击后立即隐藏 -->
-                        <button class="btn-start" id="startVerifyBtn" onclick="if(currentStep===0){this.style.display='none';this.disabled=true;callVerify();}">开始验证八字</button>
+                        <!-- ===== 按钮容器：由 JavaScript 动态渲染 ===== -->
+                        <div id="verifyBtnContainer"></div>
                     </div>
 
                     <div id="resultCard" class="result-card" style="display: none;">
@@ -1413,8 +1408,6 @@
                             <div class="time-tab active" data-tab="expert">专业推断</div>
                             <div class="time-tab" data-tab="self">自行推断</div>
                         </div>
-
-                        <!-- 专业推断 -->
                         <div id="expertTab" class="time-tab-content">
                             <div class="time-section">
                                 <div class="time-section-title">专业推断</div>
@@ -1427,9 +1420,7 @@
                                             <div class="wechat-qr">
                                                 <img src="https://s41.ax1x.com/2026/06/18/pm3hgK0.png" style="width: 140px; height: 140px; object-fit: contain;">
                                             </div>
-                                            <div class="wechat-id" id="copyWechatBtn">
-                                                微信号: mmj1399094604   点击复制
-                                            </div>
+                                            <div class="wechat-id" id="copyWechatBtn">微信号: mmj1399094604   点击复制</div>
                                             <p style="font-size: 12px; color: #888; margin-top: 12px;">添加微信后，提供出生日期和已知信息，作者会通过专业方法帮你确定准确时辰，确认准确后再付费。</p>
                                         </div>
                                     </div>
@@ -1439,13 +1430,10 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 自行推断 -->
                         <div id="selfTab" class="time-tab-content hidden">
                             <div class="time-section">
                                 <div class="time-section-title">自行推断</div>
                                 <div class="time-section-sub">免费 · 可能存在矛盾 · 准确率约60%</div>
-
                                 <div class="method-block">
                                     <div class="method-name">步骤一：询问父母，确定大概可能的时辰</div>
                                     <div class="method-pro-con">优点：简单直接；缺点：父母可能记忆模糊</div>
@@ -1456,13 +1444,11 @@
                                         <p><strong>下午-深夜 (13:00-23:00)</strong> → 申时、酉时、戌时、亥时</p>
                                     </div>
                                 </div>
-
                                 <div class="method-block">
                                     <div class="method-name">步骤二：脸型 / 指节 推断</div>
                                     <div class="method-pro-con">优点：可自行观察；缺点：不同方法可能得出矛盾结论，需综合判断</div>
                                     <div class="method-content">
                                         <p>根据传统命理经验，人的外貌特征与出生时辰有一定关联。以下是两种常见的推断方法，可以综合参考：</p>
-
                                         <div class="sub-method">
                                             <div class="sub-method-title">1. 脸型推断</div>
                                             <div class="method-pro-con">口诀：子午卯酉脸蛋圆，寅申巳亥长方面，辰戌丑未尖形面</div>
@@ -1481,7 +1467,6 @@
                                                 </div>
                                             </div>
                                         </div>
-
                                         <div class="sub-method">
                                             <div class="sub-method-title">2. 小指长度推断</div>
                                             <div class="method-pro-con">口诀：子午卯酉比较长，寅申巳亥平行量，辰戌丑未短一点</div>
@@ -1505,12 +1490,10 @@
                                         </div>
                                     </div>
                                 </div>
-
                                 <div class="method-block step-three">
                                     <div class="method-name">步骤三：时间段+脸型/指节推断交叉，确定出生时辰</div>
                                     <div class="method-pro-con">例如：早上清晨(子、丑、寅、卯) + 长方形脸(寅、申、巳、亥) = 寅时(交叉为寅时)</div>
                                 </div>
-
                                 <div class="method-block">
                                     <div class="method-name">时辰对照表</div>
                                     <div class="method-content">
@@ -1527,24 +1510,20 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="back-btn">
                             <button id="backToMainBtn">← 返回八字分析</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- ===== 联系作者独立面板（三 Tab 布局） ===== -->
+                <!-- ===== 联系作者独立面板 ===== -->
                 <div id="contactPanel" class="hidden">
                     <div class="time-page">
-                        <!-- 顶部导航：三个 Tab -->
                         <div class="time-tabs" id="contactTabs">
                             <div class="time-tab active" data-contact="intro">作者简介</div>
                             <div class="time-tab" data-contact="deep">深度服务</div>
                             <div class="time-tab" data-contact="kai-guang">开光服务</div>
                         </div>
-
-                        <!-- Tab 1: 作者简介 -->
                         <div id="contactIntroTab" class="time-tab-content">
                             <div class="time-section">
                                 <div class="time-section-title">👤 作者简介</div>
@@ -1553,7 +1532,6 @@
                                     <p style="margin-top: 8px; font-size: 13px; color: #555;">研习八字命理多年，深信命运有迹可循。不搞玄乎其玄，只求实事求是。既然你信命，那我帮你把命理捋清楚。</p>
                                 </div>
                             </div>
-
                             <div class="time-section">
                                 <div class="time-section-title">📞 联系作者能为你做什么？</div>
                                 <div class="method-content" style="margin-top: 0;">
@@ -1563,7 +1541,6 @@
                                     <p style="font-size: 13px; color: #555;">AI是大方向判断，人工是针对个性化问题做深度拆解。你困惑的细节，只有人能聊透。</p>
                                 </div>
                             </div>
-
                             <div class="time-section">
                                 <div class="time-section-title">📲 找到我</div>
                                 <div class="method-content" style="margin-top: 0;">
@@ -1571,21 +1548,16 @@
                                         <div class="wechat-qr">
                                             <img src="https://s41.ax1x.com/2026/06/18/pm3hgK0.png" style="width: 140px; height: 140px; object-fit: contain;">
                                         </div>
-                                        <div class="wechat-id" id="copyWechatBtn3">
-                                            微信号: mmj1399094604   点击复制
-                                        </div>
+                                        <div class="wechat-id" id="copyWechatBtn3">微信号: mmj1399094604   点击复制</div>
                                         <p style="font-size: 12px; color: #888; margin-top: 12px;">添加微信后，提供出生日期和已知信息，我会帮你复核命盘、解答困惑，确认准确后再付费。</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Tab 2: 深度服务 -->
                         <div id="contactDeepTab" class="time-tab-content hidden">
                             <div class="time-section">
                                 <div class="time-section-title">🔮 深度服务</div>
                                 <div class="time-section-sub">根据你的喜用神，量身定制</div>
-
                                 <div class="method-block">
                                     <div class="method-name">① 衣食住行喜用五行指导</div>
                                     <div class="method-content" style="margin-top: 0;">
@@ -1597,7 +1569,6 @@
                                         <p style="font-size: 12px; color: #888; margin-top: 12px;">让五行能量渗透生活，润物无声。</p>
                                     </div>
                                 </div>
-
                                 <div class="method-block">
                                     <div class="method-name">② 针对性阵法布置</div>
                                     <div class="method-content" style="margin-top: 0;">
@@ -1613,13 +1584,10 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Tab 3: 开光服务 -->
                         <div id="contactKaiGuangTab" class="time-tab-content hidden">
                             <div class="time-section">
                                 <div class="time-section-title">🪷 开光服务</div>
                                 <div class="time-section-sub">正规仪式 · 心诚则灵</div>
-
                                 <div class="method-block">
                                     <div class="method-name">开光加持</div>
                                     <div class="method-content" style="margin-top: 0;">
@@ -1628,15 +1596,11 @@
                                         <p style="font-size: 12px; color: #888; margin-top: 12px;">💡 长期有效，随时可联系。</p>
                                     </div>
                                 </div>
-
-                                <!-- 底部放联系方式 -->
                                 <div class="method-block" style="margin-top: 20px; padding-top: 16px; border-top: 1px dashed #e0e0e0;">
                                     <div class="method-name" style="font-size: 14px;">📲 联系我</div>
                                     <div class="method-content" style="margin-top: 0;">
                                         <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
-                                            <div class="wechat-id" id="copyWechatBtn4">
-                                                微信号: mmj1399094604   点击复制
-                                            </div>
+                                            <div class="wechat-id" id="copyWechatBtn4">微信号: mmj1399094604   点击复制</div>
                                             <span style="font-size: 12px; color: #888;">或</span>
                                             <span style="font-size: 12px; color: #e6b980; cursor: pointer;" onclick="document.getElementById('copyWechatBtn4').click();">📋 一键复制</span>
                                         </div>
@@ -1644,7 +1608,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="back-btn">
                             <button id="backToMainFromContactBtn">← 返回八字分析</button>
                         </div>
@@ -1671,23 +1634,38 @@
         let isVerifyCollapsed = false;
         let pendingVerifyContent = null;
 
-        // ==================== 验证按钮统一控制 ====================
+        // ==================== 验证按钮统一渲染（核心修复） ====================
+        function renderVerifyBtn() {
+            const container = document.getElementById('verifyBtnContainer');
+            if (!container) return;
+            if (currentStep === 0) {
+                container.innerHTML = `<button class="btn-start" id="startVerifyBtn">开始验证八字</button>`;
+                const btn = document.getElementById('startVerifyBtn');
+                if (btn) {
+                    btn.onclick = function() {
+                        // 点击后立即隐藏自身
+                        this.style.display = 'none';
+                        this.disabled = true;
+                        callVerify();
+                    };
+                }
+                container.style.display = 'block';
+            } else {
+                container.innerHTML = '';
+                container.style.display = 'none';
+            }
+        }
+
         function hideVerifyBtn() {
-            const btn = document.getElementById('startVerifyBtn');
-            if (btn) {
-                btn.style.display = 'none';
-                btn.disabled = true;
-                btn.setAttribute('hidden', 'true');
+            const container = document.getElementById('verifyBtnContainer');
+            if (container) {
+                container.innerHTML = '';
+                container.style.display = 'none';
             }
         }
 
         function showVerifyBtn() {
-            const btn = document.getElementById('startVerifyBtn');
-            if (btn) {
-                btn.style.display = 'block';
-                btn.disabled = false;
-                btn.removeAttribute('hidden');
-            }
+            renderVerifyBtn();
         }
 
         // ==================== 侧边栏折叠 ====================
@@ -1716,7 +1694,7 @@
             document.getElementById('contactPanel').classList.add('hidden');
             document.getElementById('mainTitle').textContent = '八字命盘分析';
             document.getElementById('mainSubtitle').textContent = '输入生辰信息，AI 辅助解析命盘格局';
-            showVerifyBtn();
+            renderVerifyBtn();
         }
 
         function showTimePanel() {
@@ -1725,7 +1703,7 @@
             document.getElementById('contactPanel').classList.add('hidden');
             document.getElementById('mainTitle').textContent = '时辰确定';
             document.getElementById('mainSubtitle').textContent = '专业推断 / 自行推断';
-            showVerifyBtn();
+            renderVerifyBtn();
         }
 
         function showContactPanel() {
@@ -1734,7 +1712,7 @@
             document.getElementById('contactPanel').classList.remove('hidden');
             document.getElementById('mainTitle').textContent = '联系作者';
             document.getElementById('mainSubtitle').textContent = '作者简介 · 深度服务 · 开光服务';
-            showVerifyBtn();
+            renderVerifyBtn();
         }
 
         // ==================== 时辰确定 Tab 切换 ====================
@@ -2108,7 +2086,7 @@
                 verifyArea.classList.add('hidden');
             }
 
-            // ===== 隐藏"开始验证八字"，显示深度分析按钮 =====
+            // 隐藏"开始验证八字"，显示深度分析按钮
             hideVerifyBtn();
 
             const moduleArea = document.getElementById('moduleArea');
@@ -2481,13 +2459,13 @@
 
         // ===== 核心修复：callVerify =====
         async function callVerify() {
-            // 按钮已经在HTML的onclick中隐藏了，这里再做一次保险
+            // 点击时按钮已隐藏，这里再做一次保险
             hideVerifyBtn();
 
             const birth = buildBirthString();
             if (!birth) {
                 // 验证失败时恢复按钮
-                showVerifyBtn();
+                renderVerifyBtn();
                 alert('请完整填写必填信息');
                 return false;
             }
@@ -2525,15 +2503,16 @@
                         baziInfoArea.classList.remove('hidden');
                     }
                     // 验证成功后按钮保持隐藏
+                    hideVerifyBtn();
                 } else {
                     verifyItemsContainer.innerHTML = `验证失败：${data.error || '未知错误'}`;
                     // 验证失败时恢复按钮
-                    showVerifyBtn();
+                    renderVerifyBtn();
                 }
             } catch (err) {
                 verifyItemsContainer.innerHTML = `网络错误：${err.message}`;
                 // 网络错误时恢复按钮
-                showVerifyBtn();
+                renderVerifyBtn();
             } finally {
                 isLoading = false;
             }
@@ -2642,7 +2621,7 @@
 
             verifyArea.classList.add('hidden');
 
-            // ===== 强制隐藏"开始验证八字"按钮 =====
+            // 强制隐藏"开始验证八字"按钮
             hideVerifyBtn();
 
             const moduleArea = document.getElementById('moduleArea');
@@ -2676,11 +2655,10 @@
         }
 
         // ==================== 深度分析 ====================
-        // ===== 核心修复：startAnalysis =====
         async function startAnalysis() {
             if (isLoading) return;
 
-            // ===== 强制隐藏"开始验证八字"按钮 =====
+            // 强制隐藏"开始验证八字"按钮
             hideVerifyBtn();
 
             isLoading = true;
@@ -2799,8 +2777,8 @@
             pendingVerifyContent = null;
             isVerifyCollapsed = false;
 
-            // ===== 重置按钮状态，显示"开始验证八字" =====
-            showVerifyBtn();
+            // 重置按钮状态，显示"开始验证八字"
+            renderVerifyBtn();
 
             const moduleArea = document.getElementById('moduleArea');
             if (moduleArea) {
@@ -2831,6 +2809,9 @@
             initWechatCopy();
             initTimeTabs();
             initContactTabs();
+
+            // 初始渲染验证按钮
+            renderVerifyBtn();
 
             document.getElementById('timeToolBtn').onclick = showTimePanel;
             document.getElementById('contactToolBtn').onclick = showContactPanel;
