@@ -222,9 +222,9 @@
             background: #fff;
         }
         .main-header {
-            padding: 20px 30px 24px 30px; /* 增加下内边距 */
-            border-bottom: 1px solid #eee;
-            background: #fff;
+            flex-shrink: 0 !important;
+            padding: 8px 16px 8px 16px !important;  /* 上下内边距都缩小 */
+            border-bottom: 1px solid #eee !important;
         }
         .main-header h2 {
             font-size: 22px;
@@ -233,10 +233,10 @@
             margin-bottom: 6px;
         }
         .main-header p {
-            font-size: 13px;
-            color: #888;
-            margin-top: 0;
-            margin-bottom: 0;
+            font-size: 12px !important;
+            margin-top: 4px !important;  /* 副标题上方留白增加 */
+            margin-bottom: 0 !important;
+            color: #888 !important;
         }
         .content-area {
             flex: 1;
