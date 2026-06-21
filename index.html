@@ -886,7 +886,7 @@
             }
 
             .app {
-                
+                flex-direction: column !important;
                 height: 100vh !important;
                 overflow: hidden !important;
             }
@@ -951,10 +951,6 @@
                 flex-direction: column !important;
                 min-height: 0 !important;
                 background: #fff !important;
-                margin-top: 20px !important;
-                border-top-left-radius: 20px !important;
-                border-top-right-radius: 20px !important;
-                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06) !important;
             }
 
             /* ===== 移动端标题栏 ===== */
@@ -963,8 +959,6 @@
                 padding: 14px 16px 16px 16px !important;
                 border-bottom: 1px solid #eee !important;
                 background: #fff !important;
-                border-top-left-radius: 20px !important;
-                border-top-right-radius: 20px !important;
             }
             .main-header h2 {
                 font-size: 18px !important;
@@ -991,8 +985,8 @@
             /* ===== 移动端顶部占位间距（直接插入到 main 顶部） ===== */
             .mobile-top-spacer {
                 display: block !important;
-                height: 0 !important;
-                background: transparent !important;
+                height: 16px !important;
+                background: #fff !important;
                 flex-shrink: 0 !important;
             }
 
@@ -1284,7 +1278,6 @@
             }
             .main {
                 height: calc(100vh - 48px) !important;
-                margin-top: 6px !important;
             }
             .logo {
                 font-size: 16px !important;
@@ -1314,7 +1307,7 @@
                 padding: 8px !important;
             }
             .mobile-top-spacer {
-                height: 0 !important;
+                height: 12px !important;
             }
         }
     </style>
