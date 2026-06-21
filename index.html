@@ -2501,7 +2501,11 @@
         // ===== 核心修复：callVerify 强制隐藏 =====
         async function callVerify() {
             // 强制隐藏"开始验证八字"按钮
-            hideVerifyBtn();
+            const btn = document.getElementById('startVerifyBtn');
+            if (btn) {
+                btn.style.display = 'none';
+                btn.disabled = true;
+            }
 
             const birth = buildBirthString();
             if (!birth) { alert('请完整填写必填信息'); return false; }
