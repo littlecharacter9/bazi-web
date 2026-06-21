@@ -87,6 +87,7 @@
             background: rgba(255, 255, 255, 0.15);
         }
 
+        /* 工具菜单 */
         .tools-menu {
             margin: 0 12px 16px 12px;
             padding-bottom: 16px;
@@ -104,6 +105,7 @@
             background: rgba(255, 255, 255, 0.08);
         }
 
+        /* 历史记录 */
         .history-section {
             padding: 0 12px;
             display: flex;
@@ -143,18 +145,22 @@
             text-align: center;
             font-size: 12px;
         }
-
+        /* ===== 简洁图标样式（历史记录） ===== */
         .history-icon {
-            opacity: 0.5;
+            opacity: 0.6;
             transition: opacity 0.2s, transform 0.1s;
             cursor: pointer;
             background: none;
             border: none;
             color: #aaa;
+            font-size: 14px;
+            line-height: 1;
             padding: 4px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            width: 24px;
+            height: 24px;
             border-radius: 4px;
         }
         .history-icon:hover {
@@ -165,9 +171,10 @@
         .history-icon:active {
             transform: scale(0.9);
         }
+        /* 确保图标容器对齐 */
         .history-item .history-actions {
             display: flex;
-            gap: 2px;
+            gap: 4px;
             align-items: center;
         }
 
@@ -215,7 +222,7 @@
             background: #fff;
         }
         .main-header {
-            padding: 20px 30px 24px 30px;
+            padding: 20px 30px 24px 30px; /* 增加下内边距 */
             border-bottom: 1px solid #eee;
             background: #fff;
         }
@@ -342,6 +349,7 @@
             font-weight: 600;
         }
 
+        /* 联系作者 - 专属样式 */
         .contact-area {
             text-align: center;
             padding: 16px;
@@ -395,6 +403,7 @@
             background: #ccc;
         }
 
+        /* 示意图 */
         .diagram-row {
             display: flex;
             gap: 20px;
@@ -440,6 +449,7 @@
             border-radius: 20% 20% 30% 30%;
         }
 
+        /* ===== 表单样式 ===== */
         .form-card {
             background: #f9f9fb;
             border-radius: 20px;
@@ -556,6 +566,7 @@
             margin-top: 8px;
         }
 
+        /* ===== 验证 & 分析 ===== */
         .verify-box {
             background: #e8f0fe;
             border-left: 4px solid #1a1a2e;
@@ -941,10 +952,10 @@
                 min-height: 0 !important;
             }
 
-            /* ===== 移动端标题栏留白（只改这里） ===== */
+            /* ===== 标题栏留白修复 ===== */
             .main-header {
                 flex-shrink: 0 !important;
-                padding: 16px 16px 20px 16px !important;
+                padding: 16px 16px 22px 16px !important; /* 增加下内边距 */
                 border-bottom: 1px solid #eee !important;
             }
             .main-header h2 {
@@ -1288,805 +1299,1148 @@
     </style>
 </head>
 <body>
-<!-- ==================== 所有 HTML 内容保持和之前一样 ==================== -->
-<!-- ... 中间省略（和之前一致）... -->
-<script>
-    // ==================== 配置 ====================
-    const API_URL = 'https://api.bajiemingli.top';
-    let currentModule = 'career';
-    let isLoading = false;
-    let pcaData = null;
 
-    let currentStep = 0;
-    let currentBirth = '';
-    let currentBaziStr = '';
-    let currentVerifyItems = [];
-    let itemFeedbacks = [];
-    let lastAnalysisResult = '';
-    let isVerifyCollapsed = false;
-    let pendingVerifyContent = null;
+    <div class="app">
+        <!-- ==================== 侧边栏 ==================== -->
+        <div class="sidebar" id="sidebar">
+            <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+            <div class="logo-area">
+                <div>
+                    <div class="logo">八戒命理</div>
+                    <div class="logo-sub">AI解析 · 仅供参考</div>
+                </div>
+            </div>
+            <div class="new-chat-btn" id="newChatBtn">+ 新对话</div>
 
-    // ==================== 验证按钮统一渲染 ====================
-    function renderVerifyBtn() {
-        const container = document.getElementById('verifyBtnContainer');
-        if (!container) return;
-        if (currentStep === 0) {
-            container.innerHTML = `<button class="btn-start" id="startVerifyBtn">开始验证八字</button>`;
-            const btn = document.getElementById('startVerifyBtn');
-            if (btn) {
-                btn.onclick = function() {
-                    this.style.display = 'none';
-                    this.disabled = true;
-                    callVerify();
-                };
+            <div class="tools-menu">
+                <div class="tools-menu-item" id="timeToolBtn">时辰确定</div>
+                <div class="tools-menu-item" id="contactToolBtn">联系作者</div>
+            </div>
+
+            <div class="history-section">
+                <div class="history-title">最近对话</div>
+                <ul class="history-list" id="historyList"></ul>
+            </div>
+
+            <div class="user-section" id="userSection">
+                <div class="user-info">
+                    <div class="user-avatar">八</div>
+                    <div>
+                        <div class="user-name" id="userName">游客模式</div>
+                        <div class="user-email" id="userEmail">暂未开通登录模式</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 主区域 ==================== -->
+        <div class="main">
+            <div class="main-header">
+                <h2 id="mainTitle">八字命盘分析</h2>
+                <p id="mainSubtitle">输入生辰信息，AI 辅助解析命盘格局</p>
+            </div>
+            <div class="content-area" id="contentArea">
+
+                <!-- ===== 默认面板 ===== -->
+                <div id="defaultPanel">
+                    <div class="form-card">
+                        <div class="form-row">
+                            <div class="form-group"><label>姓名 (选填)</label><input type="text" id="nameInput" placeholder="请输入姓名"></div>
+                            <div class="form-group"><label>性别 <span class="required">*</span></label><select id="genderSelect"><option value="">请选择</option><option value="男">男</option><option value="女">女</option></select></div>
+                        </div>
+                        <div class="form-row"><div class="form-group"><label>出生日期 <span class="required">*</span></label><input type="date" id="dateInput" value=""></div></div>
+                        <div class="time-option-row">
+                            <div class="time-toggle">
+                                <label><input type="radio" name="knowTime" value="yes" checked> 我知道出生时间</label>
+                                <label><input type="radio" name="knowTime" value="no"> 不清楚出生时间</label>
+                            </div>
+                            <div id="timeWarning" class="warning-box hidden">⚠️ 未提供准确出生时间，分析准确率约30%-40%，结果仅供参考。</div>
+                        </div>
+                        <div id="timeSelectArea">
+                            <div class="form-row">
+                                <div class="form-group"><label>出生时间</label><select id="hourSelect"><option value="">请选择时辰</option><option value="23">23时 子时</option><option value="0">0时 子时</option><option value="1">1时 丑时</option><option value="2">2时 丑时</option><option value="3">3时 寅时</option><option value="4">4时 寅时</option><option value="5">5时 卯时</option><option value="6">6时 卯时</option><option value="7">7时 辰时</option><option value="8">8时 辰时</option><option value="9">9时 巳时</option><option value="10">10时 巳时</option><option value="11">11时 午时</option><option value="12">12时 午时</option><option value="13">13时 未时</option><option value="14">14时 未时</option><option value="15">15时 申时</option><option value="16">16时 申时</option><option value="17">17时 酉时</option><option value="18">18时 酉时</option><option value="19">19时 戌时</option><option value="20">20时 戌时</option><option value="21">21时 亥时</option><option value="22">22时 亥时</option></select></div>
+                                <div class="form-group"><label>分钟</label><select id="minuteSelect"><option value="">请选择分钟</option></select></div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>出生地点</label>
+                                <div class="location-row">
+                                    <select id="provinceSelect" class="location-select"><option value="">请选择省份</option></select>
+                                    <select id="citySelect" class="location-select"><option value="">请选择城市</option></select>
+                                    <select id="districtSelect" class="location-select"><option value="">请选择区/县</option></select>
+                                </div>
+                                <div id="regionLoading" class="loading-text hidden">正在加载省市区数据...</div>
+                            </div>
+                        </div>
+                        <div class="checkbox-row">
+                            <label class="checkbox-label"><input type="checkbox" id="useTrueSolar"> 使用真太阳时（需填写出生地点）</label>
+                            <label class="checkbox-label"><input type="checkbox" id="useEarlyLate"> 使用早晚子时</label>
+                        </div>
+                        <div id="trueSolarResult" class="true-solar-box hidden"></div>
+
+                        <div id="baziInfoArea" class="bazi-info hidden">
+                            <span>八字排盘：<span id="baziDisplay"></span></span>
+                            <span class="verify-toggle-icon" id="verifyToggleIcon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                    <path d="M8 10L12 14L16 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                        </div>
+
+                        <div id="verifyArea" class="hidden">
+                            <div class="verify-box">
+                                <div id="verifyItemsContainer"></div>
+                                <div class="action-buttons" id="actionButtons" style="display: none;">
+                                    <button class="action-btn secondary" id="submitFeedbackBtn">提交不准确反馈</button>
+                                    <button class="action-btn dark" id="confirmOverallBtn">全部/大部分准确，继续分析</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="moduleArea" class="hidden">
+                            <div class="module-buttons">
+                                <button class="module-btn" data-module="overview">综合</button>
+                                <button class="module-btn active" data-module="career">事业</button>
+                                <button class="module-btn" data-module="wealth">财运</button>
+                                <button class="module-btn" data-module="marriage">婚姻</button>
+                                <button class="module-btn" data-module="liunian">流年</button>
+                            </div>
+                            <div id="analysisBtnContainer" class="analysis-buttons">
+                                <button class="btn-start" id="startAnalysisBtn">开始深度分析</button>
+                            </div>
+                        </div>
+
+                        <!-- ===== 按钮容器：由 JavaScript 动态渲染 ===== -->
+                        <div id="verifyBtnContainer"></div>
+                    </div>
+
+                    <div id="resultCard" class="result-card" style="display: none;">
+                        <div class="result-title">分析结果</div>
+                        <div class="result-content" id="resultContent"></div>
+                        <div class="action-icons">
+                            <div class="action-icon" id="copyResultBtn">复制</div>
+                            <div class="action-icon" id="regenerateResultBtn">重新生成</div>
+                            <div class="action-icon" id="shareResultBtn">转发</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== 时辰确定面板 ===== -->
+                <div id="timePanel" class="hidden">
+                    <div class="time-page">
+                        <div class="time-tabs">
+                            <div class="time-tab active" data-tab="expert">专业推断</div>
+                            <div class="time-tab" data-tab="self">自行推断</div>
+                        </div>
+                        <div id="expertTab" class="time-tab-content">
+                            <div class="time-section">
+                                <div class="time-section-title">专业推断</div>
+                                <div class="time-section-sub">先推断，后付费 · 不准不收费 · 收费服务</div>
+                                <div class="method-block">
+                                    <div class="method-name">联系作者</div>
+                                    <div class="method-pro-con">优点：专业准确，先验证后付费；缺点：需要付费</div>
+                                    <div class="method-content">
+                                        <div class="contact-area">
+                                            <div class="wechat-qr">
+                                                <img src="https://s41.ax1x.com/2026/06/18/pm3hgK0.png" style="width: 140px; height: 140px; object-fit: contain;">
+                                            </div>
+                                            <div class="wechat-id" id="copyWechatBtn">微信号: mmj1399094604   点击复制</div>
+                                            <p style="font-size: 12px; color: #888; margin-top: 12px;">添加微信后，提供出生日期和已知信息，作者会通过专业方法帮你确定准确时辰，确认准确后再付费。</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="method-block" style="margin-top: 20px; text-align: center; padding-top: 16px; border-top: 1px dashed #e0e0e0;">
+                                    <p style="font-size: 12px; color: #888;">💡 如果想免费自行推断，请点击上方「自行推断」查看详细方法</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="selfTab" class="time-tab-content hidden">
+                            <div class="time-section">
+                                <div class="time-section-title">自行推断</div>
+                                <div class="time-section-sub">免费 · 可能存在矛盾 · 准确率约60%</div>
+                                <div class="method-block">
+                                    <div class="method-name">步骤一：询问父母，确定大概可能的时辰</div>
+                                    <div class="method-pro-con">优点：简单直接；缺点：父母可能记忆模糊</div>
+                                    <div class="method-content">
+                                        <p>询问父母出生的大致时间段：</p>
+                                        <p><strong>凌晨-早上 (23:00-07:00)</strong> → 子时、丑时、寅时、卯时</p>
+                                        <p><strong>早上-中午 (07:00-13:00)</strong> → 辰时、巳时、午时、未时</p>
+                                        <p><strong>下午-深夜 (13:00-23:00)</strong> → 申时、酉时、戌时、亥时</p>
+                                    </div>
+                                </div>
+                                <div class="method-block">
+                                    <div class="method-name">步骤二：脸型 / 指节 推断</div>
+                                    <div class="method-pro-con">优点：可自行观察；缺点：不同方法可能得出矛盾结论，需综合判断</div>
+                                    <div class="method-content">
+                                        <p>根据传统命理经验，人的外貌特征与出生时辰有一定关联。以下是两种常见的推断方法，可以综合参考：</p>
+                                        <div class="sub-method">
+                                            <div class="sub-method-title">1. 脸型推断</div>
+                                            <div class="method-pro-con">口诀：子午卯酉脸蛋圆，寅申巳亥长方面，辰戌丑未尖形面</div>
+                                            <div class="diagram-row">
+                                                <div class="diagram-item">
+                                                    <img src="https://s41.ax1x.com/2026/06/07/pmmcO9H.png" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover;">
+                                                    <div class="diagram-label">圆脸 → 子午卯酉时</div>
+                                                </div>
+                                                <div class="diagram-item">
+                                                    <img src="https://s41.ax1x.com/2026/06/07/pmmcq4e.png" style="width: 120px; height: 120px; border-radius: 40%; object-fit: cover;">
+                                                    <div class="diagram-label">长脸 → 寅申巳亥时</div>
+                                                </div>
+                                                <div class="diagram-item">
+                                                    <img src="https://s41.ax1x.com/2026/06/07/pmmcX3d.png" style="width: 120px; height: 120px; border-radius: 20%; object-fit: cover;">
+                                                    <div class="diagram-label">尖形脸 → 辰戌丑未时</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="sub-method">
+                                            <div class="sub-method-title">2. 小指长度推断</div>
+                                            <div class="method-pro-con">口诀：子午卯酉比较长，寅申巳亥平行量，辰戌丑未短一点</div>
+                                            <div class="method-content" style="background: transparent; padding: 0;">
+                                                <p>将小指与无名指最上面那条横线比较：</p>
+                                                <div class="diagram-row">
+                                                    <div class="diagram-item">
+                                                        <img src="https://s41.ax1x.com/2026/06/08/pmn1NXn.png" style="width: 180px; height: 180px; object-fit: contain;">
+                                                        <div class="diagram-label">小指超过横线 → 子午卯酉时</div>
+                                                    </div>
+                                                    <div class="diagram-item">
+                                                        <img src="https://s41.ax1x.com/2026/06/08/pmn1amq.png" style="width: 180px; height: 180px; object-fit: contain;">
+                                                        <div class="diagram-label">小指与横线平齐 → 寅申巳亥时</div>
+                                                    </div>
+                                                    <div class="diagram-item">
+                                                        <img src="https://s41.ax1x.com/2026/06/08/pmn1d00.png" style="width: 180px; height: 180px; object-fit: contain;">
+                                                        <div class="diagram-label">小指短于横线 → 辰戌丑未时</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="method-block step-three">
+                                    <div class="method-name">步骤三：时间段+脸型/指节推断交叉，确定出生时辰</div>
+                                    <div class="method-pro-con">例如：早上清晨(子、丑、寅、卯) + 长方形脸(寅、申、巳、亥) = 寅时(交叉为寅时)</div>
+                                </div>
+                                <div class="method-block">
+                                    <div class="method-name">时辰对照表</div>
+                                    <div class="method-content">
+                                        <table class="shichen-table">
+                                            <tr><th>时辰</th><th>时间范围</th><th>时辰</th><th>时间范围</th></tr>
+                                            <tr><td>子时</td><td>23:00-01:00</td><td>午时</td><td>11:00-13:00</td></tr>
+                                            <tr><td>丑时</td><td>01:00-03:00</td><td>未时</td><td>13:00-15:00</td></tr>
+                                            <tr><td>寅时</td><td>03:00-05:00</td><td>申时</td><td>15:00-17:00</td></tr>
+                                            <tr><td>卯时</td><td>05:00-07:00</td><td>酉时</td><td>17:00-19:00</td></tr>
+                                            <tr><td>辰时</td><td>07:00-09:00</td><td>戌时</td><td>19:00-21:00</td></tr>
+                                            <tr><td>巳时</td><td>09:00-11:00</td><td>亥时</td><td>21:00-23:00</td></tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="back-btn">
+                            <button id="backToMainBtn">← 返回八字分析</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== 联系作者独立面板 ===== -->
+                <div id="contactPanel" class="hidden">
+                    <div class="time-page">
+                        <div class="time-tabs" id="contactTabs">
+                            <div class="time-tab active" data-contact="intro">作者简介</div>
+                            <div class="time-tab" data-contact="deep">深度服务</div>
+                            <div class="time-tab" data-contact="kai-guang">开光服务</div>
+                        </div>
+                        <div id="contactIntroTab" class="time-tab-content">
+                            <div class="time-section">
+                                <div class="time-section-title">👤 作者简介</div>
+                                <div class="method-content" style="margin-top: 0;">
+                                    <p>一个身为牛马的命理爱好者</p>
+                                    <p style="margin-top: 8px; font-size: 13px; color: #555;">研习八字命理多年，深信命运有迹可循。不搞玄乎其玄，只求实事求是。既然你信命，那我帮你把命理捋清楚。</p>
+                                </div>
+                            </div>
+                            <div class="time-section">
+                                <div class="time-section-title">📞 联系作者能为你做什么？</div>
+                                <div class="method-content" style="margin-top: 0;">
+                                    <p><strong>① 二次确认八字信息是否准确</strong></p>
+                                    <p style="font-size: 13px; color: #555; margin-bottom: 12px;">AI推断可能存在偏差，联系作者人工复核，确保命盘解读无误。</p>
+                                    <p><strong>② 更精准满足你的命理需求</strong></p>
+                                    <p style="font-size: 13px; color: #555;">AI是大方向判断，人工是针对个性化问题做深度拆解。你困惑的细节，只有人能聊透。</p>
+                                </div>
+                            </div>
+                            <div class="time-section">
+                                <div class="time-section-title">📲 找到我</div>
+                                <div class="method-content" style="margin-top: 0;">
+                                    <div class="contact-area">
+                                        <div class="wechat-qr">
+                                            <img src="https://s41.ax1x.com/2026/06/18/pm3hgK0.png" style="width: 140px; height: 140px; object-fit: contain;">
+                                        </div>
+                                        <div class="wechat-id" id="copyWechatBtn3">微信号: mmj1399094604   点击复制</div>
+                                        <p style="font-size: 12px; color: #888; margin-top: 12px;">添加微信后，提供出生日期和已知信息，我会帮你复核命盘、解答困惑，确认准确后再付费。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="contactDeepTab" class="time-tab-content hidden">
+                            <div class="time-section">
+                                <div class="time-section-title">🔮 深度服务</div>
+                                <div class="time-section-sub">根据你的喜用神，量身定制</div>
+                                <div class="method-block">
+                                    <div class="method-name">① 衣食住行喜用五行指导</div>
+                                    <div class="method-content" style="margin-top: 0;">
+                                        <p>根据你的喜用神，量身定制日常建议：</p>
+                                        <p style="font-size: 13px; color: #555; margin-top: 8px;"><strong>衣</strong>（颜色搭配）</p>
+                                        <p style="font-size: 13px; color: #555;"><strong>食</strong>（饮食宜忌）</p>
+                                        <p style="font-size: 13px; color: #555;"><strong>住</strong>（房间布置）</p>
+                                        <p style="font-size: 13px; color: #555;"><strong>行</strong>（出行方向）</p>
+                                        <p style="font-size: 12px; color: #888; margin-top: 12px;">让五行能量渗透生活，润物无声。</p>
+                                    </div>
+                                </div>
+                                <div class="method-block">
+                                    <div class="method-name">② 针对性阵法布置</div>
+                                    <div class="method-content" style="margin-top: 0;">
+                                        <p>根据不同目的，设计对应的能量场布置方案：</p>
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; font-size: 13px; color: #333;">
+                                            <div style="background: #f0f0f0; padding: 8px 12px; border-radius: 8px;">💰 招财进宝</div>
+                                            <div style="background: #f0f0f0; padding: 8px 12px; border-radius: 8px;">💕 桃花人缘</div>
+                                            <div style="background: #f0f0f0; padding: 8px 12px; border-radius: 8px;">📈 事业晋升</div>
+                                            <div style="background: #f0f0f0; padding: 8px 12px; border-radius: 8px;">🏥 健康平安</div>
+                                        </div>
+                                        <p style="font-size: 12px; color: #888; margin-top: 12px;">* 阵法布置方案基于八字排盘、流年气场，一人一策。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="contactKaiGuangTab" class="time-tab-content hidden">
+                            <div class="time-section">
+                                <div class="time-section-title">🪷 开光服务</div>
+                                <div class="time-section-sub">正规仪式 · 心诚则灵</div>
+                                <div class="method-block">
+                                    <div class="method-name">开光加持</div>
+                                    <div class="method-content" style="margin-top: 0;">
+                                        <p>为法器、饰品或随身物品进行开光加持，仪式遵循传统规程，不流水线作业，每人每物单独做。</p>
+                                        <p style="font-size: 13px; color: #555; margin-top: 12px;">如有需要，可线上沟通后邮寄完成。</p>
+                                        <p style="font-size: 12px; color: #888; margin-top: 12px;">💡 长期有效，随时可联系。</p>
+                                    </div>
+                                </div>
+                                <div class="method-block" style="margin-top: 20px; padding-top: 16px; border-top: 1px dashed #e0e0e0;">
+                                    <div class="method-name" style="font-size: 14px;">📲 联系我</div>
+                                    <div class="method-content" style="margin-top: 0;">
+                                        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                                            <div class="wechat-id" id="copyWechatBtn4">微信号: mmj1399094604   点击复制</div>
+                                            <span style="font-size: 12px; color: #888;">或</span>
+                                            <span style="font-size: 12px; color: #e6b980; cursor: pointer;" onclick="document.getElementById('copyWechatBtn4').click();">📋 一键复制</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="back-btn">
+                            <button id="backToMainFromContactBtn">← 返回八字分析</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 配置 ====================
+        const API_URL = 'https://api.bajiemingli.top';
+        let currentModule = 'career';
+        let isLoading = false;
+        let pcaData = null;
+
+        let currentStep = 0;
+        let currentBirth = '';
+        let currentBaziStr = '';
+        let currentVerifyItems = [];
+        let itemFeedbacks = [];
+        let lastAnalysisResult = '';
+        let isVerifyCollapsed = false;
+        let pendingVerifyContent = null;
+
+        // ==================== 验证按钮统一渲染 ====================
+        function renderVerifyBtn() {
+            const container = document.getElementById('verifyBtnContainer');
+            if (!container) return;
+            if (currentStep === 0) {
+                container.innerHTML = `<button class="btn-start" id="startVerifyBtn">开始验证八字</button>`;
+                const btn = document.getElementById('startVerifyBtn');
+                if (btn) {
+                    btn.onclick = function() {
+                        this.style.display = 'none';
+                        this.disabled = true;
+                        callVerify();
+                    };
+                }
+                container.style.display = 'block';
+            } else {
+                container.innerHTML = '';
+                container.style.display = 'none';
             }
-            container.style.display = 'block';
-        } else {
-            container.innerHTML = '';
-            container.style.display = 'none';
         }
-    }
 
-    function hideVerifyBtn() {
-        const container = document.getElementById('verifyBtnContainer');
-        if (container) {
-            container.innerHTML = '';
-            container.style.display = 'none';
+        function hideVerifyBtn() {
+            const container = document.getElementById('verifyBtnContainer');
+            if (container) {
+                container.innerHTML = '';
+                container.style.display = 'none';
+            }
         }
-    }
 
-    function showVerifyBtn() {
-        renderVerifyBtn();
-    }
+        function showVerifyBtn() {
+            renderVerifyBtn();
+        }
 
-    // ==================== 侧边栏折叠 ====================
-    document.addEventListener('DOMContentLoaded', function() {
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebar = document.getElementById('sidebar');
-        if (sidebarToggle && sidebar) {
-            sidebarToggle.addEventListener('click', function(e) {
-                e.stopPropagation();
-                sidebar.classList.toggle('open');
-            });
-            document.addEventListener('click', function(e) {
-                if (window.innerWidth <= 768) {
-                    if (!sidebar.contains(e.target) && e.target !== sidebarToggle) {
-                        sidebar.classList.remove('open');
+        // ==================== 侧边栏折叠 ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    sidebar.classList.toggle('open');
+                });
+                document.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 768) {
+                        if (!sidebar.contains(e.target) && e.target !== sidebarToggle) {
+                            sidebar.classList.remove('open');
+                        }
                     }
-                }
-            });
+                });
+            }
+        });
+
+        // ==================== 页面切换 ====================
+        function showDefaultPanel() {
+            document.getElementById('defaultPanel').classList.remove('hidden');
+            document.getElementById('timePanel').classList.add('hidden');
+            document.getElementById('contactPanel').classList.add('hidden');
+            document.getElementById('mainTitle').textContent = '八字命盘分析';
+            document.getElementById('mainSubtitle').textContent = '输入生辰信息，AI 辅助解析命盘格局';
+            renderVerifyBtn();
         }
-    });
 
-    // ==================== 页面切换 ====================
-    function showDefaultPanel() {
-        document.getElementById('defaultPanel').classList.remove('hidden');
-        document.getElementById('timePanel').classList.add('hidden');
-        document.getElementById('contactPanel').classList.add('hidden');
-        document.getElementById('mainTitle').textContent = '八字命盘分析';
-        document.getElementById('mainSubtitle').textContent = '输入生辰信息，AI 辅助解析命盘格局';
-        renderVerifyBtn();
-    }
+        function showTimePanel() {
+            document.getElementById('defaultPanel').classList.add('hidden');
+            document.getElementById('timePanel').classList.remove('hidden');
+            document.getElementById('contactPanel').classList.add('hidden');
+            document.getElementById('mainTitle').textContent = '时辰确定';
+            document.getElementById('mainSubtitle').textContent = '专业推断 / 自行推断';
+            renderVerifyBtn();
+        }
 
-    function showTimePanel() {
-        document.getElementById('defaultPanel').classList.add('hidden');
-        document.getElementById('timePanel').classList.remove('hidden');
-        document.getElementById('contactPanel').classList.add('hidden');
-        document.getElementById('mainTitle').textContent = '时辰确定';
-        document.getElementById('mainSubtitle').textContent = '专业推断 / 自行推断';
-        renderVerifyBtn();
-    }
+        function showContactPanel() {
+            document.getElementById('defaultPanel').classList.add('hidden');
+            document.getElementById('timePanel').classList.add('hidden');
+            document.getElementById('contactPanel').classList.remove('hidden');
+            document.getElementById('mainTitle').textContent = '联系作者';
+            document.getElementById('mainSubtitle').textContent = '作者简介 · 深度服务 · 开光服务';
+            renderVerifyBtn();
+        }
 
-    function showContactPanel() {
-        document.getElementById('defaultPanel').classList.add('hidden');
-        document.getElementById('timePanel').classList.add('hidden');
-        document.getElementById('contactPanel').classList.remove('hidden');
-        document.getElementById('mainTitle').textContent = '联系作者';
-        document.getElementById('mainSubtitle').textContent = '作者简介 · 深度服务 · 开光服务';
-        renderVerifyBtn();
-    }
+        // ==================== 时辰确定 Tab 切换 ====================
+        function initTimeTabs() {
+            const tabs = document.querySelectorAll('.time-tab');
+            const selfTab = document.getElementById('selfTab');
+            const expertTab = document.getElementById('expertTab');
 
-    // ==================== 时辰确定 Tab 切换 ====================
-    function initTimeTabs() {
-        const tabs = document.querySelectorAll('.time-tab');
-        const selfTab = document.getElementById('selfTab');
-        const expertTab = document.getElementById('expertTab');
+            selfTab.classList.add('hidden');
+            expertTab.classList.remove('hidden');
 
-        selfTab.classList.add('hidden');
-        expertTab.classList.remove('hidden');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const target = tab.dataset.tab;
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
 
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                const target = tab.dataset.tab;
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-
-                if (target === 'self') {
-                    selfTab.classList.remove('hidden');
-                    expertTab.classList.add('hidden');
-                } else {
-                    selfTab.classList.add('hidden');
-                    expertTab.classList.remove('hidden');
-                }
-            });
-        });
-    }
-
-    // ==================== 联系作者 Tab 切换 ====================
-    function initContactTabs() {
-        const tabs = document.querySelectorAll('#contactTabs .time-tab');
-        const introTab = document.getElementById('contactIntroTab');
-        const deepTab = document.getElementById('contactDeepTab');
-        const kaiGuangTab = document.getElementById('contactKaiGuangTab');
-
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                const target = tab.dataset.contact;
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-
-                introTab.classList.add('hidden');
-                deepTab.classList.add('hidden');
-                kaiGuangTab.classList.add('hidden');
-
-                if (target === 'intro') {
-                    introTab.classList.remove('hidden');
-                } else if (target === 'deep') {
-                    deepTab.classList.remove('hidden');
-                } else if (target === 'kai-guang') {
-                    kaiGuangTab.classList.remove('hidden');
-                }
-            });
-        });
-    }
-
-    // ==================== 微信号复制 ====================
-    function initWechatCopy() {
-        const copyBtn = document.getElementById('copyWechatBtn');
-        if (copyBtn) {
-            copyBtn.addEventListener('click', () => {
-                const wechatId = 'mmj1399094604';
-                navigator.clipboard.writeText(wechatId).then(() => {
-                    alert('微信号已复制：' + wechatId);
-                }).catch(() => {
-                    alert('复制失败，请手动复制微信号：' + wechatId);
+                    if (target === 'self') {
+                        selfTab.classList.remove('hidden');
+                        expertTab.classList.add('hidden');
+                    } else {
+                        selfTab.classList.add('hidden');
+                        expertTab.classList.remove('hidden');
+                    }
                 });
             });
         }
-        const copyBtn3 = document.getElementById('copyWechatBtn3');
-        if (copyBtn3) {
-            copyBtn3.addEventListener('click', () => {
-                const wechatId = 'mmj1399094604';
-                navigator.clipboard.writeText(wechatId).then(() => {
-                    alert('微信号已复制：' + wechatId);
-                }).catch(() => {
-                    alert('复制失败，请手动复制微信号：' + wechatId);
+
+        // ==================== 联系作者 Tab 切换 ====================
+        function initContactTabs() {
+            const tabs = document.querySelectorAll('#contactTabs .time-tab');
+            const introTab = document.getElementById('contactIntroTab');
+            const deepTab = document.getElementById('contactDeepTab');
+            const kaiGuangTab = document.getElementById('contactKaiGuangTab');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const target = tab.dataset.contact;
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    introTab.classList.add('hidden');
+                    deepTab.classList.add('hidden');
+                    kaiGuangTab.classList.add('hidden');
+
+                    if (target === 'intro') {
+                        introTab.classList.remove('hidden');
+                    } else if (target === 'deep') {
+                        deepTab.classList.remove('hidden');
+                    } else if (target === 'kai-guang') {
+                        kaiGuangTab.classList.remove('hidden');
+                    }
                 });
             });
         }
-        const copyBtn4 = document.getElementById('copyWechatBtn4');
-        if (copyBtn4) {
-            copyBtn4.addEventListener('click', () => {
-                const wechatId = 'mmj1399094604';
-                navigator.clipboard.writeText(wechatId).then(() => {
-                    alert('微信号已复制：' + wechatId);
-                }).catch(() => {
-                    alert('复制失败，请手动复制微信号：' + wechatId);
+
+        // ==================== 微信号复制 ====================
+        function initWechatCopy() {
+            const copyBtn = document.getElementById('copyWechatBtn');
+            if (copyBtn) {
+                copyBtn.addEventListener('click', () => {
+                    const wechatId = 'mmj1399094604';
+                    navigator.clipboard.writeText(wechatId).then(() => {
+                        alert('微信号已复制：' + wechatId);
+                    }).catch(() => {
+                        alert('复制失败，请手动复制微信号：' + wechatId);
+                    });
                 });
-            });
-        }
-    }
-
-    // ==================== 用户ID管理 ====================
-    const USER_ID_KEY = 'bazi_user_id';
-    const USER_INFO_KEY = 'bazi_user_info';
-
-    function getUserId() {
-        let userId = localStorage.getItem(USER_ID_KEY);
-        if (!userId) {
-            userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-            localStorage.setItem(USER_ID_KEY, userId);
-            localStorage.setItem(USER_INFO_KEY, JSON.stringify({
-                isLoggedIn: false,
-                nickname: '游客',
-                createdAt: new Date().toISOString()
-            }));
-        }
-        return userId;
-    }
-
-    function getUserInfo() {
-        const info = localStorage.getItem(USER_INFO_KEY);
-        if (info) {
-            try {
-                return JSON.parse(info);
-            } catch (e) {
-                return { isLoggedIn: false, nickname: '游客' };
+            }
+            const copyBtn3 = document.getElementById('copyWechatBtn3');
+            if (copyBtn3) {
+                copyBtn3.addEventListener('click', () => {
+                    const wechatId = 'mmj1399094604';
+                    navigator.clipboard.writeText(wechatId).then(() => {
+                        alert('微信号已复制：' + wechatId);
+                    }).catch(() => {
+                        alert('复制失败，请手动复制微信号：' + wechatId);
+                    });
+                });
+            }
+            const copyBtn4 = document.getElementById('copyWechatBtn4');
+            if (copyBtn4) {
+                copyBtn4.addEventListener('click', () => {
+                    const wechatId = 'mmj1399094604';
+                    navigator.clipboard.writeText(wechatId).then(() => {
+                        alert('微信号已复制：' + wechatId);
+                    }).catch(() => {
+                        alert('复制失败，请手动复制微信号：' + wechatId);
+                    });
+                });
             }
         }
-        return { isLoggedIn: false, nickname: '游客' };
-    }
 
-    function updateUserDisplay() {
-        const userInfo = getUserInfo();
-        const userNameEl = document.getElementById('userName');
-        const userEmailEl = document.getElementById('userEmail');
-        if (userInfo.isLoggedIn) {
-            userNameEl.textContent = userInfo.nickname || '用户';
-            userEmailEl.textContent = '已登录 · 数据云端同步';
-        } else {
-            userNameEl.textContent = '游客模式';
-            userEmailEl.textContent = '暂未开通登录模式';
-        }
-    }
+        // ==================== 用户ID管理 ====================
+        const USER_ID_KEY = 'bazi_user_id';
+        const USER_INFO_KEY = 'bazi_user_info';
 
-    function showLoginModal() {
-        alert('小成本网站 暂未开通登录服务');
-        return;
-    }
-
-    // ==================== 折叠图标 ====================
-    const expandSVG =
-        `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 10L12 14L16 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-    const collapseSVG =
-        `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 8L14 12L10 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-
-    function toggleVerifySection() {
-        const wrapper = document.getElementById('verifyArea');
-        const icon = document.getElementById('verifyToggleIcon');
-        if (isVerifyCollapsed) {
-            wrapper.classList.remove('hidden');
-            icon.innerHTML = expandSVG;
-            isVerifyCollapsed = false;
-        } else {
-            wrapper.classList.add('hidden');
-            icon.innerHTML = collapseSVG;
-            isVerifyCollapsed = true;
-        }
-    }
-
-    // ==================== 本地存储 ====================
-    const STORAGE_KEY = 'bazi_analysis_history';
-
-    function saveAnalysisRecord(birthStr, moduleName, resultContent, baziStr, userName, verifyContent) {
-        const records = getAnalysisRecords();
-        const displayName = userName && userName.trim() ? `${userName.trim()} · ${moduleName}` : `匿名 · ${moduleName}`;
-        let formattedVerifyContent = null;
-        if (verifyContent) formattedVerifyContent = formatVerifyContentForHistory(verifyContent);
-        const newRecord = {
-            id: Date.now(),
-            timestamp: new Date().toISOString(),
-            date: new Date().toLocaleString('zh-CN'),
-            birth: birthStr,
-            module: moduleName,
-            bazi: baziStr || '',
-            result: resultContent,
-            name: displayName,
-            userName: userName || '',
-            verifyContent: formattedVerifyContent,
-            userId: getUserId()
-        };
-        records.unshift(newRecord);
-        if (records.length > 30) records.pop();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-        // 更新历史列表
-        updateHistoryList();
-    }
-
-    function getAnalysisRecords() {
-        const data = localStorage.getItem(STORAGE_KEY);
-        if (!data) return [];
-        try {
-            const records = JSON.parse(data);
-            const currentUserId = getUserId();
-            return records.map(r => ({ ...r, userId: r.userId || currentUserId }));
-        } catch (e) {
-            return [];
-        }
-    }
-
-    function deleteAnalysisRecord(id) {
-        let records = getAnalysisRecords();
-        records = records.filter(r => r.id !== id);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-        updateHistoryList();
-    }
-
-    function renameAnalysisRecord(id) {
-        const records = getAnalysisRecords();
-        const record = records.find(r => r.id === id);
-        if (!record) return;
-        const currentName = record.userName || '匿名';
-        const newName = prompt('重命名', currentName);
-        if (newName && newName.trim()) {
-            record.userName = newName.trim();
-            record.name = `${newName.trim()} · ${record.module}`;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-            updateHistoryList();
-        }
-    }
-
-    function clearAllHistory() {
-        if (confirm('确定要清空所有历史记录吗？')) {
-            localStorage.removeItem(STORAGE_KEY);
-            updateHistoryList();
-        }
-    }
-
-    function migrateOldRecords() {
-        const records = getAnalysisRecords();
-        let hasChanges = false;
-        records.forEach(record => {
-            if (record.verifyContent && (record.verifyContent.includes('item-btn') || record.verifyContent.includes(
-                    'button') || record.verifyContent.includes('item-buttons'))) {
-                record.verifyContent = formatVerifyContentForHistory(record.verifyContent);
-                hasChanges = true;
+        function getUserId() {
+            let userId = localStorage.getItem(USER_ID_KEY);
+            if (!userId) {
+                userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+                localStorage.setItem(USER_ID_KEY, userId);
+                localStorage.setItem(USER_INFO_KEY, JSON.stringify({
+                    isLoggedIn: false,
+                    nickname: '游客',
+                    createdAt: new Date().toISOString()
+                }));
             }
-        });
-        if (hasChanges) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-            updateHistoryList();
+            return userId;
         }
-    }
 
-    function formatVerifyContentForHistory(htmlContent) {
-        if (!htmlContent) return '';
-        const temp = document.createElement('div');
-        temp.innerHTML = htmlContent;
-        const selectorsToRemove = ['.item-buttons', '.feedback-detail', '.verify-question', '.feedback-notice',
-            '.item-btn', '.action-buttons', 'button'
-        ];
-        selectorsToRemove.forEach(selector => {
-            const elements = temp.querySelectorAll(selector);
-            elements.forEach(el => el.remove());
-        });
-        const verifyItems = temp.querySelectorAll('.verify-item');
-        let formattedHtml = '';
-        verifyItems.forEach(item => {
-            const titleElem = item.querySelector('.verify-title');
-            const title = titleElem ? titleElem.outerHTML : '';
-            const contentElem = item.querySelector('.verify-content');
-            let content = contentElem ? contentElem.outerHTML : '';
-            if (!contentElem) {
-                const cleanItem = item.cloneNode(true);
-                const removeList = cleanItem.querySelectorAll('.item-buttons, .feedback-detail, .verify-question, button');
-                removeList.forEach(el => el.remove());
-                content = cleanItem.innerHTML;
+        function getUserInfo() {
+            const info = localStorage.getItem(USER_INFO_KEY);
+            if (info) {
+                try {
+                    return JSON.parse(info);
+                } catch (e) {
+                    return { isLoggedIn: false, nickname: '游客' };
+                }
             }
-            if (title && content) {
-                formattedHtml += `<div class="history-verify-item">${title}${content}</div>`;
-            } else if (content) {
-                formattedHtml += `<div class="history-verify-item">${content}</div>`;
+            return { isLoggedIn: false, nickname: '游客' };
+        }
+
+        function updateUserDisplay() {
+            const userInfo = getUserInfo();
+            const userNameEl = document.getElementById('userName');
+            const userEmailEl = document.getElementById('userEmail');
+            if (userInfo.isLoggedIn) {
+                userNameEl.textContent = userInfo.nickname || '用户';
+                userEmailEl.textContent = '已登录 · 数据云端同步';
+            } else {
+                userNameEl.textContent = '游客模式';
+                userEmailEl.textContent = '暂未开通登录模式';
             }
-        });
-        if (!formattedHtml.trim()) return temp.textContent || '';
-        return formattedHtml;
-    }
+        }
 
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    // ===== 更新历史列表（简洁SVG图标，参考Deepseek风格） =====
-    function updateHistoryList() {
-        const historyList = document.getElementById('historyList');
-        if (!historyList) return;
-        const records = getAnalysisRecords();
-        if (records.length === 0) {
-            historyList.innerHTML = '<li class="history-empty">暂无历史记录</li>';
+        function showLoginModal() {
+            alert('小成本网站 暂未开通登录服务');
             return;
         }
-        historyList.innerHTML = '';
-        records.forEach(record => {
-            const li = document.createElement('li');
-            li.className = 'history-item';
-            const displayName = record.name || `${record.userName || '匿名'} · ${record.module}`;
-            li.innerHTML = `
+
+        // ==================== 折叠图标 ====================
+        const expandSVG =
+            `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 10L12 14L16 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        const collapseSVG =
+            `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 8L14 12L10 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+        function toggleVerifySection() {
+            const wrapper = document.getElementById('verifyArea');
+            const icon = document.getElementById('verifyToggleIcon');
+            if (isVerifyCollapsed) {
+                wrapper.classList.remove('hidden');
+                icon.innerHTML = expandSVG;
+                isVerifyCollapsed = false;
+            } else {
+                wrapper.classList.add('hidden');
+                icon.innerHTML = collapseSVG;
+                isVerifyCollapsed = true;
+            }
+        }
+
+        // ==================== 本地存储 ====================
+        const STORAGE_KEY = 'bazi_analysis_history';
+
+        function saveAnalysisRecord(birthStr, moduleName, resultContent, baziStr, userName, verifyContent) {
+            const records = getAnalysisRecords();
+            const displayName = userName && userName.trim() ? `${userName.trim()} · ${moduleName}` : `匿名 · ${moduleName}`;
+            let formattedVerifyContent = null;
+            if (verifyContent) formattedVerifyContent = formatVerifyContentForHistory(verifyContent);
+            const newRecord = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                date: new Date().toLocaleString('zh-CN'),
+                birth: birthStr,
+                module: moduleName,
+                bazi: baziStr || '',
+                result: resultContent,
+                name: displayName,
+                userName: userName || '',
+                verifyContent: formattedVerifyContent,
+                userId: getUserId()
+            };
+            records.unshift(newRecord);
+            if (records.length > 30) records.pop();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+            updateHistoryList();
+        }
+
+        function getAnalysisRecords() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            if (!data) return [];
+            try {
+                const records = JSON.parse(data);
+                const currentUserId = getUserId();
+                return records.map(r => ({ ...r, userId: r.userId || currentUserId }));
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function deleteAnalysisRecord(id) {
+            let records = getAnalysisRecords();
+            records = records.filter(r => r.id !== id);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+            updateHistoryList();
+        }
+
+        function renameAnalysisRecord(id) {
+            const records = getAnalysisRecords();
+            const record = records.find(r => r.id === id);
+            if (!record) return;
+            const currentName = record.userName || '匿名';
+            const newName = prompt('重命名', currentName);
+            if (newName && newName.trim()) {
+                record.userName = newName.trim();
+                record.name = `${newName.trim()} · ${record.module}`;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+                updateHistoryList();
+            }
+        }
+
+        function clearAllHistory() {
+            if (confirm('确定要清空所有历史记录吗？')) {
+                localStorage.removeItem(STORAGE_KEY);
+                updateHistoryList();
+            }
+        }
+
+        function migrateOldRecords() {
+            const records = getAnalysisRecords();
+            let hasChanges = false;
+            records.forEach(record => {
+                if (record.verifyContent && (record.verifyContent.includes('item-btn') || record.verifyContent.includes(
+                        'button') || record.verifyContent.includes('item-buttons'))) {
+                    record.verifyContent = formatVerifyContentForHistory(record.verifyContent);
+                    hasChanges = true;
+                }
+            });
+            if (hasChanges) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+                updateHistoryList();
+            }
+        }
+
+        function formatVerifyContentForHistory(htmlContent) {
+            if (!htmlContent) return '';
+            const temp = document.createElement('div');
+            temp.innerHTML = htmlContent;
+            const selectorsToRemove = ['.item-buttons', '.feedback-detail', '.verify-question', '.feedback-notice',
+                '.item-btn', '.action-buttons', 'button'
+            ];
+            selectorsToRemove.forEach(selector => {
+                const elements = temp.querySelectorAll(selector);
+                elements.forEach(el => el.remove());
+            });
+            const verifyItems = temp.querySelectorAll('.verify-item');
+            let formattedHtml = '';
+            verifyItems.forEach(item => {
+                const titleElem = item.querySelector('.verify-title');
+                const title = titleElem ? titleElem.outerHTML : '';
+                const contentElem = item.querySelector('.verify-content');
+                let content = contentElem ? contentElem.outerHTML : '';
+                if (!contentElem) {
+                    const cleanItem = item.cloneNode(true);
+                    const removeList = cleanItem.querySelectorAll('.item-buttons, .feedback-detail, .verify-question, button');
+                    removeList.forEach(el => el.remove());
+                    content = cleanItem.innerHTML;
+                }
+                if (title && content) {
+                    formattedHtml += `<div class="history-verify-item">${title}${content}</div>`;
+                } else if (content) {
+                    formattedHtml += `<div class="history-verify-item">${content}</div>`;
+                }
+            });
+            if (!formattedHtml.trim()) return temp.textContent || '';
+            return formattedHtml;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 更新历史列表（含简洁图标）
+        function updateHistoryList() {
+            const historyList = document.getElementById('historyList');
+            if (!historyList) return;
+            const records = getAnalysisRecords();
+            if (records.length === 0) {
+                historyList.innerHTML = '<li class="history-empty">暂无历史记录</li>';
+                return;
+            }
+            historyList.innerHTML = '';
+            records.forEach(record => {
+                const li = document.createElement('li');
+                li.className = 'history-item';
+                const displayName = record.name || `${record.userName || '匿名'} · ${record.module}`;
+                li.innerHTML = `
                     <span style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px;">${escapeHtml(displayName)}</span>
                     <div class="history-actions">
                         <button class="history-icon history-rename" data-id="${record.id}" title="重命名">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
                         <button class="history-icon history-delete" data-id="${record.id}" title="删除">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         </button>
                     </div>
                 `;
-            li.onclick = (e) => {
-                if (e.target.closest('.history-icon')) return;
-                viewHistoryRecord(record);
-            };
-            historyList.appendChild(li);
-        });
-        document.querySelectorAll('.history-delete').forEach(btn => {
-            btn.onclick = (e) => {
+                li.onclick = (e) => {
+                    if (e.target.closest('.history-icon')) return;
+                    viewHistoryRecord(record);
+                };
+                historyList.appendChild(li);
+            });
+            // 事件绑定
+            document.querySelectorAll('.history-delete').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const id = parseInt(btn.dataset.id);
+                    deleteAnalysisRecord(id);
+                };
+            });
+            document.querySelectorAll('.history-rename').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const id = parseInt(btn.dataset.id);
+                    renameAnalysisRecord(id);
+                };
+            });
+            const clearBtn = document.createElement('li');
+            clearBtn.className = 'history-item';
+            clearBtn.style.borderTop = '1px solid rgba(255,255,255,0.1)';
+            clearBtn.style.marginTop = '8px';
+            clearBtn.style.justifyContent = 'center';
+            clearBtn.innerHTML = '<span style="color: #e6b980;">清空所有记录</span>';
+            clearBtn.onclick = (e) => {
                 e.stopPropagation();
-                const id = parseInt(btn.dataset.id);
-                deleteAnalysisRecord(id);
+                clearAllHistory();
             };
-        });
-        document.querySelectorAll('.history-rename').forEach(btn => {
-            btn.onclick = (e) => {
-                e.stopPropagation();
-                const id = parseInt(btn.dataset.id);
-                renameAnalysisRecord(id);
-            };
-        });
-        const clearBtn = document.createElement('li');
-        clearBtn.className = 'history-item';
-        clearBtn.style.borderTop = '1px solid rgba(255,255,255,0.1)';
-        clearBtn.style.marginTop = '8px';
-        clearBtn.style.justifyContent = 'center';
-        clearBtn.innerHTML = '<span style="color: #e6b980;">清空所有记录</span>';
-        clearBtn.onclick = (e) => {
-            e.stopPropagation();
-            clearAllHistory();
-        };
-        historyList.appendChild(clearBtn);
-    }
-
-    function viewHistoryRecord(record) {
-        showDefaultPanel();
-
-        const baziInfoArea = document.getElementById('baziInfoArea');
-        const baziDisplay = document.getElementById('baziDisplay');
-        if (record.bazi) {
-            baziDisplay.textContent = record.bazi;
-            baziInfoArea.classList.remove('hidden');
-        } else {
-            baziInfoArea.classList.add('hidden');
+            historyList.appendChild(clearBtn);
         }
 
-        const actionButtonsGlobal = document.getElementById('actionButtons');
-        if (actionButtonsGlobal) actionButtonsGlobal.style.display = 'none';
+        function viewHistoryRecord(record) {
+            showDefaultPanel();
 
-        const verifyArea = document.getElementById('verifyArea');
-        const verifyItemsContainer = document.getElementById('verifyItemsContainer');
-        const toggleIcon = document.getElementById('verifyToggleIcon');
-        if (record.verifyContent && record.verifyContent.trim() !== '') {
-            let cleanContent = record.verifyContent;
-            const tempCheck = document.createElement('div');
-            tempCheck.innerHTML = cleanContent;
-            const buttons = tempCheck.querySelectorAll('button, .item-btn, .item-buttons, .feedback-detail, .verify-question');
-            if (buttons.length > 0) {
-                buttons.forEach(btn => btn.remove());
-                cleanContent = tempCheck.innerHTML;
+            const baziInfoArea = document.getElementById('baziInfoArea');
+            const baziDisplay = document.getElementById('baziDisplay');
+            if (record.bazi) {
+                baziDisplay.textContent = record.bazi;
+                baziInfoArea.classList.remove('hidden');
+            } else {
+                baziInfoArea.classList.add('hidden');
             }
-            verifyItemsContainer.innerHTML = cleanContent;
-            verifyArea.classList.remove('hidden');
-            verifyArea.classList.add('hidden');
-            isVerifyCollapsed = true;
-            if (toggleIcon) toggleIcon.innerHTML = collapseSVG;
-        } else {
-            verifyArea.classList.add('hidden');
-        }
 
-        hideVerifyBtn();
+            const actionButtonsGlobal = document.getElementById('actionButtons');
+            if (actionButtonsGlobal) actionButtonsGlobal.style.display = 'none';
 
-        const moduleArea = document.getElementById('moduleArea');
-        if (moduleArea) {
-            moduleArea.classList.remove('hidden');
-            const container = document.getElementById('analysisBtnContainer');
-            if (container) {
-                container.innerHTML = `
+            const verifyArea = document.getElementById('verifyArea');
+            const verifyItemsContainer = document.getElementById('verifyItemsContainer');
+            const toggleIcon = document.getElementById('verifyToggleIcon');
+            if (record.verifyContent && record.verifyContent.trim() !== '') {
+                let cleanContent = record.verifyContent;
+                const tempCheck = document.createElement('div');
+                tempCheck.innerHTML = cleanContent;
+                const buttons = tempCheck.querySelectorAll('button, .item-btn, .item-buttons, .feedback-detail, .verify-question');
+                if (buttons.length > 0) {
+                    buttons.forEach(btn => btn.remove());
+                    cleanContent = tempCheck.innerHTML;
+                }
+                verifyItemsContainer.innerHTML = cleanContent;
+                verifyArea.classList.remove('hidden');
+                verifyArea.classList.add('hidden');
+                isVerifyCollapsed = true;
+                if (toggleIcon) toggleIcon.innerHTML = collapseSVG;
+            } else {
+                verifyArea.classList.add('hidden');
+            }
+
+            hideVerifyBtn();
+
+            const moduleArea = document.getElementById('moduleArea');
+            if (moduleArea) {
+                moduleArea.classList.remove('hidden');
+                const container = document.getElementById('analysisBtnContainer');
+                if (container) {
+                    container.innerHTML = `
                                 <button class="btn-done" disabled>深度分析已完成</button>
                                 <button class="btn-continue" id="continueAnalysisBtn">继续深度分析</button>
                             `;
-                const continueBtn = document.getElementById('continueAnalysisBtn');
-                if (continueBtn) continueBtn.onclick = continueAnalysis;
-            }
-        }
-
-        const resultCard = document.getElementById('resultCard');
-        const resultContent = document.getElementById('resultContent');
-        resultContent.innerHTML = record.result.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        resultCard.style.display = 'block';
-
-        currentBirth = record.birth;
-        currentBaziStr = record.bazi;
-        lastAnalysisResult = record.result;
-
-        if (record.birth) {
-            const birthMatch = record.birth.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})\s+(\d{1,2})时\s+(\d+)分\s+([男女])/);
-            if (birthMatch) {
-                const year = birthMatch[1];
-                const month = birthMatch[2].padStart(2, '0');
-                const day = birthMatch[3].padStart(2, '0');
-                const hour = birthMatch[4];
-                const minute = birthMatch[5];
-                const gender = birthMatch[6];
-                document.getElementById('dateInput').value = `${year}-${month}-${day}`;
-                document.getElementById('hourSelect').value = hour;
-                document.getElementById('minuteSelect').value = minute;
-                document.getElementById('genderSelect').value = gender;
-                document.querySelector('input[name="knowTime"][value="yes"]').checked = true;
-                document.getElementById('timeSelectArea').classList.remove('hidden');
-                document.getElementById('timeWarning').classList.add('hidden');
-            } else {
-                const simpleMatch = record.birth.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})\s+([男女])/);
-                if (simpleMatch) {
-                    const year = simpleMatch[1];
-                    const month = simpleMatch[2].padStart(2, '0');
-                    const day = simpleMatch[3].padStart(2, '0');
-                    const gender = simpleMatch[4];
-                    document.getElementById('dateInput').value = `${year}-${month}-${day}`;
-                    document.getElementById('genderSelect').value = gender;
-                    document.querySelector('input[name="knowTime"][value="no"]').checked = true;
-                    document.getElementById('timeSelectArea').classList.add('hidden');
-                    document.getElementById('timeWarning').classList.remove('hidden');
+                    const continueBtn = document.getElementById('continueAnalysisBtn');
+                    if (continueBtn) continueBtn.onclick = continueAnalysis;
                 }
             }
-            if (record.userName) document.getElementById('nameInput').value = record.userName;
-        }
 
-        resultCard.scrollIntoView({ behavior: 'smooth' });
-    }
+            const resultCard = document.getElementById('resultCard');
+            const resultContent = document.getElementById('resultContent');
+            resultContent.innerHTML = record.result.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            resultCard.style.display = 'block';
 
-    function currentModuleName() {
-        const moduleMap = { 'overview': '综合分析', 'career': '事业分析', 'wealth': '财运分析', 'marriage': '婚姻分析',
-            'liunian': '流年分析' };
-        return moduleMap[currentModule] || currentModule;
-    }
+            currentBirth = record.birth;
+            currentBaziStr = record.bazi;
+            lastAnalysisResult = record.result;
 
-    // ==================== 省市区数据 ====================
-    async function loadRegionData() {
-        const loadingDiv = document.getElementById('regionLoading');
-        loadingDiv.classList.remove('hidden');
-        try {
-            const [provincesRes, citiesRes, areasRes] = await Promise.all([
-                fetch('https://unpkg.com/china-division@2.7.0/dist/provinces.json'),
-                fetch('https://unpkg.com/china-division@2.7.0/dist/cities.json'),
-                fetch('https://unpkg.com/china-division@2.7.0/dist/areas.json')
-            ]);
-            const provinces = await provincesRes.json();
-            const cities = await citiesRes.json();
-            const areas = await areasRes.json();
-            pcaData = provinces.map(province => ({
-                code: province.code,
-                name: province.name,
-                children: cities.filter(city => city.provinceCode === province.code).map(city => ({
-                    code: city.code,
-                    name: city.name,
-                    children: areas.filter(area => area.cityCode === city.code).map(area => ({ code: area.code,
-                        name: area.name }))
-                }))
-            }));
-            initProvinceSelect();
-        } catch (error) {
-            useFallbackData();
-        }
-        loadingDiv.classList.add('hidden');
-    }
-
-    function useFallbackData() {
-        pcaData = [
-            { code: '11', name: '北京市', children: [{ code: '1101', name: '北京市', children: ['东城区', '西城区',
-                        '朝阳区', '海淀区'
-                    ] }] },
-            { code: '31', name: '上海市', children: [{ code: '3101', name: '上海市', children: ['黄浦区', '徐汇区',
-                        '长宁区', '静安区'
-                    ] }] },
-            { code: '44', name: '广东省', children: [{ code: '4401', name: '广州市', children: ['越秀区', '海珠区',
-                        '天河区', '白云区'
-                    ] }, { code: '4403', name: '深圳市', children: ['福田区', '南山区', '宝安区', '龙岗区'] }] },
-            { code: '51', name: '四川省', children: [{ code: '5101', name: '成都市', children: ['锦江区', '青羊区',
-                        '金牛区', '武侯区', '成华区'
-                    ] }, { code: '5115', name: '宜宾市', children: ['翠屏区', '南溪区', '叙州区', '江安县', '长宁县', '高县',
-                        '珙县', '筠连县', '兴文县', '屏山县'
-                    ] }] }
-        ];
-        initProvinceSelect();
-    }
-
-    function initProvinceSelect() {
-        const provinceSelect = document.getElementById('provinceSelect');
-        if (!provinceSelect) return;
-        provinceSelect.innerHTML = '<option value="">请选择省份</option>';
-        pcaData.forEach(province => {
-            const option = document.createElement('option');
-            option.value = province.code;
-            option.textContent = province.name;
-            provinceSelect.appendChild(option);
-        });
-    }
-
-    function updateCitySelect() {
-        const provinceCode = document.getElementById('provinceSelect').value;
-        const citySelect = document.getElementById('citySelect');
-        const districtSelect = document.getElementById('districtSelect');
-        citySelect.innerHTML = '<option value="">请选择城市</option>';
-        districtSelect.innerHTML = '<option value="">请选择区/县</option>';
-        if (provinceCode && pcaData) {
-            const province = pcaData.find(p => p.code === provinceCode);
-            if (province && province.children) {
-                province.children.forEach(city => {
-                    const option = document.createElement('option');
-                    option.value = city.code;
-                    option.textContent = city.name;
-                    citySelect.appendChild(option);
-                });
+            if (record.birth) {
+                const birthMatch = record.birth.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})\s+(\d{1,2})时\s+(\d+)分\s+([男女])/);
+                if (birthMatch) {
+                    const year = birthMatch[1];
+                    const month = birthMatch[2].padStart(2, '0');
+                    const day = birthMatch[3].padStart(2, '0');
+                    const hour = birthMatch[4];
+                    const minute = birthMatch[5];
+                    const gender = birthMatch[6];
+                    document.getElementById('dateInput').value = `${year}-${month}-${day}`;
+                    document.getElementById('hourSelect').value = hour;
+                    document.getElementById('minuteSelect').value = minute;
+                    document.getElementById('genderSelect').value = gender;
+                    document.querySelector('input[name="knowTime"][value="yes"]').checked = true;
+                    document.getElementById('timeSelectArea').classList.remove('hidden');
+                    document.getElementById('timeWarning').classList.add('hidden');
+                } else {
+                    const simpleMatch = record.birth.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})\s+([男女])/);
+                    if (simpleMatch) {
+                        const year = simpleMatch[1];
+                        const month = simpleMatch[2].padStart(2, '0');
+                        const day = simpleMatch[3].padStart(2, '0');
+                        const gender = simpleMatch[4];
+                        document.getElementById('dateInput').value = `${year}-${month}-${day}`;
+                        document.getElementById('genderSelect').value = gender;
+                        document.querySelector('input[name="knowTime"][value="no"]').checked = true;
+                        document.getElementById('timeSelectArea').classList.add('hidden');
+                        document.getElementById('timeWarning').classList.remove('hidden');
+                    }
+                }
+                if (record.userName) document.getElementById('nameInput').value = record.userName;
             }
-        }
-    }
 
-    function updateDistrictSelect() {
-        const provinceCode = document.getElementById('provinceSelect').value;
-        const cityCode = document.getElementById('citySelect').value;
-        const districtSelect = document.getElementById('districtSelect');
-        districtSelect.innerHTML = '<option value="">请选择区/县</option>';
-        if (provinceCode && cityCode && pcaData) {
-            const province = pcaData.find(p => p.code === provinceCode);
-            if (province) {
-                const city = province.children?.find(c => c.code === cityCode);
-                if (city && city.children && city.children.length > 0) {
-                    city.children.forEach(district => {
+            resultCard.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function currentModuleName() {
+            const moduleMap = { 'overview': '综合分析', 'career': '事业分析', 'wealth': '财运分析', 'marriage': '婚姻分析',
+                'liunian': '流年分析' };
+            return moduleMap[currentModule] || currentModule;
+        }
+
+        // ==================== 省市区数据 ====================
+        async function loadRegionData() {
+            const loadingDiv = document.getElementById('regionLoading');
+            loadingDiv.classList.remove('hidden');
+            try {
+                const [provincesRes, citiesRes, areasRes] = await Promise.all([
+                    fetch('https://unpkg.com/china-division@2.7.0/dist/provinces.json'),
+                    fetch('https://unpkg.com/china-division@2.7.0/dist/cities.json'),
+                    fetch('https://unpkg.com/china-division@2.7.0/dist/areas.json')
+                ]);
+                const provinces = await provincesRes.json();
+                const cities = await citiesRes.json();
+                const areas = await areasRes.json();
+                pcaData = provinces.map(province => ({
+                    code: province.code,
+                    name: province.name,
+                    children: cities.filter(city => city.provinceCode === province.code).map(city => ({
+                        code: city.code,
+                        name: city.name,
+                        children: areas.filter(area => area.cityCode === city.code).map(area => ({ code: area.code,
+                            name: area.name }))
+                    }))
+                }));
+                initProvinceSelect();
+            } catch (error) {
+                useFallbackData();
+            }
+            loadingDiv.classList.add('hidden');
+        }
+
+        function useFallbackData() {
+            pcaData = [
+                { code: '11', name: '北京市', children: [{ code: '1101', name: '北京市', children: ['东城区', '西城区',
+                            '朝阳区', '海淀区'
+                        ] }] },
+                { code: '31', name: '上海市', children: [{ code: '3101', name: '上海市', children: ['黄浦区', '徐汇区',
+                            '长宁区', '静安区'
+                        ] }] },
+                { code: '44', name: '广东省', children: [{ code: '4401', name: '广州市', children: ['越秀区', '海珠区',
+                            '天河区', '白云区'
+                        ] }, { code: '4403', name: '深圳市', children: ['福田区', '南山区', '宝安区', '龙岗区'] }] },
+                { code: '51', name: '四川省', children: [{ code: '5101', name: '成都市', children: ['锦江区', '青羊区',
+                            '金牛区', '武侯区', '成华区'
+                        ] }, { code: '5115', name: '宜宾市', children: ['翠屏区', '南溪区', '叙州区', '江安县', '长宁县', '高县',
+                            '珙县', '筠连县', '兴文县', '屏山县'
+                        ] }] }
+            ];
+            initProvinceSelect();
+        }
+
+        function initProvinceSelect() {
+            const provinceSelect = document.getElementById('provinceSelect');
+            if (!provinceSelect) return;
+            provinceSelect.innerHTML = '<option value="">请选择省份</option>';
+            pcaData.forEach(province => {
+                const option = document.createElement('option');
+                option.value = province.code;
+                option.textContent = province.name;
+                provinceSelect.appendChild(option);
+            });
+        }
+
+        function updateCitySelect() {
+            const provinceCode = document.getElementById('provinceSelect').value;
+            const citySelect = document.getElementById('citySelect');
+            const districtSelect = document.getElementById('districtSelect');
+            citySelect.innerHTML = '<option value="">请选择城市</option>';
+            districtSelect.innerHTML = '<option value="">请选择区/县</option>';
+            if (provinceCode && pcaData) {
+                const province = pcaData.find(p => p.code === provinceCode);
+                if (province && province.children) {
+                    province.children.forEach(city => {
                         const option = document.createElement('option');
-                        option.value = typeof district === 'string' ? district : district.code;
-                        option.textContent = typeof district === 'string' ? district : district.name;
-                        districtSelect.appendChild(option);
+                        option.value = city.code;
+                        option.textContent = city.name;
+                        citySelect.appendChild(option);
                     });
                 }
             }
         }
-    }
 
-    function getLocationInfo() {
-        const provinceSelect = document.getElementById('provinceSelect');
-        const provinceName = provinceSelect.options[provinceSelect.selectedIndex]?.text || '';
-        const provinceCode = provinceSelect.value;
-        const lonMap = { '11': 116.40, '31': 121.48, '44': 113.27, '51': 104.06 };
-        return { name: provinceName, longitude: lonMap[provinceCode] || 120.0 };
-    }
-
-    function initMinuteSelect() {
-        const minuteSelect = document.getElementById('minuteSelect');
-        minuteSelect.innerHTML = '<option value="">请选择分钟</option>';
-        for (let i = 0; i <= 59; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = `${i.toString().padStart(2, '0')}分`;
-            minuteSelect.appendChild(option);
+        function updateDistrictSelect() {
+            const provinceCode = document.getElementById('provinceSelect').value;
+            const cityCode = document.getElementById('citySelect').value;
+            const districtSelect = document.getElementById('districtSelect');
+            districtSelect.innerHTML = '<option value="">请选择区/县</option>';
+            if (provinceCode && cityCode && pcaData) {
+                const province = pcaData.find(p => p.code === provinceCode);
+                if (province) {
+                    const city = province.children?.find(c => c.code === cityCode);
+                    if (city && city.children && city.children.length > 0) {
+                        city.children.forEach(district => {
+                            const option = document.createElement('option');
+                            option.value = typeof district === 'string' ? district : district.code;
+                            option.textContent = typeof district === 'string' ? district : district.name;
+                            districtSelect.appendChild(option);
+                        });
+                    }
+                }
+            }
         }
-    }
 
-    function getDayOfYear(date) {
-        const start = new Date(date.getFullYear(), 0, 0);
-        return Math.floor((date - start) / 86400000);
-    }
-
-    function calculateTrueSolarTime(date, hour, minute, longitude) {
-        const dayOfYear = getDayOfYear(date);
-        const B = (dayOfYear - 1) * 2 * Math.PI / 365;
-        let eqTime = 0.258 * Math.cos(B) - 7.416 * Math.sin(B) - 3.648 * Math.cos(2 * B) - 9.228 * Math.sin(2 * B);
-        let lonCorrection = (longitude - 120) * 4;
-        let totalMinutes = hour * 60 + minute + lonCorrection + eqTime;
-        let newHour = Math.floor(totalMinutes / 60) % 24;
-        let newMinute = Math.round(totalMinutes % 60);
-        if (newMinute >= 60) { newMinute -= 60;
-            newHour = (newHour + 1) % 24; }
-        if (newMinute < 0) { newMinute += 60;
-            newHour = (newHour - 1 + 24) % 24; }
-        return { hour: newHour, minute: newMinute };
-    }
-
-    function updateTrueSolarDisplay() {
-        const useTrueSolar = document.getElementById('useTrueSolar').checked;
-        const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
-        const trueSolarDiv = document.getElementById('trueSolarResult');
-        if (!useTrueSolar || knowTime === 'no') { trueSolarDiv.classList.add('hidden'); return; }
-        const locationInfo = getLocationInfo();
-        if (!locationInfo || !locationInfo.longitude) {
-            trueSolarDiv.classList.remove('hidden');
-            trueSolarDiv.innerHTML = '📍 请选择完整的出生地点，以便进行真太阳时校正';
-            return;
+        function getLocationInfo() {
+            const provinceSelect = document.getElementById('provinceSelect');
+            const provinceName = provinceSelect.options[provinceSelect.selectedIndex]?.text || '';
+            const provinceCode = provinceSelect.value;
+            const lonMap = { '11': 116.40, '31': 121.48, '44': 113.27, '51': 104.06 };
+            return { name: provinceName, longitude: lonMap[provinceCode] || 120.0 };
         }
-        const dateStr = document.getElementById('dateInput').value;
-        const hour = parseInt(document.getElementById('hourSelect').value);
-        const minute = parseInt(document.getElementById('minuteSelect').value);
-        if (!dateStr || isNaN(hour) || isNaN(minute)) {
-            trueSolarDiv.classList.remove('hidden');
-            trueSolarDiv.innerHTML = '⏰ 请先填写完整的出生日期和时间';
-            return;
-        }
-        const date = new Date(dateStr);
-        const trueTime = calculateTrueSolarTime(date, hour, minute, locationInfo.longitude);
-        const shichenMap = { 23: '子', 0: '子', 1: '丑', 2: '丑', 3: '寅', 4: '寅', 5: '卯', 6: '卯', 7: '辰', 8: '辰', 9: '巳',
-            10: '巳', 11: '午', 12: '午', 13: '未', 14: '未', 15: '申', 16: '申', 17: '酉', 18: '酉', 19: '戌', 20: '戌',
-            21: '亥', 22: '亥' };
-        const originalShichen = shichenMap[hour] || '';
-        const trueShichen = shichenMap[trueTime.hour] || '';
-        trueSolarDiv.classList.remove('hidden');
-        trueSolarDiv.innerHTML =
-            `🌞 真太阳时校正<br>北京时间：${hour}:${minute}（${originalShichen}时）→ 真太阳时：${trueTime.hour}:${trueTime.minute}（${trueShichen}时）`;
-    }
 
-    function getActualBirthTime() {
-        const useTrueSolar = document.getElementById('useTrueSolar').checked;
-        const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
-        if (knowTime === 'no') return null;
-        let hour = parseInt(document.getElementById('hourSelect').value);
-        let minute = parseInt(document.getElementById('minuteSelect').value);
-        if (useTrueSolar) {
+        function initMinuteSelect() {
+            const minuteSelect = document.getElementById('minuteSelect');
+            minuteSelect.innerHTML = '<option value="">请选择分钟</option>';
+            for (let i = 0; i <= 59; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `${i.toString().padStart(2, '0')}分`;
+                minuteSelect.appendChild(option);
+            }
+        }
+
+        function getDayOfYear(date) {
+            const start = new Date(date.getFullYear(), 0, 0);
+            return Math.floor((date - start) / 86400000);
+        }
+
+        function calculateTrueSolarTime(date, hour, minute, longitude) {
+            const dayOfYear = getDayOfYear(date);
+            const B = (dayOfYear - 1) * 2 * Math.PI / 365;
+            let eqTime = 0.258 * Math.cos(B) - 7.416 * Math.sin(B) - 3.648 * Math.cos(2 * B) - 9.228 * Math.sin(2 * B);
+            let lonCorrection = (longitude - 120) * 4;
+            let totalMinutes = hour * 60 + minute + lonCorrection + eqTime;
+            let newHour = Math.floor(totalMinutes / 60) % 24;
+            let newMinute = Math.round(totalMinutes % 60);
+            if (newMinute >= 60) { newMinute -= 60;
+                newHour = (newHour + 1) % 24; }
+            if (newMinute < 0) { newMinute += 60;
+                newHour = (newHour - 1 + 24) % 24; }
+            return { hour: newHour, minute: newMinute };
+        }
+
+        function updateTrueSolarDisplay() {
+            const useTrueSolar = document.getElementById('useTrueSolar').checked;
+            const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
+            const trueSolarDiv = document.getElementById('trueSolarResult');
+            if (!useTrueSolar || knowTime === 'no') { trueSolarDiv.classList.add('hidden'); return; }
             const locationInfo = getLocationInfo();
+            if (!locationInfo || !locationInfo.longitude) {
+                trueSolarDiv.classList.remove('hidden');
+                trueSolarDiv.innerHTML = '📍 请选择完整的出生地点，以便进行真太阳时校正';
+                return;
+            }
             const dateStr = document.getElementById('dateInput').value;
-            if (locationInfo && locationInfo.longitude && dateStr && !isNaN(hour) && !isNaN(minute)) {
-                const date = new Date(dateStr);
-                const trueTime = calculateTrueSolarTime(date, hour, minute, locationInfo.longitude);
-                return { hour: trueTime.hour, minute: trueTime.minute };
+            const hour = parseInt(document.getElementById('hourSelect').value);
+            const minute = parseInt(document.getElementById('minuteSelect').value);
+            if (!dateStr || isNaN(hour) || isNaN(minute)) {
+                trueSolarDiv.classList.remove('hidden');
+                trueSolarDiv.innerHTML = '⏰ 请先填写完整的出生日期和时间';
+                return;
+            }
+            const date = new Date(dateStr);
+            const trueTime = calculateTrueSolarTime(date, hour, minute, locationInfo.longitude);
+            const shichenMap = { 23: '子', 0: '子', 1: '丑', 2: '丑', 3: '寅', 4: '寅', 5: '卯', 6: '卯', 7: '辰', 8: '辰', 9: '巳',
+                10: '巳', 11: '午', 12: '午', 13: '未', 14: '未', 15: '申', 16: '申', 17: '酉', 18: '酉', 19: '戌', 20: '戌',
+                21: '亥', 22: '亥' };
+            const originalShichen = shichenMap[hour] || '';
+            const trueShichen = shichenMap[trueTime.hour] || '';
+            trueSolarDiv.classList.remove('hidden');
+            trueSolarDiv.innerHTML =
+                `🌞 真太阳时校正<br>北京时间：${hour}:${minute}（${originalShichen}时）→ 真太阳时：${trueTime.hour}:${trueTime.minute}（${trueShichen}时）`;
+        }
+
+        function getActualBirthTime() {
+            const useTrueSolar = document.getElementById('useTrueSolar').checked;
+            const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
+            if (knowTime === 'no') return null;
+            let hour = parseInt(document.getElementById('hourSelect').value);
+            let minute = parseInt(document.getElementById('minuteSelect').value);
+            if (useTrueSolar) {
+                const locationInfo = getLocationInfo();
+                const dateStr = document.getElementById('dateInput').value;
+                if (locationInfo && locationInfo.longitude && dateStr && !isNaN(hour) && !isNaN(minute)) {
+                    const date = new Date(dateStr);
+                    const trueTime = calculateTrueSolarTime(date, hour, minute, locationInfo.longitude);
+                    return { hour: trueTime.hour, minute: trueTime.minute };
+                }
+            }
+            return { hour: hour, minute: minute };
+        }
+
+        function buildBirthString() {
+            const date = new Date(document.getElementById('dateInput').value);
+            if (isNaN(date.getTime())) return null;
+            const year = date.getFullYear(),
+                month = date.getMonth() + 1,
+                day = date.getDate();
+            const gender = document.getElementById('genderSelect').value;
+            const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
+            if (!gender) return null;
+            if (knowTime === 'yes') {
+                const actualTime = getActualBirthTime();
+                if (!actualTime || isNaN(actualTime.hour) || isNaN(actualTime.minute)) return null;
+                return `${year}.${month}.${day} ${actualTime.hour}时 ${actualTime.minute}分 ${gender}`;
+            } else {
+                return `${year}.${month}.${day} ${gender}`;
             }
         }
-        return { hour: hour, minute: minute };
-    }
 
-    function buildBirthString() {
-        const date = new Date(document.getElementById('dateInput').value);
-        if (isNaN(date.getTime())) return null;
-        const year = date.getFullYear(),
-            month = date.getMonth() + 1,
-            day = date.getDate();
-        const gender = document.getElementById('genderSelect').value;
-        const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
-        if (!gender) return null;
-        if (knowTime === 'yes') {
-            const actualTime = getActualBirthTime();
-            if (!actualTime || isNaN(actualTime.hour) || isNaN(actualTime.minute)) return null;
-            return `${year}.${month}.${day} ${actualTime.hour}时 ${actualTime.minute}分 ${gender}`;
-        } else {
-            return `${year}.${month}.${day} ${gender}`;
+        // ==================== 八字验证逻辑 ====================
+        function parseVerifyContent(content) {
+            const items = [];
+            const sections = ['【环境方位】', '【六亲情况】', '【过去经历】', '【性格特征】'];
+            for (let i = 0; i < sections.length; i++) {
+                const start = content.indexOf(sections[i]);
+                const end = (i < sections.length - 1) ? content.indexOf(sections[i + 1]) : content.length;
+                if (start !== -1) {
+                    let sectionContent = content.substring(start + sections[i].length, end).trim();
+                    items.push({ title: sections[i], content: sectionContent });
+                }
+            }
+            return items;
         }
-    }
 
-    // ==================== 八字验证逻辑 ====================
-    function parseVerifyContent(content) {
-        const items = [];
-        const sections = ['【环境方位】', '【六亲情况】', '【过去经历】', '【性格特征】'];
-        for (let i = 0; i < sections.length; i++) {
-            const start = content.indexOf(sections[i]);
-            const end = (i < sections.length - 1) ? content.indexOf(sections[i + 1]) : content.length;
-            if (start !== -1) {
-                let sectionContent = content.substring(start + sections[i].length, end).trim();
-                items.push({ title: sections[i], content: sectionContent });
+        function updateButtonHighlights() {
+            const hasAny = itemFeedbacks.some(fb => fb && fb.trim() !== '');
+            const submitBtn = document.getElementById('submitFeedbackBtn');
+            const confirmBtn = document.getElementById('confirmOverallBtn');
+            if (hasAny) {
+                submitBtn.classList.remove('secondary');
+                submitBtn.classList.add('primary');
+                submitBtn.disabled = false;
+                confirmBtn.classList.remove('dark');
+                confirmBtn.classList.add('secondary');
+            } else {
+                submitBtn.classList.remove('primary');
+                submitBtn.classList.add('secondary');
+                submitBtn.disabled = true;
+                confirmBtn.classList.remove('secondary');
+                confirmBtn.classList.add('dark');
             }
         }
-        return items;
-    }
 
-    function updateButtonHighlights() {
-        const hasAny = itemFeedbacks.some(fb => fb && fb.trim() !== '');
-        const submitBtn = document.getElementById('submitFeedbackBtn');
-        const confirmBtn = document.getElementById('confirmOverallBtn');
-        if (hasAny) {
-            submitBtn.classList.remove('secondary');
-            submitBtn.classList.add('primary');
-            submitBtn.disabled = false;
-            confirmBtn.classList.remove('dark');
-            confirmBtn.classList.add('secondary');
-        } else {
-            submitBtn.classList.remove('primary');
-            submitBtn.classList.add('secondary');
-            submitBtn.disabled = true;
-            confirmBtn.classList.remove('secondary');
-            confirmBtn.classList.add('dark');
-        }
-    }
-
-    function displayVerifyItems(items, feedbackNotice = null) {
-        const container = document.getElementById('verifyItemsContainer');
-        container.innerHTML = '';
-        if (feedbackNotice) {
-            const noticeDiv = document.createElement('div');
-            noticeDiv.className = 'feedback-notice';
-            noticeDiv.innerHTML = feedbackNotice;
-            container.appendChild(noticeDiv);
-        }
-        items.forEach((item, idx) => {
-            const isCharacter = item.title === '【性格特征】';
-            const questionText = isCharacter ? '请判断以上性格描述是否准确？' : '请判断以上推断是否准确？';
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'verify-item';
-            itemDiv.innerHTML = `
+        function displayVerifyItems(items, feedbackNotice = null) {
+            const container = document.getElementById('verifyItemsContainer');
+            container.innerHTML = '';
+            if (feedbackNotice) {
+                const noticeDiv = document.createElement('div');
+                noticeDiv.className = 'feedback-notice';
+                noticeDiv.innerHTML = feedbackNotice;
+                container.appendChild(noticeDiv);
+            }
+            items.forEach((item, idx) => {
+                const isCharacter = item.title === '【性格特征】';
+                const questionText = isCharacter ? '请判断以上性格描述是否准确？' : '请判断以上推断是否准确？';
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'verify-item';
+                itemDiv.innerHTML = `
                             <div class="verify-title">${escapeHtml(item.title)}</div>
                             <div class="item-buttons">
                                 <button class="item-btn confirm" data-index="${idx}">准确</button>
@@ -2096,448 +2450,449 @@
                             <div class="verify-content">${item.content.replace(/\n/g, '<br>')}</div>
                             <textarea class="feedback-detail" id="feedback-${idx}" rows="2" placeholder="请描述实际情况..."></textarea>
                         `;
-            container.appendChild(itemDiv);
-        });
-        for (let i = 0; i < items.length; i++) {
-            const confirmBtn = container.querySelector(`.item-btn.confirm[data-index="${i}"]`);
-            const feedbackBtn = container.querySelector(`.item-btn.feedback[data-index="${i}"]`);
-            const textarea = document.getElementById(`feedback-${i}`);
-            confirmBtn.onclick = () => {
-                confirmBtn.classList.add('active');
-                feedbackBtn.classList.remove('active');
-                itemFeedbacks[i] = '';
-                textarea.classList.remove('active');
-                textarea.value = '';
-                updateButtonHighlights();
-            };
-            feedbackBtn.onclick = () => {
-                textarea.classList.toggle('active');
-                if (textarea.classList.contains('active')) {
-                    feedbackBtn.classList.add('active');
-                    confirmBtn.classList.remove('active');
-                } else {
+                container.appendChild(itemDiv);
+            });
+            for (let i = 0; i < items.length; i++) {
+                const confirmBtn = container.querySelector(`.item-btn.confirm[data-index="${i}"]`);
+                const feedbackBtn = container.querySelector(`.item-btn.feedback[data-index="${i}"]`);
+                const textarea = document.getElementById(`feedback-${i}`);
+                confirmBtn.onclick = () => {
+                    confirmBtn.classList.add('active');
                     feedbackBtn.classList.remove('active');
                     itemFeedbacks[i] = '';
-                }
-            };
-            textarea.oninput = () => {
-                itemFeedbacks[i] = textarea.value;
-                if (itemFeedbacks[i].trim() !== '') {
-                    feedbackBtn.classList.add('active');
-                    confirmBtn.classList.remove('active');
-                } else {
-                    feedbackBtn.classList.remove('active');
-                }
-                updateButtonHighlights();
-            };
+                    textarea.classList.remove('active');
+                    textarea.value = '';
+                    updateButtonHighlights();
+                };
+                feedbackBtn.onclick = () => {
+                    textarea.classList.toggle('active');
+                    if (textarea.classList.contains('active')) {
+                        feedbackBtn.classList.add('active');
+                        confirmBtn.classList.remove('active');
+                    } else {
+                        feedbackBtn.classList.remove('active');
+                        itemFeedbacks[i] = '';
+                    }
+                };
+                textarea.oninput = () => {
+                    itemFeedbacks[i] = textarea.value;
+                    if (itemFeedbacks[i].trim() !== '') {
+                        feedbackBtn.classList.add('active');
+                        confirmBtn.classList.remove('active');
+                    } else {
+                        feedbackBtn.classList.remove('active');
+                    }
+                    updateButtonHighlights();
+                };
+            }
         }
-    }
 
-    // ===== callVerify =====
-    async function callVerify() {
-        hideVerifyBtn();
+        // ===== callVerify =====
+        async function callVerify() {
+            hideVerifyBtn();
 
-        const birth = buildBirthString();
-        if (!birth) {
-            renderVerifyBtn();
-            alert('请完整填写必填信息');
-            return false;
-        }
-
-        isLoading = true;
-        const verifyArea = document.getElementById('verifyArea');
-        const verifyItemsContainer = document.getElementById('verifyItemsContainer');
-        const actionButtons = document.getElementById('actionButtons');
-        const baziInfoArea = document.getElementById('baziInfoArea');
-        const toggleIcon = document.getElementById('verifyToggleIcon');
-
-        verifyArea.classList.remove('hidden');
-        actionButtons.style.display = 'none';
-        verifyItemsContainer.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 正在分析中...';
-        isVerifyCollapsed = false;
-        toggleIcon.innerHTML = expandSVG;
-
-        try {
-            const response = await fetch(`${API_URL}/verify`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ birth: birth })
-            });
-            const data = await response.json();
-            if (data.success) {
-                currentBirth = birth;
-                if (data.data.bazi) currentBaziStr = data.data.bazi;
-                currentVerifyItems = parseVerifyContent(data.data.verify);
-                itemFeedbacks = currentVerifyItems.map(() => '');
-                displayVerifyItems(currentVerifyItems);
-                actionButtons.style.display = 'flex';
-                currentStep = 1;
-                if (currentBaziStr) {
-                    document.getElementById('baziDisplay').textContent = currentBaziStr;
-                    baziInfoArea.classList.remove('hidden');
-                }
-                hideVerifyBtn();
-            } else {
-                verifyItemsContainer.innerHTML = `验证失败：${data.error || '未知错误'}`;
+            const birth = buildBirthString();
+            if (!birth) {
                 renderVerifyBtn();
+                alert('请完整填写必填信息');
+                return false;
             }
-        } catch (err) {
-            verifyItemsContainer.innerHTML = `网络错误：${err.message}`;
-            renderVerifyBtn();
-        } finally {
-            isLoading = false;
-        }
-        return true;
-    }
 
-    async function submitFeedback() {
-        const feedbackList = [];
-        for (let i = 0; i < currentVerifyItems.length; i++) {
-            if (itemFeedbacks[i] && itemFeedbacks[i].trim() !== '') {
-                feedbackList.push({
-                    section: currentVerifyItems[i].title,
-                    content: currentVerifyItems[i].content,
-                    feedback: itemFeedbacks[i]
+            isLoading = true;
+            const verifyArea = document.getElementById('verifyArea');
+            const verifyItemsContainer = document.getElementById('verifyItemsContainer');
+            const actionButtons = document.getElementById('actionButtons');
+            const baziInfoArea = document.getElementById('baziInfoArea');
+            const toggleIcon = document.getElementById('verifyToggleIcon');
+
+            verifyArea.classList.remove('hidden');
+            actionButtons.style.display = 'none';
+            verifyItemsContainer.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 正在分析中...';
+            isVerifyCollapsed = false;
+            toggleIcon.innerHTML = expandSVG;
+
+            try {
+                const response = await fetch(`${API_URL}/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ birth: birth })
                 });
+                const data = await response.json();
+                if (data.success) {
+                    currentBirth = birth;
+                    if (data.data.bazi) currentBaziStr = data.data.bazi;
+                    currentVerifyItems = parseVerifyContent(data.data.verify);
+                    itemFeedbacks = currentVerifyItems.map(() => '');
+                    displayVerifyItems(currentVerifyItems);
+                    actionButtons.style.display = 'flex';
+                    currentStep = 1;
+                    if (currentBaziStr) {
+                        document.getElementById('baziDisplay').textContent = currentBaziStr;
+                        baziInfoArea.classList.remove('hidden');
+                    }
+                    hideVerifyBtn();
+                } else {
+                    verifyItemsContainer.innerHTML = `验证失败：${data.error || '未知错误'}`;
+                    renderVerifyBtn();
+                }
+            } catch (err) {
+                verifyItemsContainer.innerHTML = `网络错误：${err.message}`;
+                renderVerifyBtn();
+            } finally {
+                isLoading = false;
             }
+            return true;
         }
-        if (feedbackList.length === 0) {
-            alert('请先在不准确的条目中填写反馈内容');
-            return;
-        }
-        const verifyItemsContainer = document.getElementById('verifyItemsContainer');
-        verifyItemsContainer.innerHTML =
-            '<div class="loading-dots"><span></span><span></span><span></span></div> 根据您的反馈重新分析...';
-        try {
-            const response = await fetch(`${API_URL}/verify_adjust`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ birth: currentBirth, feedback_items: feedbackList })
-            });
-            const data = await response.json();
-            if (data.success && data.data.adjusted_items) {
-                for (let adj of data.data.adjusted_items) {
-                    for (let i = 0; i < currentVerifyItems.length; i++) {
-                        if (currentVerifyItems[i].title === adj.section) {
-                            currentVerifyItems[i].content = adj.new_content;
-                            break;
+
+        async function submitFeedback() {
+            const feedbackList = [];
+            for (let i = 0; i < currentVerifyItems.length; i++) {
+                if (itemFeedbacks[i] && itemFeedbacks[i].trim() !== '') {
+                    feedbackList.push({
+                        section: currentVerifyItems[i].title,
+                        content: currentVerifyItems[i].content,
+                        feedback: itemFeedbacks[i]
+                    });
+                }
+            }
+            if (feedbackList.length === 0) {
+                alert('请先在不准确的条目中填写反馈内容');
+                return;
+            }
+            const verifyItemsContainer = document.getElementById('verifyItemsContainer');
+            verifyItemsContainer.innerHTML =
+                '<div class="loading-dots"><span></span><span></span><span></span></div> 根据您的反馈重新分析...';
+            try {
+                const response = await fetch(`${API_URL}/verify_adjust`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ birth: currentBirth, feedback_items: feedbackList })
+                });
+                const data = await response.json();
+                if (data.success && data.data.adjusted_items) {
+                    for (let adj of data.data.adjusted_items) {
+                        for (let i = 0; i < currentVerifyItems.length; i++) {
+                            if (currentVerifyItems[i].title === adj.section) {
+                                currentVerifyItems[i].content = adj.new_content;
+                                break;
+                            }
                         }
                     }
-                }
-                for (let i = 0; i < currentVerifyItems.length; i++) itemFeedbacks[i] = '';
-                let notice =
-                    `📝 感谢您的反馈！已根据您提供的信息重新调整了 ${feedbackList.length} 项推断：<br>`;
-                for (let fb of feedbackList) notice +=
-                    `• ${fb.section}：已根据「${fb.feedback.substring(0, 40)}${fb.feedback.length > 40 ? '...' : ''}」进行调整<br>`;
-                displayVerifyItems(currentVerifyItems, notice);
-                for (let i = 0; i < currentVerifyItems.length; i++) {
-                    const confirmBtn = document.querySelector(`.item-btn.confirm[data-index="${i}"]`);
-                    const feedbackBtn = document.querySelector(`.item-btn.feedback[data-index="${i}"]`);
-                    const textarea = document.getElementById(`feedback-${i}`);
-                    if (confirmBtn) {
-                        confirmBtn.onclick = () => {
-                            confirmBtn.classList.add('active');
-                            feedbackBtn.classList.remove('active');
-                            itemFeedbacks[i] = '';
-                            textarea.classList.remove('active');
-                            textarea.value = '';
-                            updateButtonHighlights();
-                        };
-                    }
-                    if (feedbackBtn) {
-                        feedbackBtn.onclick = () => {
-                            textarea.classList.toggle('active');
-                            if (textarea.classList.contains('active')) {
-                                feedbackBtn.classList.add('active');
-                                confirmBtn.classList.remove('active');
-                            } else {
+                    for (let i = 0; i < currentVerifyItems.length; i++) itemFeedbacks[i] = '';
+                    let notice =
+                        `📝 感谢您的反馈！已根据您提供的信息重新调整了 ${feedbackList.length} 项推断：<br>`;
+                    for (let fb of feedbackList) notice +=
+                        `• ${fb.section}：已根据「${fb.feedback.substring(0, 40)}${fb.feedback.length > 40 ? '...' : ''}」进行调整<br>`;
+                    displayVerifyItems(currentVerifyItems, notice);
+                    for (let i = 0; i < currentVerifyItems.length; i++) {
+                        const confirmBtn = document.querySelector(`.item-btn.confirm[data-index="${i}"]`);
+                        const feedbackBtn = document.querySelector(`.item-btn.feedback[data-index="${i}"]`);
+                        const textarea = document.getElementById(`feedback-${i}`);
+                        if (confirmBtn) {
+                            confirmBtn.onclick = () => {
+                                confirmBtn.classList.add('active');
                                 feedbackBtn.classList.remove('active');
                                 itemFeedbacks[i] = '';
-                            }
-                        };
+                                textarea.classList.remove('active');
+                                textarea.value = '';
+                                updateButtonHighlights();
+                            };
+                        }
+                        if (feedbackBtn) {
+                            feedbackBtn.onclick = () => {
+                                textarea.classList.toggle('active');
+                                if (textarea.classList.contains('active')) {
+                                    feedbackBtn.classList.add('active');
+                                    confirmBtn.classList.remove('active');
+                                } else {
+                                    feedbackBtn.classList.remove('active');
+                                    itemFeedbacks[i] = '';
+                                }
+                            };
+                        }
+                        if (textarea) {
+                            textarea.oninput = () => {
+                                itemFeedbacks[i] = textarea.value;
+                                if (itemFeedbacks[i].trim() !== '') {
+                                    feedbackBtn.classList.add('active');
+                                    confirmBtn.classList.remove('active');
+                                } else {
+                                    feedbackBtn.classList.remove('active');
+                                }
+                                updateButtonHighlights();
+                            };
+                        }
                     }
-                    if (textarea) {
-                        textarea.oninput = () => {
-                            itemFeedbacks[i] = textarea.value;
-                            if (itemFeedbacks[i].trim() !== '') {
-                                feedbackBtn.classList.add('active');
-                                confirmBtn.classList.remove('active');
-                            } else {
-                                feedbackBtn.classList.remove('active');
-                            }
-                            updateButtonHighlights();
-                        };
-                    }
+                    updateButtonHighlights();
+                } else {
+                    verifyItemsContainer.innerHTML = `重新分析失败：${data.error || '未知错误'}`;
                 }
-                updateButtonHighlights();
-            } else {
-                verifyItemsContainer.innerHTML = `重新分析失败：${data.error || '未知错误'}`;
+            } catch (err) {
+                verifyItemsContainer.innerHTML = `网络错误：${err.message}`;
             }
-        } catch (err) {
-            verifyItemsContainer.innerHTML = `网络错误：${err.message}`;
         }
-    }
 
-    // ===== confirmAllAccurate =====
-    function confirmAllAccurate() {
-        currentStep = 2;
-        const verifyArea = document.getElementById('verifyArea');
-        const verifyItemsContainer = document.getElementById('verifyItemsContainer');
-        const currentVerifyHtml = verifyItemsContainer.innerHTML;
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = currentVerifyHtml;
-        const elementsToRemove = tempDiv.querySelectorAll('.item-buttons, .feedback-detail, .verify-question, .action-buttons, button');
-        elementsToRemove.forEach(el => el.remove());
-        pendingVerifyContent = tempDiv.innerHTML;
+        // ===== confirmAllAccurate =====
+        function confirmAllAccurate() {
+            currentStep = 2;
+            const verifyArea = document.getElementById('verifyArea');
+            const verifyItemsContainer = document.getElementById('verifyItemsContainer');
+            const currentVerifyHtml = verifyItemsContainer.innerHTML;
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = currentVerifyHtml;
+            const elementsToRemove = tempDiv.querySelectorAll('.item-buttons, .feedback-detail, .verify-question, .action-buttons, button');
+            elementsToRemove.forEach(el => el.remove());
+            pendingVerifyContent = tempDiv.innerHTML;
 
-        verifyArea.classList.add('hidden');
-        hideVerifyBtn();
+            verifyArea.classList.add('hidden');
+            hideVerifyBtn();
 
-        const moduleArea = document.getElementById('moduleArea');
-        if (moduleArea) {
-            moduleArea.classList.remove('hidden');
-            const container = document.getElementById('analysisBtnContainer');
-            if (container) {
-                container.innerHTML = `
+            const moduleArea = document.getElementById('moduleArea');
+            if (moduleArea) {
+                moduleArea.classList.remove('hidden');
+                const container = document.getElementById('analysisBtnContainer');
+                if (container) {
+                    container.innerHTML = `
                                 <button class="btn-start" id="startAnalysisBtn">开始深度分析</button>
                             `;
-                const startBtn = document.getElementById('startAnalysisBtn');
-                if (startBtn) startBtn.onclick = startAnalysis;
+                    const startBtn = document.getElementById('startAnalysisBtn');
+                    if (startBtn) startBtn.onclick = startAnalysis;
+                }
+            }
+
+            document.getElementById('resultCard').style.display = 'none';
+        }
+
+        function showAnalysisResult(content) {
+            lastAnalysisResult = content;
+            let html = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            document.getElementById('resultContent').innerHTML = html;
+            document.getElementById('resultCard').style.display = 'block';
+            document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+            const userName = document.getElementById('nameInput').value;
+            if (currentBirth && content) {
+                saveAnalysisRecord(currentBirth, currentModuleName(), content, currentBaziStr, userName,
+                    pendingVerifyContent);
+                pendingVerifyContent = null;
             }
         }
 
-        document.getElementById('resultCard').style.display = 'none';
-    }
+        // ==================== 深度分析 ====================
+        async function startAnalysis() {
+            if (isLoading) return;
 
-    function showAnalysisResult(content) {
-        lastAnalysisResult = content;
-        let html = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        document.getElementById('resultContent').innerHTML = html;
-        document.getElementById('resultCard').style.display = 'block';
-        document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
-        const userName = document.getElementById('nameInput').value;
-        if (currentBirth && content) {
-            saveAnalysisRecord(currentBirth, currentModuleName(), content, currentBaziStr, userName,
-                pendingVerifyContent);
-            pendingVerifyContent = null;
-        }
-    }
+            hideVerifyBtn();
 
-    // ==================== 深度分析 ====================
-    async function startAnalysis() {
-        if (isLoading) return;
-
-        hideVerifyBtn();
-
-        isLoading = true;
-        const container = document.getElementById('analysisBtnContainer');
-        const startBtn = document.getElementById('startAnalysisBtn');
-        startBtn.disabled = true;
-        startBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
-        try {
-            const response = await fetch(`${API_URL}/analyze`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ birth: currentBirth, module: currentModule })
-            });
-            const data = await response.json();
-            if (data.success) {
-                showAnalysisResult(data.data.analysis);
-                container.innerHTML = `
+            isLoading = true;
+            const container = document.getElementById('analysisBtnContainer');
+            const startBtn = document.getElementById('startAnalysisBtn');
+            startBtn.disabled = true;
+            startBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
+            try {
+                const response = await fetch(`${API_URL}/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ birth: currentBirth, module: currentModule })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showAnalysisResult(data.data.analysis);
+                    container.innerHTML = `
                                 <button class="btn-done" disabled>深度分析已完成</button>
                                 <button class="btn-continue" id="continueAnalysisBtn">继续深度分析</button>
                             `;
-                document.getElementById('continueAnalysisBtn').onclick = continueAnalysis;
-            } else {
-                showAnalysisResult(`分析失败：${data.error || '未知错误'}`);
+                    document.getElementById('continueAnalysisBtn').onclick = continueAnalysis;
+                } else {
+                    showAnalysisResult(`分析失败：${data.error || '未知错误'}`);
+                    startBtn.disabled = false;
+                    startBtn.innerHTML = '开始深度分析';
+                }
+            } catch (err) {
+                showAnalysisResult(`网络错误：${err.message}`);
                 startBtn.disabled = false;
                 startBtn.innerHTML = '开始深度分析';
+            } finally {
+                isLoading = false;
             }
-        } catch (err) {
-            showAnalysisResult(`网络错误：${err.message}`);
-            startBtn.disabled = false;
-            startBtn.innerHTML = '开始深度分析';
-        } finally {
-            isLoading = false;
         }
-    }
 
-    async function continueAnalysis() {
-        if (isLoading) return;
-        isLoading = true;
-        const continueBtn = document.getElementById('continueAnalysisBtn');
-        continueBtn.disabled = true;
-        continueBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
-        try {
-            const response = await fetch(`${API_URL}/analyze`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ birth: currentBirth, module: currentModule })
-            });
-            const data = await response.json();
-            if (data.success) {
-                showAnalysisResult(data.data.analysis);
+        async function continueAnalysis() {
+            if (isLoading) return;
+            isLoading = true;
+            const continueBtn = document.getElementById('continueAnalysisBtn');
+            continueBtn.disabled = true;
+            continueBtn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> 分析中...';
+            try {
+                const response = await fetch(`${API_URL}/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ birth: currentBirth, module: currentModule })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showAnalysisResult(data.data.analysis);
+                } else {
+                    showAnalysisResult(`分析失败：${data.error || '未知错误'}`);
+                }
+            } catch (err) {
+                showAnalysisResult(`网络错误：${err.message}`);
+            } finally {
+                isLoading = false;
+                continueBtn.disabled = false;
+                continueBtn.innerHTML = '继续深度分析';
+            }
+        }
+
+        async function regenerateAnalysis() {
+            if (isLoading) return;
+            isLoading = true;
+            const resultContent = document.getElementById('resultContent');
+            resultContent.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 重新生成中...';
+            try {
+                const response = await fetch(`${API_URL}/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ birth: currentBirth, module: currentModule })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    lastAnalysisResult = data.data.analysis;
+                    let html = data.data.analysis.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    resultContent.innerHTML = html;
+                } else {
+                    resultContent.innerHTML = `分析失败：${data.error || '未知错误'}`;
+                }
+            } catch (err) {
+                resultContent.innerHTML = `网络错误：${err.message}`;
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        function copyResult() {
+            if (!lastAnalysisResult) { alert('没有可复制的内容'); return; }
+            navigator.clipboard.writeText(lastAnalysisResult).then(() => alert('已复制到剪贴板')).catch(() => alert(
+                '复制失败'));
+        }
+
+        function shareResult() {
+            if (!lastAnalysisResult) { alert('没有可分享的内容'); return; }
+            if (navigator.share) {
+                navigator.share({ title: '八字命理分析结果', text: lastAnalysisResult.substring(0, 500) }).catch(() => {});
             } else {
-                showAnalysisResult(`分析失败：${data.error || '未知错误'}`);
+                alert('当前浏览器不支持分享功能，请手动复制');
             }
-        } catch (err) {
-            showAnalysisResult(`网络错误：${err.message}`);
-        } finally {
-            isLoading = false;
-            continueBtn.disabled = false;
-            continueBtn.innerHTML = '继续深度分析';
         }
-    }
 
-    async function regenerateAnalysis() {
-        if (isLoading) return;
-        isLoading = true;
-        const resultContent = document.getElementById('resultContent');
-        resultContent.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 重新生成中...';
-        try {
-            const response = await fetch(`${API_URL}/analyze`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ birth: currentBirth, module: currentModule })
-            });
-            const data = await response.json();
-            if (data.success) {
-                lastAnalysisResult = data.data.analysis;
-                let html = data.data.analysis.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                resultContent.innerHTML = html;
-            } else {
-                resultContent.innerHTML = `分析失败：${data.error || '未知错误'}`;
-            }
-        } catch (err) {
-            resultContent.innerHTML = `网络错误：${err.message}`;
-        } finally {
-            isLoading = false;
-        }
-    }
+        function newChat() {
+            showDefaultPanel();
 
-    function copyResult() {
-        if (!lastAnalysisResult) { alert('没有可复制的内容'); return; }
-        navigator.clipboard.writeText(lastAnalysisResult).then(() => alert('已复制到剪贴板')).catch(() => alert(
-            '复制失败'));
-    }
+            currentStep = 0;
+            document.getElementById('verifyArea').classList.add('hidden');
+            document.getElementById('moduleArea').classList.add('hidden');
+            document.getElementById('resultCard').style.display = 'none';
+            document.getElementById('baziInfoArea').classList.add('hidden');
+            document.getElementById('verifyItemsContainer').innerHTML = '';
+            document.getElementById('actionButtons').style.display = 'none';
+            itemFeedbacks = [];
+            lastAnalysisResult = '';
+            pendingVerifyContent = null;
+            isVerifyCollapsed = false;
 
-    function shareResult() {
-        if (!lastAnalysisResult) { alert('没有可分享的内容'); return; }
-        if (navigator.share) {
-            navigator.share({ title: '八字命理分析结果', text: lastAnalysisResult.substring(0, 500) }).catch(() => {});
-        } else {
-            alert('当前浏览器不支持分享功能，请手动复制');
-        }
-    }
+            renderVerifyBtn();
 
-    function newChat() {
-        showDefaultPanel();
-
-        currentStep = 0;
-        document.getElementById('verifyArea').classList.add('hidden');
-        document.getElementById('moduleArea').classList.add('hidden');
-        document.getElementById('resultCard').style.display = 'none';
-        document.getElementById('baziInfoArea').classList.add('hidden');
-        document.getElementById('verifyItemsContainer').innerHTML = '';
-        document.getElementById('actionButtons').style.display = 'none';
-        itemFeedbacks = [];
-        lastAnalysisResult = '';
-        pendingVerifyContent = null;
-        isVerifyCollapsed = false;
-
-        renderVerifyBtn();
-
-        const moduleArea = document.getElementById('moduleArea');
-        if (moduleArea) {
-            moduleArea.classList.add('hidden');
-            const container = document.getElementById('analysisBtnContainer');
-            if (container) {
-                container.innerHTML = `
+            const moduleArea = document.getElementById('moduleArea');
+            if (moduleArea) {
+                moduleArea.classList.add('hidden');
+                const container = document.getElementById('analysisBtnContainer');
+                if (container) {
+                    container.innerHTML = `
                                 <button class="btn-start" id="startAnalysisBtn">开始深度分析</button>
                             `;
-                const startBtn = document.getElementById('startAnalysisBtn');
-                if (startBtn) startBtn.onclick = startAnalysis;
-            }
-        }
-
-        const toggleIcon = document.getElementById('verifyToggleIcon');
-        if (toggleIcon) toggleIcon.innerHTML = expandSVG;
-    }
-
-    // ==================== 页面初始化 ====================
-    document.addEventListener('DOMContentLoaded', function() {
-        getUserId();
-        updateUserDisplay();
-
-        initMinuteSelect();
-        loadRegionData();
-        updateHistoryList();
-        migrateOldRecords();
-        initWechatCopy();
-        initTimeTabs();
-        initContactTabs();
-
-        renderVerifyBtn();
-
-        document.getElementById('timeToolBtn').onclick = showTimePanel;
-        document.getElementById('contactToolBtn').onclick = showContactPanel;
-        document.getElementById('backToMainBtn').onclick = showDefaultPanel;
-        document.getElementById('backToMainFromContactBtn').onclick = showDefaultPanel;
-
-        const toggleIcon = document.getElementById('verifyToggleIcon');
-        if (toggleIcon) toggleIcon.onclick = toggleVerifySection;
-        document.getElementById('submitFeedbackBtn').onclick = submitFeedback;
-        document.getElementById('confirmOverallBtn').onclick = confirmAllAccurate;
-        const startAnalysisBtn = document.getElementById('startAnalysisBtn');
-        if (startAnalysisBtn) startAnalysisBtn.onclick = startAnalysis;
-        document.getElementById('copyResultBtn').onclick = copyResult;
-        document.getElementById('regenerateResultBtn').onclick = regenerateAnalysis;
-        document.getElementById('shareResultBtn').onclick = shareResult;
-        document.getElementById('newChatBtn').onclick = newChat;
-
-        const userSection = document.getElementById('userSection');
-        if (userSection) {
-            userSection.onclick = showLoginModal;
-        }
-
-        document.getElementById('provinceSelect').addEventListener('change', () => { updateCitySelect(); if (document
-                .getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
-        document.getElementById('citySelect').addEventListener('change', () => { updateDistrictSelect(); if (document
-                .getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
-        document.getElementById('districtSelect').addEventListener('change', () => { if (document.getElementById(
-                'useTrueSolar').checked) updateTrueSolarDisplay(); });
-        document.getElementById('useTrueSolar').addEventListener('change', updateTrueSolarDisplay);
-        document.getElementById('dateInput').addEventListener('change', () => { if (document.getElementById(
-                'useTrueSolar').checked) updateTrueSolarDisplay(); });
-        document.getElementById('hourSelect').addEventListener('change', () => { if (document.getElementById(
-                'useTrueSolar').checked) updateTrueSolarDisplay(); });
-        document.getElementById('minuteSelect').addEventListener('change', () => { if (document.getElementById(
-                'useTrueSolar').checked) updateTrueSolarDisplay(); });
-
-        document.querySelectorAll('input[name="knowTime"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                const timeSelectArea = document.getElementById('timeSelectArea');
-                const timeWarning = document.getElementById('timeWarning');
-                if (e.target.value === 'yes') {
-                    timeSelectArea.classList.remove('hidden');
-                    timeWarning.classList.add('hidden');
-                } else {
-                    timeSelectArea.classList.add('hidden');
-                    timeWarning.classList.remove('hidden');
-                    document.getElementById('trueSolarResult').classList.add('hidden');
+                    const startBtn = document.getElementById('startAnalysisBtn');
+                    if (startBtn) startBtn.onclick = startAnalysis;
                 }
-                if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
-            });
-        });
+            }
 
-        document.querySelectorAll('.module-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.module-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentModule = btn.dataset.module;
+            const toggleIcon = document.getElementById('verifyToggleIcon');
+            if (toggleIcon) toggleIcon.innerHTML = expandSVG;
+        }
+
+        // ==================== 页面初始化 ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            getUserId();
+            updateUserDisplay();
+
+            initMinuteSelect();
+            loadRegionData();
+            updateHistoryList();
+            migrateOldRecords();
+            initWechatCopy();
+            initTimeTabs();
+            initContactTabs();
+
+            renderVerifyBtn();
+
+            document.getElementById('timeToolBtn').onclick = showTimePanel;
+            document.getElementById('contactToolBtn').onclick = showContactPanel;
+            document.getElementById('backToMainBtn').onclick = showDefaultPanel;
+            document.getElementById('backToMainFromContactBtn').onclick = showDefaultPanel;
+
+            const toggleIcon = document.getElementById('verifyToggleIcon');
+            if (toggleIcon) toggleIcon.onclick = toggleVerifySection;
+            document.getElementById('submitFeedbackBtn').onclick = submitFeedback;
+            document.getElementById('confirmOverallBtn').onclick = confirmAllAccurate;
+            const startAnalysisBtn = document.getElementById('startAnalysisBtn');
+            if (startAnalysisBtn) startAnalysisBtn.onclick = startAnalysis;
+            document.getElementById('copyResultBtn').onclick = copyResult;
+            document.getElementById('regenerateResultBtn').onclick = regenerateAnalysis;
+            document.getElementById('shareResultBtn').onclick = shareResult;
+            document.getElementById('newChatBtn').onclick = newChat;
+
+            const userSection = document.getElementById('userSection');
+            if (userSection) {
+                userSection.onclick = showLoginModal;
+            }
+
+            document.getElementById('provinceSelect').addEventListener('change', () => { updateCitySelect(); if (document
+                    .getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
+            document.getElementById('citySelect').addEventListener('change', () => { updateDistrictSelect(); if (document
+                    .getElementById('useTrueSolar').checked) updateTrueSolarDisplay(); });
+            document.getElementById('districtSelect').addEventListener('change', () => { if (document.getElementById(
+                    'useTrueSolar').checked) updateTrueSolarDisplay(); });
+            document.getElementById('useTrueSolar').addEventListener('change', updateTrueSolarDisplay);
+            document.getElementById('dateInput').addEventListener('change', () => { if (document.getElementById(
+                    'useTrueSolar').checked) updateTrueSolarDisplay(); });
+            document.getElementById('hourSelect').addEventListener('change', () => { if (document.getElementById(
+                    'useTrueSolar').checked) updateTrueSolarDisplay(); });
+            document.getElementById('minuteSelect').addEventListener('change', () => { if (document.getElementById(
+                    'useTrueSolar').checked) updateTrueSolarDisplay(); });
+
+            document.querySelectorAll('input[name="knowTime"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    const timeSelectArea = document.getElementById('timeSelectArea');
+                    const timeWarning = document.getElementById('timeWarning');
+                    if (e.target.value === 'yes') {
+                        timeSelectArea.classList.remove('hidden');
+                        timeWarning.classList.add('hidden');
+                    } else {
+                        timeSelectArea.classList.add('hidden');
+                        timeWarning.classList.remove('hidden');
+                        document.getElementById('trueSolarResult').classList.add('hidden');
+                    }
+                    if (document.getElementById('useTrueSolar').checked) updateTrueSolarDisplay();
+                });
+            });
+
+            document.querySelectorAll('.module-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.module-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentModule = btn.dataset.module;
+                });
             });
         });
-    });
-</script>
+    </script>
+
 </body>
 </html>
