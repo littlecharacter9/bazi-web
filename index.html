@@ -145,7 +145,6 @@
             text-align: center;
             font-size: 12px;
         }
-        /* ===== 简洁图标样式（历史记录） ===== */
         .history-icon {
             opacity: 0.6;
             transition: opacity 0.2s, transform 0.1s;
@@ -171,7 +170,6 @@
         .history-icon:active {
             transform: scale(0.9);
         }
-        /* 确保图标容器对齐 */
         .history-item .history-actions {
             display: flex;
             gap: 4px;
@@ -349,7 +347,6 @@
             font-weight: 600;
         }
 
-        /* 联系作者 - 专属样式 */
         .contact-area {
             text-align: center;
             padding: 16px;
@@ -403,7 +400,6 @@
             background: #ccc;
         }
 
-        /* 示意图 */
         .diagram-row {
             display: flex;
             gap: 20px;
@@ -449,7 +445,6 @@
             border-radius: 20% 20% 30% 30%;
         }
 
-        /* ===== 表单样式 ===== */
         .form-card {
             background: #f9f9fb;
             border-radius: 20px;
@@ -566,7 +561,6 @@
             margin-top: 8px;
         }
 
-        /* ===== 验证 & 分析 ===== */
         .verify-box {
             background: #e8f0fe;
             border-left: 4px solid #1a1a2e;
@@ -876,7 +870,9 @@
             }
         }
 
-        /* ===== 移动端适配 ===== */
+        /* ================================================================ */
+        /* ===== 移动端适配（仅对 768px 以下生效，不影响桌面端） ===== */
+        /* ================================================================ */
         @media (max-width: 768px) {
             body {
                 overflow: hidden !important;
@@ -891,6 +887,7 @@
                 overflow: hidden !important;
             }
 
+            /* ---- 侧边栏 ---- */
             .sidebar {
                 width: 100% !important;
                 max-height: 56px !important;
@@ -943,6 +940,7 @@
                 max-height: 200px !important;
             }
 
+            /* ---- 主区域（移动端专用：下移露出侧边栏背景） ---- */
             .main {
                 flex: 1 !important;
                 overflow: hidden !important;
@@ -951,14 +949,23 @@
                 flex-direction: column !important;
                 min-height: 0 !important;
                 background: #fff !important;
+                /* 关键：让白框下移，露出侧边栏深色背景 */
+                margin-top: 24px !important;
+                border-top-left-radius: 20px !important;
+                border-top-right-radius: 20px !important;
+                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06) !important;
+                /* 保证不溢出 */
+                max-height: calc(100vh - 56px - 24px) !important;
             }
 
-            /* ===== 移动端标题栏 ===== */
             .main-header {
                 flex-shrink: 0 !important;
                 padding: 14px 16px 16px 16px !important;
                 border-bottom: 1px solid #eee !important;
                 background: #fff !important;
+                border-top-left-radius: 20px !important;
+                border-top-right-radius: 20px !important;
+                margin-top: 0 !important;
             }
             .main-header h2 {
                 font-size: 18px !important;
@@ -982,11 +989,10 @@
                 background: #fff !important;
             }
 
-            /* ===== 移动端顶部占位间距（直接插入到 main 顶部） ===== */
             .mobile-top-spacer {
                 display: block !important;
-                height: 16px !important;
-                background: #fff !important;
+                height: 0 !important;
+                background: transparent !important;
                 flex-shrink: 0 !important;
             }
 
@@ -1278,6 +1284,8 @@
             }
             .main {
                 height: calc(100vh - 48px) !important;
+                margin-top: 20px !important;
+                max-height: calc(100vh - 48px - 20px) !important;
             }
             .logo {
                 font-size: 16px !important;
@@ -1307,7 +1315,7 @@
                 padding: 8px !important;
             }
             .mobile-top-spacer {
-                height: 12px !important;
+                height: 0 !important;
             }
         }
     </style>
@@ -1348,7 +1356,8 @@
         </div>
 
         <!-- ==================== 主区域 ==================== -->
-            <!-- ===== 移动端顶部占位间距（只在移动端显示） ===== -->
+        <div class="main">
+            <!-- 移动端占位 -->
             <div class="mobile-top-spacer"></div>
 
             <div class="main-header">
@@ -1428,7 +1437,6 @@
                             </div>
                         </div>
 
-                        <!-- ===== 按钮容器：由 JavaScript 动态渲染 ===== -->
                         <div id="verifyBtnContainer"></div>
                     </div>
 
