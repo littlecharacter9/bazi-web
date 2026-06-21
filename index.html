@@ -853,7 +853,7 @@
                 flex-direction: column !important;
                 height: 100vh !important;
                 overflow: hidden !important;
-                background: #1a1a2e !important; /* 整体深色背景，让间距显示深色 */
+                background: #1a1a2e !important;
             }
 
             .sidebar {
@@ -909,7 +909,6 @@
                 max-height: 200px !important;
             }
 
-            /* ---- 主区域：直角 + 10px 深色间距 ---- */
             .main {
                 flex: 1 !important;
                 overflow: hidden !important;
@@ -918,7 +917,6 @@
                 flex-direction: column !important;
                 min-height: 0 !important;
                 background: #fff !important;
-                /* 10px 间距，露出 .app 的深色背景 */
                 margin-top: 10px !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
@@ -1645,6 +1643,14 @@
         let isVerifyCollapsed = false;
         let pendingVerifyContent = null;
 
+        // ==================== 侧边栏关闭（移动端） ====================
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+            }
+        }
+
         // ==================== 验证按钮统一渲染 ====================
         function renderVerifyBtn() {
             const container = document.getElementById('verifyBtnContainer');
@@ -1697,7 +1703,7 @@
             }
         });
 
-        // ==================== 页面切换 ====================
+        // ==================== 页面切换（自动关闭侧边栏） ====================
         function showDefaultPanel() {
             document.getElementById('defaultPanel').classList.remove('hidden');
             document.getElementById('timePanel').classList.add('hidden');
@@ -1705,6 +1711,7 @@
             document.getElementById('mainTitle').textContent = '八字命盘分析';
             document.getElementById('mainSubtitle').textContent = '输入生辰信息，AI 辅助解析命盘格局';
             renderVerifyBtn();
+            closeSidebar();
         }
 
         function showTimePanel() {
@@ -1714,6 +1721,7 @@
             document.getElementById('mainTitle').textContent = '时辰确定';
             document.getElementById('mainSubtitle').textContent = '专业推断 / 自行推断';
             renderVerifyBtn();
+            closeSidebar();
         }
 
         function showContactPanel() {
@@ -1723,6 +1731,7 @@
             document.getElementById('mainTitle').textContent = '联系作者';
             document.getElementById('mainSubtitle').textContent = '作者简介 · 深度服务 · 开光服务';
             renderVerifyBtn();
+            closeSidebar();
         }
 
         // ==================== 时辰确定 Tab 切换 ====================
@@ -2161,6 +2170,7 @@
             }
 
             resultCard.scrollIntoView({ behavior: 'smooth' });
+            closeSidebar();
         }
 
         function currentModuleName() {
@@ -2801,6 +2811,7 @@
 
             const toggleIcon = document.getElementById('verifyToggleIcon');
             if (toggleIcon) toggleIcon.innerHTML = expandSVG;
+            closeSidebar();
         }
 
         // ==================== 页面初始化 ====================
@@ -2818,10 +2829,27 @@
 
             renderVerifyBtn();
 
-            document.getElementById('timeToolBtn').onclick = showTimePanel;
-            document.getElementById('contactToolBtn').onclick = showContactPanel;
-            document.getElementById('backToMainBtn').onclick = showDefaultPanel;
-            document.getElementById('backToMainFromContactBtn').onclick = showDefaultPanel;
+            // 绑定点击事件 + 自动关闭侧边栏
+            document.getElementById('timeToolBtn').onclick = function() {
+                showTimePanel();
+                closeSidebar();
+            };
+            document.getElementById('contactToolBtn').onclick = function() {
+                showContactPanel();
+                closeSidebar();
+            };
+            document.getElementById('backToMainBtn').onclick = function() {
+                showDefaultPanel();
+                closeSidebar();
+            };
+            document.getElementById('backToMainFromContactBtn').onclick = function() {
+                showDefaultPanel();
+                closeSidebar();
+            };
+            document.getElementById('newChatBtn').onclick = function() {
+                newChat();
+                closeSidebar();
+            };
 
             const toggleIcon = document.getElementById('verifyToggleIcon');
             if (toggleIcon) toggleIcon.onclick = toggleVerifySection;
@@ -2832,11 +2860,13 @@
             document.getElementById('copyResultBtn').onclick = copyResult;
             document.getElementById('regenerateResultBtn').onclick = regenerateAnalysis;
             document.getElementById('shareResultBtn').onclick = shareResult;
-            document.getElementById('newChatBtn').onclick = newChat;
 
             const userSection = document.getElementById('userSection');
             if (userSection) {
-                userSection.onclick = showLoginModal;
+                userSection.onclick = function() {
+                    showLoginModal();
+                    closeSidebar();
+                };
             }
 
             document.getElementById('provinceSelect').addEventListener('change', () => { updateCitySelect(); if (document
