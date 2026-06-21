@@ -87,6 +87,7 @@
             background: rgba(255, 255, 255, 0.15);
         }
 
+        /* 工具菜单 */
         .tools-menu {
             margin: 0 12px 16px 12px;
             padding-bottom: 16px;
@@ -104,6 +105,7 @@
             background: rgba(255, 255, 255, 0.08);
         }
 
+        /* 历史记录 */
         .history-section {
             padding: 0 12px;
             display: flex;
@@ -143,16 +145,37 @@
             text-align: center;
             font-size: 12px;
         }
+        /* ===== 简洁图标样式（历史记录） ===== */
         .history-icon {
-            opacity: 0.5;
-            transition: opacity 0.2s;
+            opacity: 0.6;
+            transition: opacity 0.2s, transform 0.1s;
             cursor: pointer;
-        }
-        .history-item:hover .history-icon {
-            opacity: 1;
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 14px;
+            line-height: 1;
+            padding: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
         }
         .history-icon:hover {
-            color: #e6b980 !important;
+            opacity: 1;
+            color: #e6b980;
+            background: rgba(230, 185, 128, 0.1);
+        }
+        .history-icon:active {
+            transform: scale(0.9);
+        }
+        /* 确保图标容器对齐 */
+        .history-item .history-actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
         }
 
         .user-section {
@@ -199,7 +222,7 @@
             background: #fff;
         }
         .main-header {
-            padding: 20px 30px;
+            padding: 20px 30px 24px 30px; /* 增加下内边距 */
             border-bottom: 1px solid #eee;
             background: #fff;
         }
@@ -326,6 +349,7 @@
             font-weight: 600;
         }
 
+        /* 联系作者 - 专属样式 */
         .contact-area {
             text-align: center;
             padding: 16px;
@@ -379,6 +403,7 @@
             background: #ccc;
         }
 
+        /* 示意图 */
         .diagram-row {
             display: flex;
             gap: 20px;
@@ -927,9 +952,10 @@
                 min-height: 0 !important;
             }
 
+            /* ===== 标题栏留白修复 ===== */
             .main-header {
                 flex-shrink: 0 !important;
-                padding: 14px 16px 16px 16px !important;
+                padding: 14px 16px 20px 16px !important; /* 增加下内边距 */
                 border-bottom: 1px solid #eee !important;
             }
             .main-header h2 {
@@ -1634,7 +1660,7 @@
         let isVerifyCollapsed = false;
         let pendingVerifyContent = null;
 
-        // ==================== 验证按钮统一渲染（核心修复） ====================
+        // ==================== 验证按钮统一渲染 ====================
         function renderVerifyBtn() {
             const container = document.getElementById('verifyBtnContainer');
             if (!container) return;
@@ -1643,7 +1669,6 @@
                 const btn = document.getElementById('startVerifyBtn');
                 if (btn) {
                     btn.onclick = function() {
-                        // 点击后立即隐藏自身
                         this.style.display = 'none';
                         this.disabled = true;
                         callVerify();
@@ -1997,6 +2022,7 @@
             return div.innerHTML;
         }
 
+        // 更新历史列表（含简洁图标）
         function updateHistoryList() {
             const historyList = document.getElementById('historyList');
             if (!historyList) return;
@@ -2011,18 +2037,19 @@
                 li.className = 'history-item';
                 const displayName = record.name || `${record.userName || '匿名'} · ${record.module}`;
                 li.innerHTML = `
-                            <span style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px;">${escapeHtml(displayName)}</span>
-                            <div style="display: flex; gap: 12px; align-items: center;">
-                                <span class="history-icon history-rename" data-id="${record.id}" style="cursor: pointer; color: #888; font-size: 12px;">✎</span>
-                                <span class="history-icon history-delete" data-id="${record.id}" style="cursor: pointer; color: #888; font-size: 14px;">🗑</span>
-                            </div>
-                        `;
+                    <span style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px;">${escapeHtml(displayName)}</span>
+                    <div class="history-actions">
+                        <button class="history-icon history-rename" data-id="${record.id}" title="重命名">✎</button>
+                        <button class="history-icon history-delete" data-id="${record.id}" title="删除">✕</button>
+                    </div>
+                `;
                 li.onclick = (e) => {
-                    if (e.target.classList.contains('history-icon')) return;
+                    if (e.target.closest('.history-icon')) return;
                     viewHistoryRecord(record);
                 };
                 historyList.appendChild(li);
             });
+            // 事件绑定
             document.querySelectorAll('.history-delete').forEach(btn => {
                 btn.onclick = (e) => {
                     e.stopPropagation();
@@ -2086,7 +2113,6 @@
                 verifyArea.classList.add('hidden');
             }
 
-            // 隐藏"开始验证八字"，显示深度分析按钮
             hideVerifyBtn();
 
             const moduleArea = document.getElementById('moduleArea');
@@ -2457,14 +2483,12 @@
             }
         }
 
-        // ===== 核心修复：callVerify =====
+        // ===== callVerify =====
         async function callVerify() {
-            // 点击时按钮已隐藏，这里再做一次保险
             hideVerifyBtn();
 
             const birth = buildBirthString();
             if (!birth) {
-                // 验证失败时恢复按钮
                 renderVerifyBtn();
                 alert('请完整填写必填信息');
                 return false;
@@ -2502,16 +2526,13 @@
                         document.getElementById('baziDisplay').textContent = currentBaziStr;
                         baziInfoArea.classList.remove('hidden');
                     }
-                    // 验证成功后按钮保持隐藏
                     hideVerifyBtn();
                 } else {
                     verifyItemsContainer.innerHTML = `验证失败：${data.error || '未知错误'}`;
-                    // 验证失败时恢复按钮
                     renderVerifyBtn();
                 }
             } catch (err) {
                 verifyItemsContainer.innerHTML = `网络错误：${err.message}`;
-                // 网络错误时恢复按钮
                 renderVerifyBtn();
             } finally {
                 isLoading = false;
@@ -2607,7 +2628,7 @@
             }
         }
 
-        // ===== 核心修复：confirmAllAccurate =====
+        // ===== confirmAllAccurate =====
         function confirmAllAccurate() {
             currentStep = 2;
             const verifyArea = document.getElementById('verifyArea');
@@ -2620,8 +2641,6 @@
             pendingVerifyContent = tempDiv.innerHTML;
 
             verifyArea.classList.add('hidden');
-
-            // 强制隐藏"开始验证八字"按钮
             hideVerifyBtn();
 
             const moduleArea = document.getElementById('moduleArea');
@@ -2658,7 +2677,6 @@
         async function startAnalysis() {
             if (isLoading) return;
 
-            // 强制隐藏"开始验证八字"按钮
             hideVerifyBtn();
 
             isLoading = true;
@@ -2777,7 +2795,6 @@
             pendingVerifyContent = null;
             isVerifyCollapsed = false;
 
-            // 重置按钮状态，显示"开始验证八字"
             renderVerifyBtn();
 
             const moduleArea = document.getElementById('moduleArea');
@@ -2810,7 +2827,6 @@
             initTimeTabs();
             initContactTabs();
 
-            // 初始渲染验证按钮
             renderVerifyBtn();
 
             document.getElementById('timeToolBtn').onclick = showTimePanel;
