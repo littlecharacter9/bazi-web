@@ -58,6 +58,10 @@
             align-items: center;
             justify-content: space-between;
         }
+        .logo-click-area {
+            cursor: pointer;
+            user-select: none;
+        }
         .logo {
             font-size: 24px;
             font-weight: 700;
@@ -65,7 +69,6 @@
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            cursor: pointer;
         }
         .logo-sub {
             font-size: 12px;
@@ -882,9 +885,11 @@
                 align-items: center !important;
                 justify-content: space-between !important;
             }
+            .logo-click-area {
+                cursor: pointer !important;
+            }
             .logo {
                 font-size: 18px !important;
-                cursor: pointer !important;
             }
             .logo-sub {
                 font-size: 10px !important;
@@ -1287,8 +1292,8 @@
         <div class="sidebar" id="sidebar">
             <button class="sidebar-toggle" id="sidebarToggle">☰</button>
             <div class="logo-area">
-                <div>
-                    <div class="logo" id="logoClick">八戒命理</div>
+                <div class="logo-click-area" id="logoClickArea">
+                    <div class="logo">八戒命理</div>
                     <div class="logo-sub">AI解析 · 仅供参考</div>
                 </div>
             </div>
@@ -1651,7 +1656,7 @@
             }
         }
 
-        // ===== 打开侧边栏（点击 Logo 时） =====
+        // ===== 打开侧边栏（点击 Logo 区域时） =====
         function openSidebar() {
             const sidebar = document.getElementById('sidebar');
             if (window.innerWidth <= 768) {
@@ -1710,10 +1715,10 @@
                 });
             }
 
-            // ===== Logo 点击打开侧边栏 =====
-            const logo = document.getElementById('logoClick');
-            if (logo) {
-                logo.addEventListener('click', function(e) {
+            // ===== Logo 区域点击打开侧边栏 =====
+            const logoArea = document.getElementById('logoClickArea');
+            if (logoArea) {
+                logoArea.addEventListener('click', function(e) {
                     e.stopPropagation();
                     openSidebar();
                 });
@@ -1887,7 +1892,7 @@
 
         function showLoginModal() {
             alert('小成本网站 暂未开通登录服务');
-            return;
+            // 游客模式点击不收起侧边栏，所以不调用 closeSidebar()
         }
 
         // ==================== 折叠图标 ====================
@@ -2885,11 +2890,13 @@
             document.getElementById('regenerateResultBtn').onclick = regenerateAnalysis;
             document.getElementById('shareResultBtn').onclick = shareResult;
 
+            // ===== 游客模式：点击只弹窗，不关闭侧边栏 =====
             const userSection = document.getElementById('userSection');
             if (userSection) {
-                userSection.onclick = function() {
+                userSection.onclick = function(e) {
+                    e.stopPropagation();
                     showLoginModal();
-                    closeSidebar();
+                    // 不调用 closeSidebar()
                 };
             }
 
