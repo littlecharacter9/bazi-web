@@ -2089,11 +2089,13 @@
             }
         }
 
+        // 删除记录：显示自定义弹框（不关闭侧边栏）
         function deleteAnalysisRecord(id) {
-            // 改用弹框确认，不再直接删除
             showDeleteModal(id);
+            // 不调用 closeSidebar()
         }
 
+        // 重命名记录：不关闭侧边栏
         function renameAnalysisRecord(id) {
             const records = getAnalysisRecords();
             const record = records.find(r => r.id === id);
@@ -2106,6 +2108,7 @@
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
                 updateHistoryList();
             }
+            // 不调用 closeSidebar()
         }
 
         function clearAllHistory() {
@@ -2202,19 +2205,21 @@
                 };
                 historyList.appendChild(li);
             });
-            // 事件绑定
+            // 事件绑定：编辑和删除不关闭侧边栏
             document.querySelectorAll('.history-delete').forEach(btn => {
                 btn.onclick = (e) => {
-                    e.stopPropagation();
+                    e.stopPropagation(); // 阻止冒泡到 li
                     const id = parseInt(btn.dataset.id);
                     deleteAnalysisRecord(id);
+                    // 不调用 closeSidebar()
                 };
             });
             document.querySelectorAll('.history-rename').forEach(btn => {
                 btn.onclick = (e) => {
-                    e.stopPropagation();
+                    e.stopPropagation(); // 阻止冒泡到 li
                     const id = parseInt(btn.dataset.id);
                     renameAnalysisRecord(id);
+                    // 不调用 closeSidebar()
                 };
             });
             const clearBtn = document.createElement('li');
@@ -2325,6 +2330,7 @@
             }
 
             resultCard.scrollIntoView({ behavior: 'smooth' });
+            // 点击历史记录条目查看详情 — 关闭侧边栏
             closeSidebar();
         }
 
