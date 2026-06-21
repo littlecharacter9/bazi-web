@@ -955,6 +955,13 @@
             }
 
             /* ===== 标题栏留白修复 ===== */
+            .main-header::before {
+                content: '';
+                display: block;
+                height: 16px; /* 控制你想要的间距大小 */
+                background: transparent;
+                margin-top: -8px;
+            }
             .main-header {
                 flex-shrink: 0 !important;
                 padding: 16px 16px 22px 16px !important; /* 增加下内边距 */
