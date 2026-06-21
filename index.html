@@ -145,7 +145,6 @@
             text-align: center;
             font-size: 12px;
         }
-        /* ===== 简洁图标样式（历史记录） ===== */
         .history-icon {
             opacity: 0.6;
             transition: opacity 0.2s, transform 0.1s;
@@ -171,7 +170,6 @@
         .history-icon:active {
             transform: scale(0.9);
         }
-        /* 确保图标容器对齐 */
         .history-item .history-actions {
             display: flex;
             gap: 4px;
@@ -943,6 +941,14 @@
                 max-height: 200px !important;
             }
 
+            /* ===== main-top-gap：在白框上方占位，把白框整体下移 ===== */
+            .main-top-gap {
+                display: block !important;
+                height: 20px !important;
+                background: #f5f5f7 !important;
+                flex-shrink: 0 !important;
+            }
+
             .main {
                 flex: 1 !important;
                 overflow: hidden !important;
@@ -953,7 +959,6 @@
                 background: #fff !important;
             }
 
-            /* ===== 移动端标题栏 ===== */
             .main-header {
                 flex-shrink: 0 !important;
                 padding: 14px 16px 16px 16px !important;
@@ -980,6 +985,11 @@
                 height: 100% !important;
                 min-height: 0 !important;
                 background: #fff !important;
+            }
+
+            /* 移除之前错误的 spacer */
+            .mobile-top-spacer {
+                display: none !important;
             }
 
             .form-card {
@@ -1298,7 +1308,7 @@
                 font-size: 12px !important;
                 padding: 8px !important;
             }
-            .mobile-top-spacer {
+            .main-top-gap {
                 height: 12px !important;
             }
         }
@@ -1340,9 +1350,10 @@
         </div>
 
         <!-- ==================== 主区域 ==================== -->
-            <!-- ===== 移动端顶部占位间距（只在移动端显示） ===== -->
-            <div class="mobile-top-spacer"></div>
+        <!-- ===== 移动端顶部占位：在白框上方，把白框整体下移 ===== -->
+        <div class="main-top-gap"></div>
 
+        <div class="main">
             <div class="main-header">
                 <h2 id="mainTitle">八字命盘分析</h2>
                 <p id="mainSubtitle">输入生辰信息，AI 辅助解析命盘格局</p>
