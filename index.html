@@ -222,9 +222,9 @@
             background: #fff;
         }
         .main-header {
-            flex-shrink: 0 !important;
-            padding: 8px 16px 8px 16px !important;  /* 上下内边距都缩小 */
-            border-bottom: 1px solid #eee !important;
+            padding: 20px 30px 24px 30px;
+            border-bottom: 1px solid #eee;
+            background: #fff;
         }
         .main-header h2 {
             font-size: 22px;
@@ -233,10 +233,10 @@
             margin-bottom: 6px;
         }
         .main-header p {
-            font-size: 12px !important;
-            margin-top: 4px !important;  /* 副标题上方留白增加 */
-            margin-bottom: 0 !important;
-            color: #888 !important;
+            font-size: 13px;
+            color: #888;
+            margin-top: 0;
+            margin-bottom: 0;
         }
         .content-area {
             flex: 1;
@@ -899,7 +899,6 @@
                 position: relative !important;
                 z-index: 10 !important;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-                margin-bottom: 12px !important; /* 加这行，让侧边栏和白色内容区之间距离变大 */
                 transition: max-height 0.3s ease !important;
             }
             .sidebar.open {
@@ -951,21 +950,15 @@
                 display: flex !important;
                 flex-direction: column !important;
                 min-height: 0 !important;
-                padding-top: 12px !important;  /* 这里加 padding-top */
+                background: #fff !important;
             }
 
-            /* ===== 标题栏留白修复 ===== */
-            .main-header::before {
-                content: '';
-                display: block;
-                height: 16px; /* 控制你想要的间距大小 */
-                background: transparent;
-                margin-top: -8px;
-            }
+            /* ===== 移动端标题栏 ===== */
             .main-header {
                 flex-shrink: 0 !important;
-                padding: 16px 16px 22px 16px !important; /* 增加下内边距 */
+                padding: 14px 16px 16px 16px !important;
                 border-bottom: 1px solid #eee !important;
+                background: #fff !important;
             }
             .main-header h2 {
                 font-size: 18px !important;
@@ -983,9 +976,18 @@
                 flex: 1 !important;
                 overflow-y: auto !important;
                 -webkit-overflow-scrolling: touch !important;
-                padding: 12px 16px 140px 16px !important;             
+                padding: 12px 16px 140px 16px !important;
                 height: 100% !important;
                 min-height: 0 !important;
+                background: #fff !important;
+            }
+
+            /* ===== 移动端顶部占位间距（直接插入到 main 顶部） ===== */
+            .mobile-top-spacer {
+                display: block !important;
+                height: 16px !important;
+                background: #fff !important;
+                flex-shrink: 0 !important;
             }
 
             .form-card {
@@ -1304,6 +1306,9 @@
                 font-size: 12px !important;
                 padding: 8px !important;
             }
+            .mobile-top-spacer {
+                height: 12px !important;
+            }
         }
     </style>
 </head>
@@ -1344,6 +1349,9 @@
 
         <!-- ==================== 主区域 ==================== -->
         <div class="main">
+            <!-- ===== 移动端顶部占位间距（只在移动端显示） ===== -->
+            <div class="mobile-top-spacer"></div>
+
             <div class="main-header">
                 <h2 id="mainTitle">八字命盘分析</h2>
                 <p id="mainSubtitle">输入生辰信息，AI 辅助解析命盘格局</p>
