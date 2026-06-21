@@ -840,6 +840,86 @@
             }
         }
 
+        /* ===== 自定义删除确认弹框 ===== */
+        .delete-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeIn 0.2s ease;
+        }
+        .delete-modal-overlay.active {
+            display: flex;
+        }
+        .delete-modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px 32px 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: scaleIn 0.2s ease;
+        }
+        .delete-modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+        .delete-modal-desc {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .delete-modal-desc .highlight {
+            color: #e74c3c;
+            font-weight: 500;
+        }
+        .delete-modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        .delete-modal-actions button {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .delete-modal-actions .btn-cancel {
+            background: #f0f0f0;
+            color: #666;
+        }
+        .delete-modal-actions .btn-cancel:hover {
+            background: #e0e0e0;
+        }
+        .delete-modal-actions .btn-confirm-delete {
+            background: #e74c3c;
+            color: white;
+        }
+        .delete-modal-actions .btn-confirm-delete:hover {
+            background: #c0392b;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
         /* ===== 移动端适配 ===== */
         @media (max-width: 768px) {
             body {
@@ -1236,6 +1316,20 @@
                 font-size: 12px !important;
                 padding: 10px 12px !important;
             }
+
+            .delete-modal {
+                padding: 20px 24px 20px !important;
+            }
+            .delete-modal-title {
+                font-size: 16px !important;
+            }
+            .delete-modal-desc {
+                font-size: 13px !important;
+            }
+            .delete-modal-actions button {
+                padding: 8px 18px !important;
+                font-size: 13px !important;
+            }
         }
 
         @media (max-width: 480px) {
@@ -1276,6 +1370,22 @@
             }
             .mobile-top-spacer {
                 height: 0 !important;
+            }
+            .delete-modal {
+                padding: 16px 18px 16px !important;
+            }
+            .delete-modal-title {
+                font-size: 15px !important;
+            }
+            .delete-modal-desc {
+                font-size: 12px !important;
+            }
+            .delete-modal-actions {
+                gap: 8px !important;
+            }
+            .delete-modal-actions button {
+                padding: 8px 14px !important;
+                font-size: 12px !important;
             }
         }
     </style>
@@ -1627,6 +1737,21 @@
         </div>
     </div>
 
+    <!-- ===== 自定义删除确认弹框 ===== -->
+    <div class="delete-modal-overlay" id="deleteModal">
+        <div class="delete-modal">
+            <div class="delete-modal-title">⚠️ 删除对话</div>
+            <div class="delete-modal-desc">
+                删除后，该对话将<span class="highlight">不可恢复</span><br>
+                由该对话生成的分享链接也将失效
+            </div>
+            <div class="delete-modal-actions">
+                <button class="btn-cancel" id="deleteModalCancel">取消</button>
+                <button class="btn-confirm-delete" id="deleteModalConfirm">删除该对话</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==================== 配置 ====================
         const API_URL = 'https://api.bajiemingli.top';
@@ -1643,7 +1768,10 @@
         let isVerifyCollapsed = false;
         let pendingVerifyContent = null;
 
-        // ==================== 侧边栏关闭（移动端） ====================
+        // ===== 删除弹框状态 =====
+        let pendingDeleteId = null;
+
+        // ===== 关闭侧边栏 =====
         function closeSidebar() {
             const sidebar = document.getElementById('sidebar');
             if (window.innerWidth <= 768) {
@@ -1651,7 +1779,29 @@
             }
         }
 
-        // ==================== 验证按钮统一渲染 ====================
+        // ===== 显示删除确认弹框 =====
+        function showDeleteModal(id) {
+            pendingDeleteId = id;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        // ===== 隐藏删除确认弹框 =====
+        function hideDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+            pendingDeleteId = null;
+        }
+
+        // ===== 执行删除 =====
+        function executeDelete() {
+            if (pendingDeleteId === null) return;
+            let records = getAnalysisRecords();
+            records = records.filter(r => r.id !== pendingDeleteId);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+            updateHistoryList();
+            hideDeleteModal();
+        }
+
+        // ===== 验证按钮统一渲染 =====
         function renderVerifyBtn() {
             const container = document.getElementById('verifyBtnContainer');
             if (!container) return;
@@ -1701,6 +1851,13 @@
                     }
                 });
             }
+
+            // ===== 删除弹框事件绑定 =====
+            document.getElementById('deleteModalCancel').addEventListener('click', hideDeleteModal);
+            document.getElementById('deleteModalConfirm').addEventListener('click', executeDelete);
+            document.getElementById('deleteModal').addEventListener('click', function(e) {
+                if (e.target === this) hideDeleteModal();
+            });
         });
 
         // ==================== 页面切换（自动关闭侧边栏） ====================
@@ -1933,10 +2090,8 @@
         }
 
         function deleteAnalysisRecord(id) {
-            let records = getAnalysisRecords();
-            records = records.filter(r => r.id !== id);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-            updateHistoryList();
+            // 改用弹框确认，不再直接删除
+            showDeleteModal(id);
         }
 
         function renameAnalysisRecord(id) {
