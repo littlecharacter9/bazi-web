@@ -853,10 +853,9 @@
                 flex-direction: column !important;
                 height: 100vh !important;
                 overflow: hidden !important;
-                background: #1a1a2e !important; /* 让整体背景为深色 */
+                background: #1a1a2e !important; /* 整体深色背景，让间距显示深色 */
             }
 
-            /* ---- 侧边栏：底部延伸出深色 ---- */
             .sidebar {
                 width: 100% !important;
                 max-height: 56px !important;
@@ -867,27 +866,15 @@
                 border-bottom: none !important;
                 transition: max-height 0.3s ease !important;
                 background: #1a1a2e !important;
-                /* 底部额外深色区域，形成 10px 间距 */
-                padding-bottom: 10px !important;
-                margin-bottom: 0 !important;
             }
             .sidebar.open {
                 max-height: 100vh !important;
                 overflow-y: auto !important;
-                padding-bottom: 0 !important;
             }
             .sidebar-toggle {
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-            }
-
-            /* 侧边栏内容底部不要多余间距 */
-            .sidebar .logo-area {
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-            }
-            .sidebar .user-section {
-                border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
             }
 
             .logo-area {
@@ -922,20 +909,20 @@
                 max-height: 200px !important;
             }
 
-            /* ---- 主区域：直角 + 紧贴侧边栏底部 ---- */
+            /* ---- 主区域：直角 + 10px 深色间距 ---- */
             .main {
                 flex: 1 !important;
                 overflow: hidden !important;
-                height: calc(100vh - 56px - 10px) !important; /* 减去侧边栏高度+间距 */
+                height: calc(100vh - 56px) !important;
                 display: flex !important;
                 flex-direction: column !important;
                 min-height: 0 !important;
                 background: #fff !important;
-                margin-top: 0 !important;
+                /* 10px 间距，露出 .app 的深色背景 */
+                margin-top: 10px !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
                 max-height: calc(100vh - 56px - 10px) !important;
-                /* 让顶部紧贴侧边栏底部，间距区域由侧边栏的 padding-bottom 提供 */
             }
 
             .mobile-top-spacer {
@@ -1256,10 +1243,10 @@
         @media (max-width: 480px) {
             .sidebar {
                 max-height: 48px !important;
-                padding-bottom: 10px !important;
             }
             .main {
-                height: calc(100vh - 48px - 10px) !important;
+                height: calc(100vh - 48px) !important;
+                margin-top: 10px !important;
                 max-height: calc(100vh - 48px - 10px) !important;
             }
             .logo {
