@@ -1852,12 +1852,31 @@
                 });
             }
 
-            // ===== 删除弹框事件绑定 =====
-            document.getElementById('deleteModalCancel').addEventListener('click', hideDeleteModal);
-            document.getElementById('deleteModalConfirm').addEventListener('click', executeDelete);
-            document.getElementById('deleteModal').addEventListener('click', function(e) {
-                if (e.target === this) hideDeleteModal();
-            });
+            // ===== 删除弹框事件绑定（阻止冒泡，防止触发侧边栏收起） =====
+            const cancelBtn = document.getElementById('deleteModalCancel');
+            const confirmBtn = document.getElementById('deleteModalConfirm');
+            const overlay = document.getElementById('deleteModal');
+
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    hideDeleteModal();
+                });
+            }
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    executeDelete();
+                });
+            }
+            if (overlay) {
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        e.stopPropagation();
+                        hideDeleteModal();
+                    }
+                });
+            }
         });
 
         // ==================== 页面切换（自动关闭侧边栏） ====================
