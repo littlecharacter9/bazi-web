@@ -1657,13 +1657,16 @@
                         <div id="contactIntroTab" class="time-tab-content">
                             <div class="time-section">
                                 <div class="time-section-title">作者简介</div>
+                                <div class="time-section-sub">简要介绍作者并提供联系渠道</div>
+                                <div class="method-block">
+                                <div class="time-section-title" style="color: #e6b980;">作者简介</div>
                                 <div class="method-content" style="margin-top: 0;">
                                     <p>一个身为牛马的命理爱好者</p>
                                     <p style="margin-top: 8px; font-size: 13px; color: #555;">自习八字，不敢说算得准，但起码不忽悠人。命理这东西，信则有，不信就当看个热闹。既然你来了，我帮你理一理，图个明白。</p>
                                 </div>
                             </div>
                             <div class="time-section">
-                                <div class="time-section-title">我的用处</div>
+                                <div class="time-section-title" style="color: #e6b980;">我的用处</div>
                                 <div class="method-content" style="margin-top: 0;">
                                     <p><strong>①二次确认</strong></p>
                                     <p style="font-size: 13px; color: #555; margin-bottom: 12px;">二次确认八字信息是否准确，AI推断可能存在偏差，联系作者人工复核，确保命盘解读无误。</p>
@@ -1675,7 +1678,7 @@
                             </div>
                             <!-- ===== 找到我 ===== -->
                             <div class="time-section" style="margin-top: 20px;">
-                                <div class="time-section-title">联系通道</div>
+                                <div class="time-section-title" style="color: #e6b980;">联系通道</div>
                                 <div class="time-section-sub" style="border-bottom: none; margin-bottom: 12px; padding-bottom: 0;">
                                     添加微信后，提供出生日期和已知信息，我会帮你复核命盘、解答困惑，确认准确后再付费
                                 </div>
@@ -1685,7 +1688,7 @@
                             </div>
                             <!-- ===== 支持作者 ===== -->
                             <div class="time-section" style="margin-top: 20px;">
-                                <div class="time-section-title">支持作者</div>
+                                <div class="time-section-title" style="color: #e6b980;">支持作者</div>
                                 <div class="time-section-sub" style="border-bottom: none; margin-bottom: 12px; padding-bottom: 0;">
                                     如果您觉得分析有帮助，欢迎随缘打赏，金额不限
                                 </div>
@@ -1972,7 +1975,17 @@
             }
             const copyBtn3 = document.getElementById('copyWechatBtn3');
             if (copyBtn3) {
-                copyBtn3.addEventListener('click', () => {
+                copyBtn3.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    // 点击反馈：背景闪一下
+                    this.style.transition = 'background 0.1s';
+                    this.style.background = '#e6b980';
+                    this.style.color = '#1a1a2e';
+                    setTimeout(() => {
+                        this.style.background = '#f0f0f0';
+                        this.style.color = '';
+                    }, 200);
+            
                     const wechatId = 'mmj1399094604';
                     navigator.clipboard.writeText(wechatId).then(() => {
                         alert('微信号已复制：' + wechatId);
