@@ -1645,114 +1645,112 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- ===== 作者简介 Tab ===== -->
-                <div id="contactIntroTab" class="time-tab-content">
-                    <!-- 作者简介 -->
-                    <div class="time-section">
-                        <div class="time-section-title" style="color: #e6b980;">作者简介</div>
-                        <div class="method-content" style="margin-top: 0; background: #f9f9fb; border-left: 3px solid #e6b980;">
-                            <p>一个身为牛马的命理爱好者</p>
-                            <p style="margin-top: 8px; font-size: 13px; color: #555;">自习八字，不敢说算得准，但起码不忽悠人。命理这东西，信则有，不信就当看个热闹。既然你来了，我帮你理一理，图个明白。</p>
+
+                <!-- ===== 联系作者独立面板 ===== -->
+                <div id="contactPanel" class="hidden">
+                    <div class="time-page">
+                        <div class="time-tabs" id="contactTabs">
+                            <div class="time-tab active" data-contact="intro">作者简介</div>
+                            <div class="time-tab" data-contact="deep">深度服务</div>
+                            <div class="time-tab" data-contact="kai-guang">开光服务</div>
                         </div>
-                    </div>
-                
-                    <!-- 我的用处 -->
-                    <div class="time-section">
-                        <div class="time-section-title" style="color: #e6b980;">我的用处</div>
-                        <div class="method-content" style="margin-top: 0; background: #f9f9fb; border-left: 3px solid #e6b980;">
-                            <p><strong>① 二次确认</strong></p>
-                            <p style="font-size: 13px; color: #555; margin-bottom: 12px;">二次确认八字信息是否准确，AI推断可能存在偏差，联系作者人工复核，确保命盘解读无误。</p>
-                            <p><strong>② 个性化梳理</strong></p>
-                            <p style="font-size: 13px; color: #555; margin-bottom: 12px;">针对个人八字更精准满足你的命理需求，AI是大方向判断，人工是针对个性化问题做深度拆解。</p>
-                            <p><strong>③ 深度服务</strong></p>
-                            <p style="font-size: 13px; color: #555;">在确认八字准确的基础上根据不同的需求（招财、求官、学习……）进行阵法布置。</p>
-                        </div>
-                    </div>
-                
-                    <!-- 联系通道 -->
-                    <div class="time-section">
-                        <div class="time-section-title" style="color: #e6b980;">联系通道</div>
-                        <div class="time-section-sub" style="border-bottom: none; margin-bottom: 12px; padding-bottom: 0;">
-                            添加微信后，提供出生日期和已知信息，我会帮你复核命盘、解答困惑，确认准确后再付费。
-                        </div>
-                        <div style="display: flex; justify-content: center;">
-                            <div class="wechat-id" id="copyWechatBtn3" style="font-size: 15px; padding: 10px 30px; background: #f0f0f0; border-radius: 30px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.15s;">微信号: mmj1399094604   点击复制</div>
-                        </div>
-                    </div>
-                
-                    <!-- 支持作者 -->
-                    <div class="time-section" style="margin-top: 20px;">
-                        <div class="time-section-title" style="color: #e6b980;">支持作者</div>
-                        <div class="time-section-sub" style="border-bottom: none; margin-bottom: 12px; padding-bottom: 0;">
-                            如果您觉得分析有帮助，欢迎随缘打赏，金额不限。
-                        </div>
-                        <div style="display: flex; justify-content: center;">
-                            <button class="donate-btn" id="donateContactBtn" style="font-size: 15px; padding: 10px 30px; background: #e6b980; color: #1a1a2e; border-radius: 30px; border: none; font-weight: 500; cursor: pointer;">🎁 支持作者</button>
-                        </div>
-                        <div style="text-align: center; margin-top: 10px; font-size: 13px; color: #888;">
-                            点击后选择「自选金额发电」即可
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- ===== 深度服务 Tab ===== -->
-                <div id="contactDeepTab" class="time-tab-content hidden">
-                    <div class="time-section">
-                        <div class="time-section-title">深度服务</div>
-                        <div class="time-section-sub">根据你的喜用神，量身定制</div>
-                        <div class="method-block">
-                            <div class="method-name">① 衣食住行喜用五行指导</div>
-                            <div class="method-content" style="margin-top: 0;">
-                                <p>根据你的喜用神，量身定制日常建议：</p>
-                                <p style="font-size: 13px; color: #555; margin-top: 8px;"><strong>衣</strong>（颜色搭配）</p>
-                                <p style="font-size: 13px; color: #555;"><strong>食</strong>（饮食宜忌）</p>
-                                <p style="font-size: 13px; color: #555;"><strong>住</strong>（房间布置）</p>
-                                <p style="font-size: 13px; color: #555;"><strong>行</strong>（出行方向）</p>
-                                <p style="font-size: 12px; color: #888; margin-top: 12px;">让五行能量渗透生活，润物无声。</p>
-                            </div>
-                        </div>
-                        <div class="method-block">
-                            <div class="method-name">② 针对性阵法布置</div>
-                            <div class="method-content" style="margin-top: 0;">
-                                <p>根据不同目的，设计对应的能量场布置方案：</p>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; font-size: 13px; color: #333;">
-                                    <div style="background: #f0f0f0; padding: 8px 12px; border-radius: 8px;">💰 招财进宝</div>
-                                    <div style="background: #f0f0f0; padding: 8px 12px; border-radius: 8px;">💕 桃花人缘</div>
-                                    <div style="background: #f0f0f0; padding: 8px 12px; border-radius: 8px;">📈 事业晋升</div>
-                                    <div style="background: #f0f0f0; padding: 8px 12px; border-radius: 8px;">🏥 健康平安</div>
+                        <div id="contactIntroTab" class="time-tab-content">
+                            <div class="time-section">
+                                <div class="time-section-title">作者简介</div>
+                                <div class="method-content" style="margin-top: 0;">
+                                    <p>一个身为牛马的命理爱好者</p>
+                                    <p style="margin-top: 8px; font-size: 13px; color: #555;">自习八字，不敢说算得准，但起码不忽悠人。命理这东西，信则有，不信就当看个热闹。既然你来了，我帮你理一理，图个明白。</p>
                                 </div>
-                                <p style="font-size: 12px; color: #888; margin-top: 12px;">* 阵法布置方案基于八字排盘、流年气场，一人一策。</p>
                             </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- ===== 开光服务 Tab ===== -->
-                <div id="contactKaiGuangTab" class="time-tab-content hidden">
-                    <div class="time-section">
-                        <div class="time-section-title">开光服务</div>
-                        <div class="time-section-sub">正规仪式 · 心诚则灵</div>
-                        <div class="method-block">
-                            <div class="method-name">开光加持</div>
-                            <div class="method-content" style="margin-top: 0;">
-                                <p>为法器、饰品或随身物品进行开光加持，仪式遵循传统规程，不流水线作业，每人每物单独做。</p>
-                                <p style="font-size: 13px; color: #555; margin-top: 12px;">如有需要，可线上沟通后邮寄完成。</p>
-                                <p style="font-size: 12px; color: #888; margin-top: 12px;">💡 长期有效，随时可联系。</p>
+                            <div class="time-section">
+                                <div class="time-section-title">我的用处</div>
+                                <div class="method-content" style="margin-top: 0;">
+                                    <p><strong>①二次确认</strong></p>
+                                    <p style="font-size: 13px; color: #555; margin-bottom: 12px;">二次确认八字信息是否准确，AI推断可能存在偏差，联系作者人工复核，确保命盘解读无误。</p>
+                                    <p><strong>②个性化梳理</strong></p>
+                                    <p style="font-size: 13px; color: #555;">针对个人八字更精准满足你的命理需求，AI是大方向判断，人工是针对个性化问题做深度拆解</p>
+                                    <p><strong>②深度服务</strong></p>
+                                    <p style="font-size: 13px; color: #555;">在确认八字准确的基础上根据不同的需求(招财、求官、学习……)进行阵法布置</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="method-block" style="margin-top: 20px; padding-top: 16px; border-top: 1px dashed #e0e0e0;">
-                            <div class="method-name" style="font-size: 14px;">联系我</div>
-                            <div class="method-content" style="margin-top: 0;">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
-                                    <div class="wechat-id" id="copyWechatBtn4">微信号: mmj1399094604   点击复制</div>
-                                    <span style="font-size: 12px; color: #888;">或</span>
-                                    <span style="font-size: 12px; color: #e6b980; cursor: pointer;" onclick="document.getElementById('copyWechatBtn4').click();">一键复制</span>
+                            <!-- ===== 找到我 ===== -->
+                            <div class="time-section" style="margin-top: 20px;">
+                                <div class="time-section-title">联系通道</div>
+                                <div class="time-section-sub" style="border-bottom: none; margin-bottom: 12px; padding-bottom: 0;">
+                                    添加微信后，提供出生日期和已知信息，我会帮你复核命盘、解答困惑，确认准确后再付费
+                                </div>
+                                <div style="display: flex; justify-content: center;">
+                                    <div class="wechat-id" id="copyWechatBtn3" style="font-size: 15px; padding: 10px 30px; background: #f0f0f0; border-radius: 30px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">微信号: mmj1399094604   点击复制</div>
+                                </div>
+                            </div>
+                            <!-- ===== 支持作者 ===== -->
+                            <div class="time-section" style="margin-top: 20px;">
+                                <div class="time-section-title">支持作者</div>
+                                <div class="time-section-sub" style="border-bottom: none; margin-bottom: 12px; padding-bottom: 0;">
+                                    如果您觉得分析有帮助，欢迎随缘打赏，金额不限
+                                </div>
+                                <div style="display: flex; justify-content: center;">
+                                    <button class="donate-btn" id="donateContactBtn" style="font-size: 15px; padding: 10px 30px; background: #e6b980; color: #1a1a2e; border-radius: 30px; border: none; font-weight: 500; cursor: pointer;">🎁 支持作者</button>
+                                </div>
+                                <div style="text-align: center; margin-top: 10px; font-size: 13px; color: #888;">
+                                    点击后选择「自选金额发电」即可
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                        <div id="contactDeepTab" class="time-tab-content hidden">
+                            <div class="time-section">
+                                <div class="time-section-title">深度服务</div>
+                                <div class="time-section-sub">根据你的喜用神，量身定制</div>
+                                <div class="method-block">
+                                    <div class="method-name">①衣食住行喜用五行指导</div>
+                                    <div class="method-content" style="margin-top: 0;">
+                                        <p>根据你的喜用神，量身定制日常建议：</p>
+                                        <p style="font-size: 13px; color: #555; margin-top: 8px;"><strong>衣</strong>（颜色搭配）</p>
+                                        <p style="font-size: 13px; color: #555;"><strong>食</strong>（饮食宜忌）</p>
+                                        <p style="font-size: 13px; color: #555;"><strong>住</strong>（房间布置）</p>
+                                        <p style="font-size: 13px; color: #555;"><strong>行</strong>（出行方向）</p>
+                                        <p style="font-size: 12px; color: #888; margin-top: 12px;">让五行能量渗透生活，润物无声。</p>
+                                    </div>
+                                </div>
+                                <div class="method-block">
+                                    <div class="method-name">②针对性阵法布置</div>
+                                    <div class="method-content" style="margin-top: 0;">
+                                        <p>根据不同目的，设计对应的能量场布置方案：</p>
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; font-size: 13px; color: #333;">
+                                            <div style="background: #f0f0f0; padding: 8px 12px; border-radius: 8px;">💰招财进宝</div>
+                                            <div style="background: #f0f0f0; padding: 8px 12px; border-radius: 8px;">💕桃花人缘</div>
+                                            <div style="background: #f0f0f0; padding: 8px 12px; border-radius: 8px;">📈事业晋升</div>
+                                            <div style="background: #f0f0f0; padding: 8px 12px; border-radius: 8px;">🏥健康平安</div>
+                                        </div>
+                                        <p style="font-size: 12px; color: #888; margin-top: 12px;">* 阵法布置方案基于八字排盘、流年气场，一人一策。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="contactKaiGuangTab" class="time-tab-content hidden">
+                            <div class="time-section">
+                                <div class="time-section-title">开光服务</div>
+                                <div class="time-section-sub">正规仪式 · 心诚则灵</div>
+                                <div class="method-block">
+                                    <div class="method-name">开光加持</div>
+                                    <div class="method-content" style="margin-top: 0;">
+                                        <p>为法器、饰品或随身物品进行开光加持，仪式遵循传统规程，不流水线作业，每人每物单独做。</p>
+                                        <p style="font-size: 13px; color: #555; margin-top: 12px;">如有需要，可线上沟通后邮寄完成。</p>
+                                        <p style="font-size: 12px; color: #888; margin-top: 12px;">💡长期有效，随时可联系。</p>
+                                    </div>
+                                </div>
+                                <div class="method-block" style="margin-top: 20px; padding-top: 16px; border-top: 1px dashed #e0e0e0;">
+                                    <div class="method-name" style="font-size: 14px;">联系我</div>
+                                    <div class="method-content" style="margin-top: 0;">
+                                        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                                            <div class="wechat-id" id="copyWechatBtn4">微信号: mmj1399094604   点击复制</div>
+                                            <span style="font-size: 12px; color: #888;">或</span>
+                                            <span style="font-size: 12px; color: #e6b980; cursor: pointer;" onclick="document.getElementById('copyWechatBtn4').click();">一键复制</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="back-btn">
                             <button id="backToMainFromContactBtn">← 返回八字分析</button>
                         </div>
@@ -1974,17 +1972,7 @@
             }
             const copyBtn3 = document.getElementById('copyWechatBtn3');
             if (copyBtn3) {
-                copyBtn3.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    // 点击反馈：背景闪一下
-                    this.style.transition = 'background 0.1s';
-                    this.style.background = '#e6b980';
-                    this.style.color = '#1a1a2e';
-                    setTimeout(() => {
-                        this.style.background = '#f0f0f0';
-                        this.style.color = '';
-                    }, 200);
-            
+                copyBtn3.addEventListener('click', () => {
                     const wechatId = 'mmj1399094604';
                     navigator.clipboard.writeText(wechatId).then(() => {
                         alert('微信号已复制：' + wechatId);
