@@ -1646,61 +1646,57 @@
                     </div>
                 </div>
 
-                <div id="contactIntroTab" class="time-tab-content">
-                    <!-- ===== 作者简介 ===== -->
-                    <div class="time-section">
-                        <div class="time-section-title">作者简介</div>
-                        <div class="method-content" style="margin-top: 0; background: #f9f9fb; border-left: 3px solid #e6b980;">
-                            <p>自习八字，不敢说算得准，但起码不忽悠人。命理这东西，信则有，不信就当看个热闹。既然你来了，我帮你理一理，图个明白。</p>
+                <!-- ===== 联系作者独立面板 ===== -->
+                <div id="contactPanel" class="hidden">
+                    <div class="time-page">
+                        <div class="time-tabs" id="contactTabs">
+                            <div class="time-tab active" data-contact="intro">作者简介</div>
+                            <div class="time-tab" data-contact="deep">深度服务</div>
+                            <div class="time-tab" data-contact="kai-guang">开光服务</div>
                         </div>
-                    </div>
-                
-                    <!-- ===== 我的用处 ===== -->
-                    <div class="time-section">
-                        <div class="time-section-title">我的用处</div>
-                        <div class="time-section-sub">联系作者能为你做什么？</div>
-                        <div style="display: flex; flex-direction: column; gap: 16px;">
-                            <div style="background: #f9f9fb; border-radius: 12px; padding: 16px; border-left: 3px solid #e6b980;">
-                                <div style="font-weight: 600; color: #1a1a2e; margin-bottom: 4px;">①二次确认</div>
-                                <div style="font-size: 13px; color: #555;">AI推断可能存在偏差，联系作者人工复核，确保命盘解读无误。</div>
+                        <div id="contactIntroTab" class="time-tab-content">
+                            <div class="time-section">
+                                <div class="time-section-title">作者简介</div>
+                                <div class="method-content" style="margin-top: 0;">
+                                    <p>一个身为牛马的命理爱好者</p>
+                                    <p style="margin-top: 8px; font-size: 13px; color: #555;">自习八字，不敢说算得准，但起码不忽悠人。命理这东西，信则有，不信就当看个热闹。既然你来了，我帮你理一理，图个明白。</p>
+                                </div>
                             </div>
-                            <div style="background: #f9f9fb; border-radius: 12px; padding: 16px; border-left: 3px solid #e6b980;">
-                                <div style="font-weight: 600; color: #1a1a2e; margin-bottom: 4px;">②深度解析</div>
-                                <div style="font-size: 13px; color: #555;">AI是大方向判断，人工是针对个性化问题做深度拆解。你困惑的细节，只有人能聊透。</div>
+                            <div class="time-section">
+                                <div class="time-section-title">我的用处</div>
+                                <div class="method-content" style="margin-top: 0;">
+                                    <p><strong>①二次确认</strong></p>
+                                    <p style="font-size: 13px; color: #555; margin-bottom: 12px;">二次确认八字信息是否准确，AI推断可能存在偏差，联系作者人工复核，确保命盘解读无误。</p>
+                                    <p><strong>②个性化梳理</strong></p>
+                                    <p style="font-size: 13px; color: #555;">针对个人八字更精准满足你的命理需求，AI是大方向判断，人工是针对个性化问题做深度拆解</p>
+                                    <p><strong>②深度服务</strong></p>
+                                    <p style="font-size: 13px; color: #555;">在确认八字准确的基础上根据不同的需求(招财、求官、学习……)进行阵法布置</p>
+                                </div>
                             </div>
-                            <div style="background: #f9f9fb; border-radius: 12px; padding: 16px; border-left: 3px solid #e6b980;">
-                                <div style="font-weight: 600; color: #1a1a2e; margin-bottom: 4px;">③开光服务</div>
-                                <div style="font-size: 13px; color: #555;">在确认八字准确的基础上，根据不同的需求（招财、求官、学习……）进行阵法布置。</div>
+                            <!-- ===== 找到我 ===== -->
+                            <div class="time-section" style="margin-top: 20px;">
+                                <div class="time-section-title">联系通道</div>
+                                <div class="time-section-sub" style="border-bottom: none; margin-bottom: 12px; padding-bottom: 0;">
+                                    添加微信后，提供出生日期和已知信息，我会帮你复核命盘、解答困惑，确认准确后再付费
+                                </div>
+                                <div style="display: flex; justify-content: center;">
+                                    <div class="wechat-id" id="copyWechatBtn3" style="font-size: 15px; padding: 10px 30px; background: #f0f0f0; border-radius: 30px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">微信号: mmj1399094604   点击复制</div>
+                                </div>
+                            </div>
+                            <!-- ===== 支持作者 ===== -->
+                            <div class="time-section" style="margin-top: 20px;">
+                                <div class="time-section-title">支持作者</div>
+                                <div class="time-section-sub" style="border-bottom: none; margin-bottom: 12px; padding-bottom: 0;">
+                                    如果您觉得分析有帮助，欢迎随缘打赏，金额不限
+                                </div>
+                                <div style="display: flex; justify-content: center;">
+                                    <button class="donate-btn" id="donateContactBtn" style="font-size: 15px; padding: 10px 30px; background: #e6b980; color: #1a1a2e; border-radius: 30px; border: none; font-weight: 500; cursor: pointer;">🎁 支持作者</button>
+                                </div>
+                                <div style="text-align: center; margin-top: 10px; font-size: 13px; color: #888;">
+                                    点击后选择「自选金额发电」即可
+                                </div>
                             </div>
                         </div>
-                    </div>
-                
-                    <!-- ===== 联系通道 ===== -->
-                    <div class="time-section" style="margin-bottom: 12px;">
-                        <div class="time-section-title">联系通道</div>
-                        <div class="time-section-sub" style="border-bottom: none; margin-bottom: 12px; padding-bottom: 0;">
-                            添加微信后，提供出生日期和已知信息，我会帮你复核命盘、解答困惑，确认准确后再付费。
-                        </div>
-                        <div style="display: flex; justify-content: center;">
-                            <div class="wechat-id" id="copyWechatBtn3" style="font-size: 15px; padding: 10px 30px; background: #f0f0f0; border-radius: 30px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.15s;">微信号: mmj1399094604   点击复制</div>
-                        </div>
-                    </div>
-                
-                    <!-- ===== 支持作者 ===== -->
-                    <div class="time-section" style="margin-top: 20px;">
-                        <div class="time-section-title">支持作者</div>
-                        <div class="time-section-sub" style="border-bottom: none; margin-bottom: 12px; padding-bottom: 0;">
-                            如果您觉得分析有帮助，欢迎随缘打赏，金额不限。
-                        </div>
-                        <div style="display: flex; justify-content: center;">
-                            <button class="donate-btn" id="donateContactBtn" style="font-size: 15px; padding: 10px 30px; background: #e6b980; color: #1a1a2e; border-radius: 30px; border: none; font-weight: 500; cursor: pointer;">🎁 支持作者</button>
-                        </div>
-                        <div style="text-align: center; margin-top: 10px; font-size: 13px; color: #888;">
-                            点击后选择「自选金额发电」即可
-                        </div>
-                    </div>
-                </div>
-                
                         <div id="contactDeepTab" class="time-tab-content hidden">
                             <div class="time-section">
                                 <div class="time-section-title">深度服务</div>
@@ -1976,17 +1972,7 @@
             }
             const copyBtn3 = document.getElementById('copyWechatBtn3');
             if (copyBtn3) {
-                copyBtn3.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    // 点击反馈：背景闪一下
-                    this.style.transition = 'background 0.1s';
-                    this.style.background = '#e6b980';
-                    this.style.color = '#1a1a2e';
-                    setTimeout(() => {
-                        this.style.background = '#f0f0f0';
-                        this.style.color = '';
-                    }, 200);
-            
+                copyBtn3.addEventListener('click', () => {
                     const wechatId = 'mmj1399094604';
                     navigator.clipboard.writeText(wechatId).then(() => {
                         alert('微信号已复制：' + wechatId);
