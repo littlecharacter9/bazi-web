@@ -124,6 +124,22 @@
             list-style: none;
             overflow-y: auto;
             max-height: 280px;
+            /* 简洁滚动条 */
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+        }
+        .history-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .history-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .history-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+        }
+        .history-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
         }
         .history-item {
             padding: 10px 12px;
@@ -1548,6 +1564,9 @@
                                     <div class="method-pro-con">优点：专业准确，先验证后付费；缺点：需要付费</div>
                                     <div class="method-content">
                                         <div class="contact-area">
+                                            <div class="wechat-qr">
+                                                <img src="https://s41.ax1x.com/2026/06/18/pm3hgK0.png" style="width: 140px; height: 140px; object-fit: contain;">
+                                            </div>
                                             <div class="wechat-id" id="copyWechatBtn">微信号: mmj1399094604   点击复制</div>
                                             <p style="font-size: 12px; color: #888; margin-top: 12px;">添加微信后，提供出生日期和已知信息，作者会通过专业方法帮你确定准确时辰，确认准确后再付费。</p>
                                         </div>
@@ -1653,10 +1672,11 @@
                             <div class="time-tab" data-contact="kai-guang">开光服务</div>
                         </div>
                         <div id="contactIntroTab" class="time-tab-content">
-                            <!-- ===== 总领标题（和深度服务完全一致） ===== -->
+                            <!-- ===== 总领标题 ===== -->
                             <div class="time-section">
                                 <div class="time-section-title">联系作者</div>
                                 <div class="time-section-sub">简要介绍作者并提供联系渠道</div>
+
                                 <!-- 作者简介 -->
                                 <div class="method-block">
                                     <div class="method-name">作者简介</div>
@@ -1710,9 +1730,9 @@
                                 <div class="time-section-title">深度服务</div>
                                 <div class="time-section-sub">根据你的喜用神，量身定制</div>
                                 <div class="method-block">
-                                    <div class="method-name">五行指导</div>
+                                    <div class="method-name">①衣食住行喜用五行指导</div>
                                     <div class="method-content" style="margin-top: 0;">
-                                        <p>根据你的五行喜用神，量身定制衣食住行日常建议：</p>
+                                        <p>根据你的喜用神，量身定制日常建议：</p>
                                         <p style="font-size: 13px; color: #555; margin-top: 8px;"><strong>衣</strong>（颜色搭配）</p>
                                         <p style="font-size: 13px; color: #555;"><strong>食</strong>（饮食宜忌）</p>
                                         <p style="font-size: 13px; color: #555;"><strong>住</strong>（房间布置）</p>
@@ -1721,7 +1741,7 @@
                                     </div>
                                 </div>
                                 <div class="method-block">
-                                    <div class="method-name">阵法布置</div>
+                                    <div class="method-name">②针对性阵法布置</div>
                                     <div class="method-content" style="margin-top: 0;">
                                         <p>根据不同目的，设计对应的能量场布置方案：</p>
                                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; font-size: 13px; color: #333;">
@@ -1738,7 +1758,7 @@
                         <div id="contactKaiGuangTab" class="time-tab-content hidden">
                             <div class="time-section">
                                 <div class="time-section-title">开光服务</div>
-                                <div class="time-section-sub">对物品进行开光，能量加持</div>
+                                <div class="time-section-sub">正规仪式 · 心诚则灵</div>
                                 <div class="method-block">
                                     <div class="method-name">开光加持</div>
                                     <div class="method-content" style="margin-top: 0;">
@@ -1748,10 +1768,12 @@
                                     </div>
                                 </div>
                                 <div class="method-block" style="margin-top: 20px; padding-top: 16px; border-top: 1px dashed #e0e0e0;">
-                                    <div class="method-name" style="font-size: 16px;">联系通道</div>
+                                    <div class="method-name" style="font-size: 14px;">联系我</div>
                                     <div class="method-content" style="margin-top: 0;">
                                         <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
                                             <div class="wechat-id" id="copyWechatBtn4">微信号: mmj1399094604   点击复制</div>
+                                            <span style="font-size: 12px; color: #888;">或</span>
+                                            <span style="font-size: 12px; color: #e6b980; cursor: pointer;" onclick="document.getElementById('copyWechatBtn4').click();">一键复制</span>
                                         </div>
                                     </div>
                                 </div>
