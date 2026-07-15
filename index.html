@@ -2248,7 +2248,20 @@
 
         function saveAnalysisRecord(birthStr, moduleName, resultContent, baziStr, userName, verifyContent) {
             const records = getAnalysisRecords();
-            const displayName = userName && userName.trim() ? `${userName.trim()} · ${moduleName}` : `匿名 · ${moduleName}`;
+
+            // ===== 模块名英文→中文映射（用于显示） =====
+            const displayNameMap = {
+                'overview': '综合分析',
+                'career': '事业分析',
+                'wealth': '财运分析',
+                'marriage': '婚姻分析',
+                'parents': '父母分析',
+                'children': '子女分析',
+                'liunian': '流年分析'
+            };
+            const displayModuleName = displayNameMap[moduleName] || moduleName;
+
+            const displayName = userName && userName.trim() ? `${userName.trim()} · ${displayModuleName}` : `匿名 · ${displayModuleName}`;
             let formattedVerifyContent = null;
             if (verifyContent) formattedVerifyContent = formatVerifyContentForHistory(verifyContent);
             const newRecord = {
@@ -2256,10 +2269,10 @@
                 timestamp: new Date().toISOString(),
                 date: new Date().toLocaleString('zh-CN'),
                 birth: birthStr,
-                module: moduleName,
+                module: moduleName, // 存英文 key，用于模块切换和高亮
                 bazi: baziStr || '',
                 result: resultContent,
-                name: displayName,
+                name: displayName, // 存中文显示名
                 userName: userName || '',
                 verifyContent: formattedVerifyContent,
                 userId: getUserId()
@@ -2302,7 +2315,18 @@
             const newName = prompt('重命名对话', currentName);
             if (newName && newName.trim()) {
                 record.userName = newName.trim();
-                record.name = `${newName.trim()} · ${record.module}`;
+                // 根据 module 重新生成显示名
+                const displayNameMap = {
+                    'overview': '综合分析',
+                    'career': '事业分析',
+                    'wealth': '财运分析',
+                    'marriage': '婚姻分析',
+                    'parents': '父母分析',
+                    'children': '子女分析',
+                    'liunian': '流年分析'
+                };
+                const displayModuleName = displayNameMap[record.module] || record.module;
+                record.name = `${newName.trim()} · ${displayModuleName}`;
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
                 updateHistoryList();
             }
