@@ -2433,10 +2433,11 @@
         }
 
         function viewHistoryRecord(record) {
-            // ===== 修复：同步当前模块 =====
+            // ===== 1. 同步当前模块 =====
             currentModule = record.module || 'career';
+            console.log('🔍 历史记录模块:', currentModule);
 
-            // 高亮对应的模块按钮
+            // ===== 2. 高亮对应的模块按钮 =====
             document.querySelectorAll('.module-btn').forEach(btn => {
                 btn.classList.remove('active');
                 if (btn.dataset.module === currentModule) {
@@ -2444,8 +2445,10 @@
                 }
             });
 
+            // ===== 3. 显示主面板 =====
             showDefaultPanel();
 
+            // ===== 4. 显示八字信息 =====
             const baziInfoArea = document.getElementById('baziInfoArea');
             const baziDisplay = document.getElementById('baziDisplay');
             if (record.bazi) {
@@ -2455,9 +2458,11 @@
                 baziInfoArea.classList.add('hidden');
             }
 
+            // ===== 5. 隐藏验证反馈按钮 =====
             const actionButtonsGlobal = document.getElementById('actionButtons');
             if (actionButtonsGlobal) actionButtonsGlobal.style.display = 'none';
 
+            // ===== 6. 显示验证内容 =====
             const verifyArea = document.getElementById('verifyArea');
             const verifyItemsContainer = document.getElementById('verifyItemsContainer');
             const toggleIcon = document.getElementById('verifyToggleIcon');
@@ -2479,31 +2484,49 @@
                 verifyArea.classList.add('hidden');
             }
 
+            // ===== 7. 隐藏验证按钮 =====
             hideVerifyBtn();
 
+            // ===== 8. 显示模块区域 =====
             const moduleArea = document.getElementById('moduleArea');
             if (moduleArea) {
                 moduleArea.classList.remove('hidden');
+                // 再次确保模块按钮正确高亮
+                document.querySelectorAll('.module-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.module === currentModule) {
+                        btn.classList.add('active');
+                    }
+                });
                 const container = document.getElementById('analysisBtnContainer');
                 if (container) {
                     container.innerHTML = `
-                                <button class="btn-done" disabled>深度分析已完成</button>
-                                <button class="btn-continue" id="continueAnalysisBtn">继续深度分析</button>
-                            `;
+                        <button class="btn-done" disabled>深度分析已完成</button>
+                        <button class="btn-continue" id="continueAnalysisBtn">继续深度分析</button>
+                    `;
                     const continueBtn = document.getElementById('continueAnalysisBtn');
-                    if (continueBtn) continueBtn.onclick = continueAnalysis;
+                    if (continueBtn) {
+                        // 确保 continueAnalysis 使用的是当前模块
+                        continueBtn.onclick = function() {
+                            console.log('🔍 继续分析，当前模块:', currentModule);
+                            continueAnalysis();
+                        };
+                    }
                 }
             }
 
+            // ===== 9. 显示分析结果 =====
             const resultCard = document.getElementById('resultCard');
             const resultContent = document.getElementById('resultContent');
             resultContent.innerHTML = record.result.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             resultCard.style.display = 'block';
 
+            // ===== 10. 恢复当前状态 =====
             currentBirth = record.birth;
             currentBaziStr = record.bazi;
             lastAnalysisResult = record.result;
 
+            // ===== 11. 恢复表单 =====
             if (record.birth) {
                 const birthMatch = record.birth.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})\s+(\d{1,2})时\s+(\d+)分\s+([男女])/);
                 if (birthMatch) {
@@ -2537,6 +2560,7 @@
                 if (record.userName) document.getElementById('nameInput').value = record.userName;
             }
 
+            // ===== 12. 滚动到结果区域 =====
             resultCard.scrollIntoView({ behavior: 'smooth' });
             closeSidebar();
         }
