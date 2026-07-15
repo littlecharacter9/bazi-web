@@ -1521,6 +1521,8 @@
                                 <button class="module-btn active" data-module="career">事业</button>
                                 <button class="module-btn" data-module="wealth">财运</button>
                                 <button class="module-btn" data-module="marriage">婚姻</button>
+                                <button class="module-btn" data-module="parents">父母</button>
+                                <button class="module-btn" data-module="children">子女</button>
                                 <button class="module-btn" data-module="liunian">流年</button>
                             </div>
                             <div id="analysisBtnContainer" class="analysis-buttons">
@@ -2383,8 +2385,15 @@
         }
 
         function currentModuleName() {
-            const moduleMap = { 'overview': '综合分析', 'career': '事业分析', 'wealth': '财运分析', 'marriage': '婚姻分析',
-                'liunian': '流年分析' };
+            const moduleMap = {
+                'overview': '综合分析',
+                'career': '事业分析',
+                'wealth': '财运分析',
+                'marriage': '婚姻分析',
+                'parents': '父母分析',
+                'children': '子女分析',
+                'liunian': '流年分析'
+            };
             return moduleMap[currentModule] || currentModule;
         }
 
@@ -2565,14 +2574,14 @@
             const useTrueSolar = document.getElementById('useTrueSolar').checked;
             const knowTime = document.querySelector('input[name="knowTime"]:checked').value;
             if (knowTime === 'no') return null;
-            
+
             let hour = parseInt(document.getElementById('hourSelect').value);
             let minute = parseInt(document.getElementById('minuteSelect').value);
-            
+
             // 分钟未选则默认为 0
             if (isNaN(minute)) minute = 0;
             if (isNaN(hour)) return null;
-            
+
             if (useTrueSolar) {
                 const locationInfo = getLocationInfo();
                 const dateStr = document.getElementById('dateInput').value;
