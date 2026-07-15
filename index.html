@@ -2433,8 +2433,25 @@
         }
 
         function viewHistoryRecord(record) {
+            // ===== 中文模块名 → 英文key 映射 =====
+            const moduleMap = {
+                '综合分析': 'overview',
+                '事业分析': 'career',
+                '财运分析': 'wealth',
+                '婚姻分析': 'marriage',
+                '父母分析': 'parents',
+                '子女分析': 'children',
+                '流年分析': 'liunian'
+            };
+
+            // 如果 record.module 是中文名，转成英文 key
+            var moduleKey = record.module || 'career';
+            if (moduleMap[moduleKey]) {
+                moduleKey = moduleMap[moduleKey];
+            }
+
             // ===== 1. 同步当前模块 =====
-            currentModule = record.module || 'career';
+            currentModule = moduleKey;
             console.log('🔍 历史记录模块:', currentModule);
 
             // ===== 2. 高亮对应的模块按钮 =====
@@ -2506,7 +2523,6 @@
                     `;
                     const continueBtn = document.getElementById('continueAnalysisBtn');
                     if (continueBtn) {
-                        // 确保 continueAnalysis 使用的是当前模块
                         continueBtn.onclick = function() {
                             console.log('🔍 继续分析，当前模块:', currentModule);
                             continueAnalysis();
@@ -3073,7 +3089,8 @@
             document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
             const userName = document.getElementById('nameInput').value;
             if (currentBirth && content) {
-                saveAnalysisRecord(currentBirth, currentModuleName(), content, currentBaziStr, userName,
+                // 保存时用英文 key（currentModule），而不是中文名
+                saveAnalysisRecord(currentBirth, currentModule, content, currentBaziStr, userName,
                     pendingVerifyContent);
                 pendingVerifyContent = null;
             }
