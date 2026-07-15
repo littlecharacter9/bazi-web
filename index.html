@@ -952,6 +952,101 @@
             }
         }
 
+        /* ===== 反馈弹窗 ===== */
+        .feedback-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .feedback-modal.show {
+            display: flex;
+        }
+        .feedback-modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        .feedback-modal-content {
+            position: relative;
+            background: #fff;
+            border-radius: 20px;
+            max-width: 480px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 28px 30px 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        .feedback-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 20px;
+        }
+        .feedback-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            padding: 0 4px;
+        }
+        .feedback-modal-close:hover {
+            color: #333;
+        }
+        .feedback-form-group {
+            margin-bottom: 16px;
+        }
+        .feedback-form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 6px;
+        }
+        .feedback-form-group label .required {
+            color: #e74c3c;
+        }
+        .feedback-form-group select,
+        .feedback-form-group textarea,
+        .feedback-form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            background: #fff;
+        }
+        .feedback-form-group select:focus,
+        .feedback-form-group textarea:focus,
+        .feedback-form-group input:focus {
+            border-color: #e6b980;
+        }
+        #feedbackAssociatedInfo {
+            font-size: 13px;
+            color: #555;
+            margin-top: 4px;
+            line-height: 1.6;
+        }
+        #feedbackStatus {
+            min-height: 20px;
+            font-size: 13px;
+        }
+
         /* ===== 移动端适配 ===== */
         @media (max-width: 768px) {
             body {
@@ -1360,6 +1455,11 @@
                 font-size: 14px !important;
                 padding: 8px 20px !important;
             }
+
+            .feedback-modal-content {
+                padding: 20px !important;
+                width: 95% !important;
+            }
         }
 
         @media (max-width: 480px) {
@@ -1407,6 +1507,9 @@
             .action-icon {
                 font-size: 11px !important;
                 padding: 3px 4px !important;
+            }
+            .feedback-modal-content {
+                padding: 16px !important;
             }
         }
     </style>
@@ -1544,6 +1647,7 @@
                             </div>
                             <div class="action-group-right">
                                 <button class="action-icon donate" id="donateResultBtn">随缘打赏</button>
+                                <button class="action-icon" id="feedbackBtn">💬 反馈</button>
                             </div>
                         </div>
                     </div>
@@ -1787,6 +1891,42 @@
         </div>
     </div>
 
+    <!-- ===== 反馈弹窗 ===== -->
+    <div id="feedbackModal" class="feedback-modal">
+        <div class="feedback-modal-overlay"></div>
+        <div class="feedback-modal-content">
+            <div class="feedback-modal-header">
+                <span>📝 反馈&建议</span>
+                <button class="feedback-modal-close" id="feedbackModalClose">✕</button>
+            </div>
+            <div class="feedback-modal-body">
+                <div class="feedback-form-group">
+                    <label>反馈类型</label>
+                    <select id="feedbackType">
+                        <option value="功能建议">功能建议</option>
+                        <option value="分析不准">分析不准</option>
+                        <option value="体验问题">体验问题</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="feedback-form-group">
+                    <label>反馈内容 <span class="required">*</span></label>
+                    <textarea id="feedbackContent" rows="4" placeholder="请详细描述您的反馈..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:12px;font-family:inherit;resize:vertical;"></textarea>
+                </div>
+                <div class="feedback-form-group">
+                    <label>联系方式（选填）</label>
+                    <input type="text" id="feedbackContact" placeholder="微信号/手机号/邮箱" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:12px;">
+                </div>
+                <div class="feedback-form-group" style="background:#f5f5f7;padding:12px;border-radius:12px;font-size:13px;color:#888;">
+                    <label>📌 自动关联信息</label>
+                    <div id="feedbackAssociatedInfo">正在获取...</div>
+                </div>
+                <div id="feedbackStatus"></div>
+                <button class="btn-start" id="feedbackSubmitBtn" style="margin-top:16px;">提交反馈</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==================== 配置 ====================
         const API_URL = 'https://api.bajiemingli.top';
@@ -1895,6 +2035,12 @@
             const donateContactBtn = document.getElementById('donateContactBtn');
             if (donateContactBtn) {
                 donateContactBtn.addEventListener('click', donate);
+            }
+
+            // ===== 反馈按钮绑定 =====
+            const feedbackBtn = document.getElementById('feedbackBtn');
+            if (feedbackBtn) {
+                feedbackBtn.addEventListener('click', openFeedbackModal);
             }
         });
 
@@ -2287,6 +2433,17 @@
         }
 
         function viewHistoryRecord(record) {
+            // ===== 修复：同步当前模块 =====
+            currentModule = record.module || 'career';
+
+            // 高亮对应的模块按钮
+            document.querySelectorAll('.module-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.module === currentModule) {
+                    btn.classList.add('active');
+                }
+            });
+
             showDefaultPanel();
 
             const baziInfoArea = document.getElementById('baziInfoArea');
@@ -3038,6 +3195,85 @@
             const toggleIcon = document.getElementById('verifyToggleIcon');
             if (toggleIcon) toggleIcon.innerHTML = expandSVG;
             closeSidebar();
+        }
+
+        // ==================== 反馈弹窗逻辑 ====================
+        const feedbackModal = document.getElementById('feedbackModal');
+        const feedbackCloseBtn = document.getElementById('feedbackModalClose');
+        const feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
+        const feedbackContent = document.getElementById('feedbackContent');
+        const feedbackContact = document.getElementById('feedbackContact');
+        const feedbackType = document.getElementById('feedbackType');
+        const feedbackStatus = document.getElementById('feedbackStatus');
+        const feedbackAssociated = document.getElementById('feedbackAssociatedInfo');
+
+        function openFeedbackModal() {
+            const birth = buildBirthString() || '未提供';
+            const bazi = document.getElementById('baziDisplay').textContent || '未生成';
+            feedbackAssociated.innerHTML = `生辰：${birth}<br>八字：${bazi}`;
+            feedbackContent.value = '';
+            feedbackContact.value = '';
+            feedbackStatus.textContent = '';
+            feedbackStatus.style.color = '';
+            feedbackModal.classList.add('show');
+            feedbackModal.style.display = 'flex';
+        }
+
+        function closeFeedbackModal() {
+            feedbackModal.classList.remove('show');
+            feedbackModal.style.display = 'none';
+        }
+
+        if (document.querySelector('.feedback-modal-overlay')) {
+            document.querySelector('.feedback-modal-overlay').addEventListener('click', closeFeedbackModal);
+        }
+        if (feedbackCloseBtn) {
+            feedbackCloseBtn.addEventListener('click', closeFeedbackModal);
+        }
+
+        if (feedbackSubmitBtn) {
+            feedbackSubmitBtn.addEventListener('click', async function() {
+                const content = feedbackContent.value.trim();
+                if (!content) {
+                    feedbackStatus.textContent = '⚠️ 请填写反馈内容';
+                    feedbackStatus.style.color = '#e74c3c';
+                    return;
+                }
+                const birth = buildBirthString() || '';
+                const bazi = document.getElementById('baziDisplay').textContent || '';
+                this.disabled = true;
+                this.textContent = '提交中...';
+                feedbackStatus.textContent = '⏳ 正在提交...';
+                feedbackStatus.style.color = '#888';
+                try {
+                    const response = await fetch(`${API_URL}/feedback`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            feedback_type: feedbackType.value,
+                            content: content,
+                            contact: feedbackContact.value.trim(),
+                            birth: birth,
+                            bazi: bazi
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        feedbackStatus.textContent = '✅ 感谢您的反馈！';
+                        feedbackStatus.style.color = '#2e7d32';
+                        setTimeout(closeFeedbackModal, 1500);
+                    } else {
+                        feedbackStatus.textContent = `❌ 提交失败：${data.error || '未知错误'}`;
+                        feedbackStatus.style.color = '#e74c3c';
+                    }
+                } catch (err) {
+                    feedbackStatus.textContent = `❌ 网络错误：${err.message}`;
+                    feedbackStatus.style.color = '#e74c3c';
+                } finally {
+                    this.disabled = false;
+                    this.textContent = '提交反馈';
+                }
+            });
         }
 
         // ==================== 页面初始化 ====================
