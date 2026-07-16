@@ -1046,15 +1046,53 @@
             min-height: 20px;
             font-size: 13px;
         }
-        /* 图片上传预览样式 */
-        .feedback-image-preview {
-            margin-top: 8px;
-            display: none;
-            position: relative;
-            border: 1px solid #eee;
-            border-radius: 12px;
-            padding: 8px;
+        /* ===== 文件上传区域 ===== */
+        .upload-area {
+            border: 2px dashed #d4d4d8;
+            border-radius: 16px;
+            padding: 28px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
             background: #fafafa;
+            position: relative;
+        }
+        .upload-area:hover {
+            border-color: #e6b980;
+            background: #fef6f0;
+        }
+        .upload-area .upload-icon {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .upload-area .upload-text {
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+        }
+        .upload-area .upload-hint {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 4px;
+        }
+        .upload-area input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        /* 上传后预览 */
+        .feedback-image-preview {
+            margin-top: 12px;
+            display: none;
+            padding: 12px;
+            background: #f5f5f7;
+            border-radius: 12px;
+            border: 1px solid #eee;
         }
         .feedback-image-preview.show {
             display: block;
@@ -1066,22 +1104,16 @@
             display: block;
         }
         .feedback-image-preview .remove-btn {
-            display: inline-block;
-            margin-top: 4px;
+            margin-top: 6px;
             background: none;
             border: none;
             color: #e74c3c;
             cursor: pointer;
-            font-size: 12px;
-            padding: 4px 8px;
+            font-size: 13px;
+            padding: 4px 0;
         }
         .feedback-image-preview .remove-btn:hover {
             text-decoration: underline;
-        }
-        .feedback-image-hint {
-            font-size: 12px;
-            color: #999;
-            margin-top: 4px;
         }
 
         /* ===== 移动端适配 ===== */
@@ -1956,12 +1988,16 @@
                 </div>
                 <div class="feedback-form-group">
                     <label>截图（选填）</label>
-                    <input type="file" id="feedbackImage" accept="image/*" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:12px;font-size:14px;">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">🖼️</div>
+                        <div class="upload-text">点击上传图片</div>
+                        <div class="upload-hint">支持 JPG、PNG、WebP，建议截图</div>
+                        <input type="file" id="feedbackImage" accept="image/*">
+                    </div>
                     <div class="feedback-image-preview" id="feedbackImagePreview">
                         <img id="feedbackImagePreviewImg" src="">
                         <button type="button" class="remove-btn" id="feedbackImageRemove">✕ 移除图片</button>
                     </div>
-                    <div class="feedback-image-hint">支持 JPG、PNG、WebP 格式，建议截图</div>
                 </div>
                 <div class="feedback-form-group" style="background:#f5f5f7;padding:12px;border-radius:12px;font-size:13px;color:#888;">
                     <label>📌 自动关联信息</label>
@@ -3317,24 +3353,27 @@
         const feedbackType = document.getElementById('feedbackType');
         const feedbackStatus = document.getElementById('feedbackStatus');
         const feedbackAssociated = document.getElementById('feedbackAssociatedInfo');
+
+        // ===== 图片上传 =====
+        const uploadArea = document.getElementById('uploadArea');
         const feedbackImage = document.getElementById('feedbackImage');
         const feedbackImagePreview = document.getElementById('feedbackImagePreview');
         const feedbackImagePreviewImg = document.getElementById('feedbackImagePreviewImg');
         const feedbackImageRemove = document.getElementById('feedbackImageRemove');
         let feedbackImageData = null;
 
-        // 打开弹窗
         function openFeedbackModal() {
             const birth = buildBirthString() || '未提供';
             const bazi = document.getElementById('baziDisplay').textContent || '未生成';
             feedbackAssociated.innerHTML = `生辰：${birth}<br>八字：${bazi}`;
             feedbackContent.value = '';
             feedbackContact.value = '';
+            feedbackStatus.textContent = '';
+            feedbackStatus.style.color = '';
+            // 重置图片上传
             feedbackImageData = null;
             feedbackImage.value = '';
             feedbackImagePreview.classList.remove('show');
-            feedbackStatus.textContent = '';
-            feedbackStatus.style.color = '';
             feedbackModal.classList.add('show');
             feedbackModal.style.display = 'flex';
         }
@@ -3351,20 +3390,27 @@
             feedbackCloseBtn.addEventListener('click', closeFeedbackModal);
         }
 
-        // 图片上传处理
+        // 点击上传区域触发文件选择
+        if (uploadArea) {
+            uploadArea.addEventListener('click', function(e) {
+                if (e.target.tagName !== 'INPUT') {
+                    feedbackImage.click();
+                }
+            });
+        }
+
+        // 文件选择处理
         if (feedbackImage) {
             feedbackImage.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (!file) return;
 
-                // 限制文件大小（2MB）
                 if (file.size > 2 * 1024 * 1024) {
                     alert('图片大小不能超过 2MB');
                     this.value = '';
                     return;
                 }
 
-                // 限制文件类型
                 const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
                 if (!allowedTypes.includes(file.type)) {
                     alert('只支持 JPG、PNG、WebP、GIF 格式');
@@ -3382,6 +3428,7 @@
             });
         }
 
+        // 移除图片
         if (feedbackImageRemove) {
             feedbackImageRemove.addEventListener('click', function() {
                 feedbackImageData = null;
